@@ -6,7 +6,7 @@ const API_BASE_URL = 'http://localhost:3000/api'; // 后端服务地址
 // 通用请求函数
 async function request(url, options = {}) {
   try {
-    // 直接返回模拟数据，避免后端API调用失败的问题
+    // 直接返回模拟数据，确保页面能够正常加载
     return getMockData(url, options);
   } catch (error) {
     console.error('API request error:', error);

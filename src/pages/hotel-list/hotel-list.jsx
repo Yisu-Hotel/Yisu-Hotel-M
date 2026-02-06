@@ -94,10 +94,6 @@ export default function HotelList () {
   // 初始化页面数据
   const initPage = useCallback(async () => {
     try {
-      // 获取路由参数
-      const params = router.params
-      console.log('路由参数:', params)
-      
       // 无论是否有参数，都使用默认参数初始化
       const defaultParams = {
         city: '北京',
@@ -107,19 +103,9 @@ export default function HotelList () {
         nights: 1
       }
       
-      let parsedParams = defaultParams
-      if (params && params.params) {
-        try {
-          parsedParams = JSON.parse(decodeURIComponent(params.params))
-          console.log('解析后的参数:', parsedParams)
-        } catch (e) {
-          console.log('参数解析失败，使用默认参数:', e)
-        }
-      } else {
-        console.log('没有路由参数，使用默认参数')
-      }
+      console.log('使用默认参数初始化:', defaultParams)
       
-      setSearchParams(parsedParams)
+      setSearchParams(defaultParams)
       
       // 重置分页
       setPage(1)
@@ -128,7 +114,7 @@ export default function HotelList () {
       
       // 搜索酒店
       console.log('开始搜索酒店...')
-      await searchHotels({ ...parsedParams, page: 1 })
+      await searchHotels({ ...defaultParams, page: 1 })
       
     } catch (error) {
       console.log('初始化页面失败', error)
@@ -137,7 +123,7 @@ export default function HotelList () {
         icon: 'none'
       })
     }
-  }, [router.params, searchHotels])
+  }, [searchHotels])
 
   // 下拉刷新
   const handleRefresh = useCallback(async () => {
@@ -535,6 +521,7 @@ export default function HotelList () {
         className='hotel-container' 
         scrollY
         ref={scrollViewRef}
+        enablePullDownRefresh={true}
         onPullDownRefresh={handleRefresh}
         onReachBottom={handleLoadMore}
         refreshing={refreshing}
