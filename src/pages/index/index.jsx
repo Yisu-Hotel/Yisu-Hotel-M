@@ -214,9 +214,10 @@ export default function Index () {
       
       console.log('搜索参数:', params)
       
-      // 设置搜索参数并显示酒店列表
-      setSearchParams(params)
-      setShowHotelList(true)
+      // 跳转到酒店列表页
+      navigateTo({
+        url: `/pages/hotel-list/hotel-list?params=${encodeURIComponent(JSON.stringify(params))}`
+      })
       
     } catch (error) {
       console.log('搜索异常:', error)
@@ -523,7 +524,7 @@ export default function Index () {
           <ScrollView className='hotel-list'>
             {/* 酒店项 1 */}
             <View className='hotel-item'>
-              <Image className='hotel-image' src='https://via.placeholder.com/100' />
+              <Image className='hotel-image' src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=square' />
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京王府井希尔顿酒店</Text>
@@ -546,7 +547,7 @@ export default function Index () {
             
             {/* 酒店项 2 */}
             <View className='hotel-item'>
-              <Image className='hotel-image' src='https://via.placeholder.com/100' />
+              <Image className='hotel-image' src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=luxury%20hotel%20facade%20with%20modern%20design&image_size=square' />
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京国贸大酒店</Text>
@@ -569,7 +570,7 @@ export default function Index () {
             
             {/* 酒店项 3 */}
             <View className='hotel-item'>
-              <Image className='hotel-image' src='https://via.placeholder.com/100' />
+              <Image className='hotel-image' src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=elegant%20hotel%20building%20with%20glass%20facade&image_size=square' />
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京三里屯洲际酒店</Text>
