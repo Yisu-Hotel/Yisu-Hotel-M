@@ -30,7 +30,53 @@ export default function HotelList () {
   // 初始化页面
   useEffect(() => {
     initPage()
-  }, [initPage])
+  }, [])
+
+  // 搜索酒店
+  const searchHotels = useCallback(async (params) => {
+    try {
+      setLoading(true)
+      
+      // 调用后端API搜索酒店，优先使用传入的sort参数
+      const searchResult = await hotelApi.searchHotels({
+        ...params,
+        sort: params.sort || sortType,
+        ...filters
+      })
+      
+      if (searchResult.success && searchResult.data) {
+        const newHotels = searchResult.data.hotels || []
+        
+        if (params.page === 1) {
+          setHotels(newHotels)
+        } else {
+          setHotels(prev => [...prev, ...newHotels])
+        }
+        
+        setTotalCount(searchResult.data.total || 0)
+        setHasMore(newHotels.length >= (params.pageSize || 10))
+        setPage(params.page)
+      } else {
+        showToast({
+          title: '搜索失败，请稍后重试',
+          icon: 'none'
+        })
+      }
+    } catch (error) {
+      console.log('搜索酒店失败', error)
+      showToast({
+        title: '搜索失败，请稍后重试',
+        icon: 'none'
+      })
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
+      setRefreshing(false)
+      if (refreshing) {
+        stopPullDownRefresh()
+      }
+    }
+  }, [sortType, filters, refreshing])
 
   // 初始化页面数据
   const initPage = useCallback(async () => {
@@ -79,52 +125,6 @@ export default function HotelList () {
       })
     }
   }, [router.params, searchHotels])
-
-  // 搜索酒店
-  const searchHotels = useCallback(async (params) => {
-    try {
-      setLoading(true)
-      
-      // 调用后端API搜索酒店
-      const searchResult = await hotelApi.searchHotels({
-        ...params,
-        sort: sortType,
-        ...filters
-      })
-      
-      if (searchResult.success && searchResult.data) {
-        const newHotels = searchResult.data.hotels || []
-        
-        if (params.page === 1) {
-          setHotels(newHotels)
-        } else {
-          setHotels(prev => [...prev, ...newHotels])
-        }
-        
-        setTotalCount(searchResult.data.total || 0)
-        setHasMore(newHotels.length >= (params.pageSize || 10))
-        setPage(params.page)
-      } else {
-        showToast({
-          title: '搜索失败，请稍后重试',
-          icon: 'none'
-        })
-      }
-    } catch (error) {
-      console.log('搜索酒店失败', error)
-      showToast({
-        title: '搜索失败，请稍后重试',
-        icon: 'none'
-      })
-    } finally {
-      setLoading(false)
-      setLoadingMore(false)
-      setRefreshing(false)
-      if (refreshing) {
-        stopPullDownRefresh()
-      }
-    }
-  }, [sortType, filters, refreshing])
 
   // 下拉刷新
   const handleRefresh = useCallback(async () => {
@@ -180,7 +180,8 @@ export default function HotelList () {
     setPage(1)
     setHotels([])
     setHasMore(true)
-    searchHotels({ ...searchParams, page: 1 })
+    // 直接传递type参数给searchHotels函数，确保使用最新的排序类型
+    searchHotels({ ...searchParams, page: 1, sort: type })
   }, [searchParams, searchHotels])
 
   // 处理筛选
