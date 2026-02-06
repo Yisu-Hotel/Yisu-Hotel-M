@@ -19,6 +19,10 @@ export default function Index () {
   const [filteredCities, setFilteredCities] = useState([])
   const [showHotelList, setShowHotelList] = useState(false)
   const [searchParams, setSearchParams] = useState({})
+  const [selectedTags, setSelectedTags] = useState([])
+  const [showFilter, setShowFilter] = useState(false)
+  const [currentFilterType, setCurrentFilterType] = useState('')
+  const [filterOptions, setFilterOptions] = useState({})
   
   // 返回到搜索页面
   const handleBackToSearch = useCallback(() => {
@@ -453,13 +457,23 @@ export default function Index () {
   // 处理快捷标签点击
   const handleTagClick = useCallback((tag) => {
     console.log('点击标签', tag)
-    // 这里可以根据标签更新筛选条件
+    // 实现标签的选择和取消选择
+    setSelectedTags(prev => {
+      if (prev.includes(tag)) {
+        // 如果标签已选中，则取消选择
+        return prev.filter(t => t !== tag)
+      } else {
+        // 如果标签未选中，则选择
+        return [...prev, tag]
+      }
+    })
   }, [])
 
   // 处理筛选条件点击
   const handleFilterClick = useCallback((filterType) => {
     console.log('点击筛选', filterType)
-    // 这里可以跳转到详细筛选页
+    setCurrentFilterType(filterType)
+    setShowFilter(true)
   }, [])
 
   // 处理日期选择
@@ -650,12 +664,12 @@ export default function Index () {
 
             {/* 快捷标签区 */}
             <ScrollView scrollX className='tags-container'>
-              <View className='tag' onClick={() => handleTagClick('亲子友好')}>亲子友好</View>
-              <View className='tag' onClick={() => handleTagClick('免费停车场')}>免费停车场</View>
-              <View className='tag' onClick={() => handleTagClick('含早餐')}>含早餐</View>
-              <View className='tag' onClick={() => handleTagClick('豪华型')}>豪华型</View>
-              <View className='tag' onClick={() => handleTagClick('商务出行')}>商务出行</View>
-              <View className='tag' onClick={() => handleTagClick('近地铁')}>近地铁</View>
+              <View className={`tag ${selectedTags.includes('亲子友好') ? 'tag-active' : ''}`} onClick={() => handleTagClick('亲子友好')}>亲子友好</View>
+              <View className={`tag ${selectedTags.includes('免费停车场') ? 'tag-active' : ''}`} onClick={() => handleTagClick('免费停车场')}>免费停车场</View>
+              <View className={`tag ${selectedTags.includes('含早餐') ? 'tag-active' : ''}`} onClick={() => handleTagClick('含早餐')}>含早餐</View>
+              <View className={`tag ${selectedTags.includes('豪华型') ? 'tag-active' : ''}`} onClick={() => handleTagClick('豪华型')}>豪华型</View>
+              <View className={`tag ${selectedTags.includes('商务出行') ? 'tag-active' : ''}`} onClick={() => handleTagClick('商务出行')}>商务出行</View>
+              <View className={`tag ${selectedTags.includes('近地铁') ? 'tag-active' : ''}`} onClick={() => handleTagClick('近地铁')}>近地铁</View>
             </ScrollView>
 
             {/* 查询按钮 */}
@@ -833,6 +847,58 @@ export default function Index () {
                     </>
                   )}
                 </ScrollView>
+              </View>
+            </View>
+          )}
+          
+          {/* 筛选弹窗 */}
+          {showFilter && (
+            <View className='filter-container'>
+              <View className='filter-content'>
+                <View className='filter-header'>
+                  <Text className='filter-title'>
+                    {currentFilterType === 'star' ? '选择星级' : currentFilterType === 'price' ? '选择价格' : '选择设施'}
+                  </Text>
+                  <Text className='filter-close' onClick={() => setShowFilter(false)}>✕</Text>
+                </View>
+                
+                <View className='filter-body'>
+                  {currentFilterType === 'star' && (
+                    <View className='filter-options'>
+                      {['不限', '5星', '4星', '3星', '2星及以下'].map(star => (
+                        <View key={star} className='filter-option-item'>
+                          <Text>{star}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  
+                  {currentFilterType === 'price' && (
+                    <View className='filter-options'>
+                      {['不限', '¥500以下', '¥500-800', '¥800-1200', '¥1200-2000', '¥2000以上'].map(price => (
+                        <View key={price} className='filter-option-item'>
+                          <Text>{price}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  
+                  {currentFilterType === 'facility' && (
+                    <View className='filter-options'>
+                      {['免费WiFi', '免费停车场', '健身房', '游泳池', '餐厅', '会议室', '商务中心', 'SPA'].map(facility => (
+                        <View key={facility} className='filter-option-item'>
+                          <Text>{facility}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+                
+                <View className='filter-footer'>
+                  <Button className='filter-confirm-btn' onClick={() => setShowFilter(false)}>
+                    确定
+                  </Button>
+                </View>
               </View>
             </View>
           )}
