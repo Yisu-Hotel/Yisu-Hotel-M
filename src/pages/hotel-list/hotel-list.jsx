@@ -38,25 +38,39 @@ export default function HotelList () {
       // 获取路由参数
       const params = router.params
       console.log('路由参数:', params)
-      if (params && params.params) {
-        const parsedParams = JSON.parse(decodeURIComponent(params.params))
-        console.log('解析后的参数:', parsedParams)
-        setSearchParams(parsedParams)
-        
-        // 重置分页
-        setPage(1)
-        setHotels([])
-        setHasMore(true)
-        
-        // 搜索酒店
-        console.log('开始搜索酒店...')
-        await searchHotels({ ...parsedParams, page: 1 })
-      } else {
-        showToast({
-          title: '参数错误',
-          icon: 'none'
-        })
+      
+      // 无论是否有参数，都使用默认参数初始化
+      const defaultParams = {
+        city: '北京',
+        keyword: '',
+        checkInDate: new Date().toISOString().split('T')[0],
+        checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        nights: 1
       }
+      
+      let parsedParams = defaultParams
+      if (params && params.params) {
+        try {
+          parsedParams = JSON.parse(decodeURIComponent(params.params))
+          console.log('解析后的参数:', parsedParams)
+        } catch (e) {
+          console.log('参数解析失败，使用默认参数:', e)
+        }
+      } else {
+        console.log('没有路由参数，使用默认参数')
+      }
+      
+      setSearchParams(parsedParams)
+      
+      // 重置分页
+      setPage(1)
+      setHotels([])
+      setHasMore(true)
+      
+      // 搜索酒店
+      console.log('开始搜索酒店...')
+      await searchHotels({ ...parsedParams, page: 1 })
+      
     } catch (error) {
       console.log('初始化页面失败', error)
       showToast({

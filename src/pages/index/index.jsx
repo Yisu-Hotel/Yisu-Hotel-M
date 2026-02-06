@@ -17,6 +17,13 @@ export default function Index () {
   const [showCitySelector, setShowCitySelector] = useState(false)
   const [citySearchKeyword, setCitySearchKeyword] = useState('')
   const [filteredCities, setFilteredCities] = useState([])
+  const [showHotelList, setShowHotelList] = useState(false)
+  const [searchParams, setSearchParams] = useState({})
+  
+  // 返回到搜索页面
+  const handleBackToSearch = useCallback(() => {
+    setShowHotelList(false)
+  }, [])
   
   // 日历状态
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
@@ -192,51 +199,31 @@ export default function Index () {
   }, [])
 
   // 处理查询按钮点击
-  const handleSearch = useCallback(async () => {
-    // 验证日期选择
-    if (!checkInDate || !checkOutDate) {
-      showToast({
-        title: '请选择入住和离店日期',
-        icon: 'none'
-      })
-      return
-    }
-
-    // 验证城市选择
-    if (!currentCity || currentCity === '定位中...' || currentCity === '请选择城市') {
-      showToast({
-        title: '请选择城市',
-        icon: 'none'
-      })
-      return
-    }
-
-    // 构建查询参数
-    const searchParams = {
-      city: currentCity,
-      keyword: keyword,
-      checkInDate: checkInDate,
-      checkOutDate: checkOutDate,
-      nights: calculateNights(checkInDate, checkOutDate)
-    }
-
+  const handleSearch = useCallback(() => {
+    console.log('点击了查询按钮')
+    
     try {
-      setLoading(true)
+      // 构建查询参数
+      const params = {
+        city: currentCity === '定位中...' ? '北京' : currentCity,
+        keyword: keyword,
+        checkInDate: checkInDate || new Date().toISOString().split('T')[0],
+        checkOutDate: checkOutDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        nights: calculateNights(checkInDate, checkOutDate) || 1
+      }
       
-      console.log('开始搜索，参数:', searchParams)
+      console.log('搜索参数:', params)
       
-      // 直接跳转到酒店列表页，不依赖API调用结果
-      navigateTo({
-        url: `/pages/hotel-list/hotel-list?params=${encodeURIComponent(JSON.stringify(searchParams))}`
-      })
+      // 设置搜索参数并显示酒店列表
+      setSearchParams(params)
+      setShowHotelList(true)
+      
     } catch (error) {
-      console.log('搜索酒店失败', error)
+      console.log('搜索异常:', error)
       showToast({
-        title: '搜索失败，请稍后重试',
+        title: '搜索异常，请检查',
         icon: 'none'
       })
-    } finally {
-      setLoading(false)
     }
   }, [currentCity, keyword, checkInDate, checkOutDate, calculateNights])
 
@@ -481,49 +468,6 @@ export default function Index () {
     setShowCalendar(true)
   }, [])
 
-  // 处理日期选择
-  const handleDateSelect = useCallback((days) => {
-    const today = new Date()
-    const checkIn = new Date(today)
-    const checkOut = new Date(today)
-    checkOut.setDate(today.getDate() + days)
-
-    const formatDate = (date) => {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
-    }
-
-    setCheckInDate(formatDate(checkIn))
-    setCheckOutDate(formatDate(checkOut))
-    // 不自动关闭日历，让用户点击确定按钮关闭
-  }, [])
-
-  // 处理日期范围变化
-  const handleDateRangeChange = useCallback((dates) => {
-    if (dates && dates.length === 2) {
-      const [start, end] = dates
-      setCheckInDate(formatDate(new Date(start)))
-      setCheckOutDate(formatDate(new Date(end)))
-      // 不自动关闭日历，让用户点击确定按钮关闭
-    }
-  }, [])
-
-  // 处理日历确认
-  const handleCalendarConfirm = useCallback(() => {
-    // 确保有完整的日期范围
-    if (checkInDate && checkOutDate) {
-      setShowCalendar(false)
-    } else {
-      showModal({
-        title: '提示',
-        content: '请选择完整的入住和离店日期',
-        showCancel: false
-      })
-    }
-  }, [checkInDate, checkOutDate])
-
   // 处理快捷选择天数
   const handleQuickSelect = useCallback((days) => {
     const today = new Date()
@@ -542,283 +486,391 @@ export default function Index () {
     setShowCalendar(false)
   }, [])
 
+  // 处理日历确认
+  const handleCalendarConfirm = useCallback(() => {
+    // 确保有完整的日期范围
+    if (checkInDate && checkOutDate) {
+      setShowCalendar(false)
+    } else {
+      showModal({
+        title: '提示',
+        content: '请选择完整的入住和离店日期',
+        showCancel: false
+      })
+    }
+  }, [checkInDate, checkOutDate])
+
   return (
     <View className='index'>
-      {/* 顶部Banner */}
-      <View className='banner' onClick={handleBannerClick}>
-        <Image 
-          src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount&image_size=landscape_16_9" 
-          className='banner-image'
-          mode="aspectFill"
-        />
-        <View className='banner-text'>春节特惠，低至 8 折</View>
-      </View>
-
-      {/* 核心查询区域 */}
-      <View className='search-container'>
-        {/* 当前地点 */}
-        <View className='location-bar' onClick={handleCityClick}>
-          <Text className='location-text'>{currentCity}</Text>
-          <Text className='location-icon'>▾</Text>
-        </View>
-
-        {/* 关键字搜索框 */}
-        <View className='search-input-container' style={{ position: 'relative', zIndex: 100 }}>
-          <Text className='search-icon'>🔍</Text>
-          <input 
-            className='search-input' 
-            placeholder="输入酒店名称 / 品牌 / 位置" 
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            onSubmit={handleSearch}
-            type="text"
-            autoComplete="off"
-            style={{ 
-              flex: 1, 
-              fontSize: '14px', 
-              color: '#333', 
-              background: 'transparent', 
-              padding: '4px 0', 
-              outline: 'none', 
-              border: 'none', 
-              minHeight: '20px'
-            }}
-          />
-        </View>
-
-        {/* 日期选择框 */}
-        <View className='date-container' onClick={handleDateClick}>
-          <Text className='date-icon'>📅</Text>
-          <Text className='date-text'>
-            {checkInDate} - {checkOutDate} 共 {calculateNights(checkInDate, checkOutDate)} 晚
-          </Text>
-        </View>
-
-        {/* 筛选条件栏 */}
-        <View className='filter-bar'>
-          <View className='filter-item' onClick={() => handleFilterClick('star')}>
-            <Text>星级</Text>
-            <Text className='filter-arrow'>▾</Text>
+      {/* 条件渲染：显示酒店列表或搜索页面 */}
+      {showHotelList ? (
+        /* 酒店列表内容 */
+        <View className='hotel-list-page'>
+          {/* 酒店列表头部 */}
+          <View className='hotel-list-header'>
+            <Button className='back-btn' onClick={handleBackToSearch}>
+              返回
+            </Button>
+            <Text className='page-title'>酒店列表</Text>
           </View>
-          <View className='filter-item' onClick={() => handleFilterClick('price')}>
-            <Text>价格</Text>
-            <Text className='filter-arrow'>▾</Text>
+          
+          {/* 搜索结果统计 */}
+          <View className='search-result'>
+            <Text>共找到 10 家酒店</Text>
           </View>
-          <View className='filter-item' onClick={() => handleFilterClick('facility')}>
-            <Text>设施</Text>
-            <Text className='filter-arrow'>▾</Text>
-          </View>
-        </View>
-
-        {/* 快捷标签区 */}
-        <ScrollView scrollX className='tags-container'>
-          <View className='tag' onClick={() => handleTagClick('亲子友好')}>亲子友好</View>
-          <View className='tag' onClick={() => handleTagClick('免费停车场')}>免费停车场</View>
-          <View className='tag' onClick={() => handleTagClick('含早餐')}>含早餐</View>
-          <View className='tag' onClick={() => handleTagClick('豪华型')}>豪华型</View>
-          <View className='tag' onClick={() => handleTagClick('商务出行')}>商务出行</View>
-          <View className='tag' onClick={() => handleTagClick('近地铁')}>近地铁</View>
-        </ScrollView>
-
-        {/* 查询按钮 */}
-        <Button className='search-button' onClick={handleSearch}>
-          查询
-        </Button>
-      </View>
-
-      {/* 日历组件 */}
-      {showCalendar && (
-        <View className='calendar-container'>
-          <View className='calendar-content'>
-            <View className='calendar-header'>
-              <Text className='calendar-title'>选择日期</Text>
-              <Text className='calendar-close' onClick={handleCalendarCancel}>✕</Text>
-            </View>
-            
-            {/* 快捷选择天数 */}
-            <View className='calendar-quick-select'>
-              <Text className='quick-select-title'>快捷选择</Text>
-              <View className='quick-select-buttons'>
-                <Button className='quick-select-btn' onClick={() => handleQuickSelect(1)}>
-                  1天
-                </Button>
-                <Button className='quick-select-btn' onClick={() => handleQuickSelect(2)}>
-                  2天
-                </Button>
-                <Button className='quick-select-btn' onClick={() => handleQuickSelect(3)}>
-                  3天
-                </Button>
-                <Button className='quick-select-btn' onClick={() => handleQuickSelect(7)}>
-                  7天
-                </Button>
-              </View>
-            </View>
-            
-            <View className='calendar-range-info'>
-              <Text className='range-info-item'>
-                入住: <Text style={{ color: '#1890ff' }}>{checkInDate || '未选择'}</Text>
-              </Text>
-              <Text className='range-info-item'>
-                离店: <Text style={{ color: '#1890ff' }}>{checkOutDate || '未选择'}</Text>
-              </Text>
-              <Text className='range-info-item'>
-                晚数: <Text style={{ color: '#1890ff' }}>{calculateNights(checkInDate, checkOutDate)}晚</Text>
-              </Text>
-            </View>
-            
-            <View className='calendar-body' style={{ height: '500px' }}>
-              {/* 自定义完整日历组件 */}
-              <View className='full-calendar'>
-                {/* 日历头部 */}
-                <View className='calendar-header-section'>
-                  <Button className='month-nav-btn' onClick={handlePrevMonth}>
-                    ◀
-                  </Button>
-                  <Text className='current-month'>
-                    {currentYear}年{currentMonth}月
-                  </Text>
-                  <Button className='month-nav-btn' onClick={handleNextMonth}>
-                    ▶
-                  </Button>
+          
+          {/* 酒店列表 */}
+          <ScrollView className='hotel-list'>
+            {/* 酒店项 1 */}
+            <View className='hotel-item'>
+              <Image className='hotel-image' src='https://via.placeholder.com/100' />
+              <View className='hotel-info'>
+                <View className='hotel-header'>
+                  <Text className='hotel-name'>北京王府井希尔顿酒店</Text>
+                  <Button className='collect-btn'>收藏</Button>
                 </View>
-                
-                {/* 星期标题 */}
-                <View className='week-header'>
-                  {['日', '一', '二', '三', '四', '五', '六'].map((day, index) => (
-                    <Text key={index} className='week-day'>
-                      {day}
-                    </Text>
-                  ))}
-                </View>
-                
-                {/* 日期网格 */}
-                <View className='date-grid'>
-                  {calendarDays.map((day, index) => {
-                    const isToday = day.date === formatDate(new Date())
-                    const isCheckIn = day.date === checkInDate
-                    const isCheckOut = day.date === checkOutDate
-                    const isInRange = checkInDate && checkOutDate && 
-                      day.date >= checkInDate && day.date <= checkOutDate
-                    const isDisabled = day.date < formatDate(new Date())
-                    const isOtherMonth = day.month !== currentMonth
-                    
-                    return (
-                      <View
-                        key={index}
-                        className={`date-cell ${isToday ? 'today' : ''} ${isCheckIn ? 'check-in' : ''} ${isCheckOut ? 'check-out' : ''} ${isInRange ? 'in-range' : ''} ${isDisabled ? 'disabled' : ''} ${isOtherMonth ? 'other-month' : ''}`}
-                        onClick={() => !isDisabled && !isOtherMonth && handleDateCellClick(day.date)}
-                      >
-                        <Text className={`date-text ${isDisabled ? 'disabled-text' : ''} ${isOtherMonth ? 'disabled-text' : ''}`}>
-                          {day.day}
-                        </Text>
-                      </View>
-                    )
-                  })}
+                <Text className='hotel-address'>北京市东城区王府井东街8号</Text>
+                <View className='hotel-footer'>
+                  <View className='hotel-price'>
+                    <Text className='price-symbol'>¥</Text>
+                    <Text className='price-value'>1288</Text>
+                    <Text className='price-unit'>/晚</Text>
+                  </View>
+                  <View className='hotel-rating'>
+                    <Text className='rating-value'>4.8</Text>
+                    <Text className='rating-label'>分</Text>
+                  </View>
                 </View>
               </View>
             </View>
             
-            <View className='calendar-footer'>
-              <Button className='calendar-cancel-btn' onClick={handleCalendarCancel}>
-                取消
-              </Button>
-              <Button className='calendar-confirm-btn' onClick={handleCalendarConfirm}>
-                确认
-              </Button>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* 城市选择器组件 */}
-      {showCitySelector && (
-        <View className='city-selector-container'>
-          <View className='city-selector-content'>
-            <View className='city-selector-header'>
-              <Text className='city-selector-title'>选择城市</Text>
-              <Text className='city-selector-close' onClick={() => setShowCitySelector(false)}>✕</Text>
+            {/* 酒店项 2 */}
+            <View className='hotel-item'>
+              <Image className='hotel-image' src='https://via.placeholder.com/100' />
+              <View className='hotel-info'>
+                <View className='hotel-header'>
+                  <Text className='hotel-name'>北京国贸大酒店</Text>
+                  <Button className='collect-btn'>收藏</Button>
+                </View>
+                <Text className='hotel-address'>北京市朝阳区建国门外大街1号</Text>
+                <View className='hotel-footer'>
+                  <View className='hotel-price'>
+                    <Text className='price-symbol'>¥</Text>
+                    <Text className='price-value'>1588</Text>
+                    <Text className='price-unit'>/晚</Text>
+                  </View>
+                  <View className='hotel-rating'>
+                    <Text className='rating-value'>4.9</Text>
+                    <Text className='rating-label'>分</Text>
+                  </View>
+                </View>
+              </View>
             </View>
             
-            {/* 城市搜索框 */}
-            <View className='city-search-box'>
-              <Text className='city-search-icon'>🔍</Text>
-              <Input 
-                className='city-search-input'
-                placeholder='输入城市名称搜索'
-                value={citySearchKeyword}
-                onChange={(e) => handleCitySearch(e.target.value)}
+            {/* 酒店项 3 */}
+            <View className='hotel-item'>
+              <Image className='hotel-image' src='https://via.placeholder.com/100' />
+              <View className='hotel-info'>
+                <View className='hotel-header'>
+                  <Text className='hotel-name'>北京三里屯洲际酒店</Text>
+                  <Button className='collect-btn'>收藏</Button>
+                </View>
+                <Text className='hotel-address'>北京市朝阳区三里屯北路1号</Text>
+                <View className='hotel-footer'>
+                  <View className='hotel-price'>
+                    <Text className='price-symbol'>¥</Text>
+                    <Text className='price-value'>1388</Text>
+                    <Text className='price-unit'>/晚</Text>
+                  </View>
+                  <View className='hotel-rating'>
+                    <Text className='rating-value'>4.7</Text>
+                    <Text className='rating-label'>分</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      ) : (
+        /* 首页搜索区域 */
+        <>
+          {/* 顶部Banner */}
+          <View className='banner' onClick={handleBannerClick}>
+            <Image 
+              src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount&image_size=landscape_16_9" 
+              className='banner-image'
+              mode="aspectFill"
+            />
+            <View className='banner-text'>春节特惠，低至 8 折</View>
+          </View>
+
+          {/* 核心查询区域 */}
+          <View className='search-container'>
+            {/* 当前地点 */}
+            <View className='location-bar' onClick={handleCityClick}>
+              <Text className='location-text'>{currentCity}</Text>
+              <Text className='location-icon'>▾</Text>
+            </View>
+
+            {/* 关键字搜索框 */}
+            <View className='search-input-container' style={{ position: 'relative', zIndex: 100 }}>
+              <Text className='search-icon'>🔍</Text>
+              <input 
+                className='search-input' 
+                placeholder="输入酒店名称 / 品牌 / 位置" 
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                onSubmit={handleSearch}
+                type="text"
+                autoComplete="off"
+                style={{ 
+                  flex: 1, 
+                  fontSize: '14px', 
+                  color: '#333', 
+                  background: 'transparent', 
+                  padding: '4px 0', 
+                  outline: 'none', 
+                  border: 'none', 
+                  minHeight: '20px'
+                }}
               />
             </View>
-            
-            {/* 城市列表 */}
-            <ScrollView 
-              className='city-list-container'
-              scrollY
-              style={{ flex: 1 }}
-            >
-              {citySearchKeyword ? (
-                /* 搜索结果 */
-                <View className='city-section'>
-                  <Text className='section-title'>搜索结果</Text>
-                  <View className='city-list'>
-                    {filteredCities.length > 0 ? (
-                      filteredCities.map(city => (
-                        <View 
-                          key={city.id} 
-                          className='city-item'
-                          onClick={() => handleCitySelect(city)}
-                        >
-                          <Text>{city.name}</Text>
-                        </View>
-                      ))
-                    ) : (
-                      <View className='no-result'>
-                        <Text>未找到匹配的城市</Text>
-                      </View>
-                    )}
+
+            {/* 日期选择框 */}
+            <View className='date-container' onClick={handleDateClick}>
+              <Text className='date-icon'>📅</Text>
+              <Text className='date-text'>
+                {checkInDate} - {checkOutDate} 共 {calculateNights(checkInDate, checkOutDate)} 晚
+              </Text>
+            </View>
+
+            {/* 筛选条件栏 */}
+            <View className='filter-bar'>
+              <View className='filter-item' onClick={() => handleFilterClick('star')}>
+                <Text>星级</Text>
+                <Text className='filter-arrow'>▾</Text>
+              </View>
+              <View className='filter-item' onClick={() => handleFilterClick('price')}>
+                <Text>价格</Text>
+                <Text className='filter-arrow'>▾</Text>
+              </View>
+              <View className='filter-item' onClick={() => handleFilterClick('facility')}>
+                <Text>设施</Text>
+                <Text className='filter-arrow'>▾</Text>
+              </View>
+            </View>
+
+            {/* 快捷标签区 */}
+            <ScrollView scrollX className='tags-container'>
+              <View className='tag' onClick={() => handleTagClick('亲子友好')}>亲子友好</View>
+              <View className='tag' onClick={() => handleTagClick('免费停车场')}>免费停车场</View>
+              <View className='tag' onClick={() => handleTagClick('含早餐')}>含早餐</View>
+              <View className='tag' onClick={() => handleTagClick('豪华型')}>豪华型</View>
+              <View className='tag' onClick={() => handleTagClick('商务出行')}>商务出行</View>
+              <View className='tag' onClick={() => handleTagClick('近地铁')}>近地铁</View>
+            </ScrollView>
+
+            {/* 查询按钮 */}
+              <Button className='search-button' onClick={handleSearch}>
+                查询
+              </Button>
+          </View>
+
+          {/* 日历组件 */}
+          {showCalendar && (
+            <View className='calendar-container'>
+              <View className='calendar-content'>
+                <View className='calendar-header'>
+                  <Text className='calendar-title'>选择日期</Text>
+                  <Text className='calendar-close' onClick={handleCalendarCancel}>✕</Text>
+                </View>
+                
+                {/* 快捷选择天数 */}
+                <View className='calendar-quick-select'>
+                  <Text className='quick-select-title'>快捷选择</Text>
+                  <View className='quick-select-buttons'>
+                    <Button className='quick-select-btn' onClick={() => handleQuickSelect(1)}>
+                      1天
+                    </Button>
+                    <Button className='quick-select-btn' onClick={() => handleQuickSelect(2)}>
+                      2天
+                    </Button>
+                    <Button className='quick-select-btn' onClick={() => handleQuickSelect(3)}>
+                      3天
+                    </Button>
+                    <Button className='quick-select-btn' onClick={() => handleQuickSelect(7)}>
+                      7天
+                    </Button>
                   </View>
                 </View>
-              ) : (
-                /* 热门城市和按字母排序的城市 */
-                <>
-                  {/* 热门城市 */}
-                  <View className='city-section'>
-                    <Text className='section-title'>热门城市</Text>
-                    <View className='hot-cities'>
-                      {citiesData.hot.map(city => (
-                        <View 
-                          key={city.id} 
-                          className='hot-city-item'
-                          onClick={() => handleCitySelect(city)}
-                        >
-                          <Text>{city.name}</Text>
-                        </View>
+                
+                <View className='calendar-range-info'>
+                  <Text className='range-info-item'>
+                    入住: <Text style={{ color: '#1890ff' }}>{checkInDate || '未选择'}</Text>
+                  </Text>
+                  <Text className='range-info-item'>
+                    离店: <Text style={{ color: '#1890ff' }}>{checkOutDate || '未选择'}</Text>
+                  </Text>
+                  <Text className='range-info-item'>
+                    晚数: <Text style={{ color: '#1890ff' }}>{calculateNights(checkInDate, checkOutDate)}晚</Text>
+                  </Text>
+                </View>
+                
+                <View className='calendar-body' style={{ height: '500px' }}>
+                  {/* 自定义完整日历组件 */}
+                  <View className='full-calendar'>
+                    {/* 日历头部 */}
+                    <View className='calendar-header-section'>
+                      <Button className='month-nav-btn' onClick={handlePrevMonth}>
+                        ◀
+                      </Button>
+                      <Text className='current-month'>
+                        {currentYear}年{currentMonth}月
+                      </Text>
+                      <Button className='month-nav-btn' onClick={handleNextMonth}>
+                        ▶
+                      </Button>
+                    </View>
+                    
+                    {/* 星期标题 */}
+                    <View className='week-header'>
+                      {['日', '一', '二', '三', '四', '五', '六'].map((day, index) => (
+                        <Text key={index} className='week-day'>
+                          {day}
+                        </Text>
                       ))}
                     </View>
-                  </View>
-                  
-                  {/* 按字母排序的城市 */}
-                  {letters.map(letter => (
-                    <View key={letter} className='city-section'>
-                      <Text className='section-title'>{letter}</Text>
-                      <View className='city-list'>
-                        {citiesData[letter].map(city => (
-                          <View 
-                            key={city.id} 
-                            className='city-item'
-                            onClick={() => handleCitySelect(city)}
+                    
+                    {/* 日期网格 */}
+                    <View className='date-grid'>
+                      {calendarDays.map((day, index) => {
+                        const isToday = day.date === formatDate(new Date())
+                        const isCheckIn = day.date === checkInDate
+                        const isCheckOut = day.date === checkOutDate
+                        const isInRange = checkInDate && checkOutDate && 
+                          day.date >= checkInDate && day.date <= checkOutDate
+                        const isDisabled = day.date < formatDate(new Date())
+                        const isOtherMonth = day.month !== currentMonth
+                        
+                        return (
+                          <View
+                            key={index}
+                            className={`date-cell ${isToday ? 'today' : ''} ${isCheckIn ? 'check-in' : ''} ${isCheckOut ? 'check-out' : ''} ${isInRange ? 'in-range' : ''} ${isDisabled ? 'disabled' : ''} ${isOtherMonth ? 'other-month' : ''}`}
+                            onClick={() => !isDisabled && !isOtherMonth && handleDateCellClick(day.date)}
                           >
-                            <Text>{city.name}</Text>
+                            <Text className={`date-text ${isDisabled ? 'disabled-text' : ''} ${isOtherMonth ? 'disabled-text' : ''}`}>
+                              {day.day}
+                            </Text>
                           </View>
-                        ))}
+                        )
+                      })}
+                    </View>
+                  </View>
+                </View>
+                
+                <View className='calendar-footer'>
+                  <Button className='calendar-cancel-btn' onClick={handleCalendarCancel}>
+                    取消
+                  </Button>
+                  <Button className='calendar-confirm-btn' onClick={handleCalendarConfirm}>
+                    确认
+                  </Button>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* 城市选择器组件 */}
+          {showCitySelector && (
+            <View className='city-selector-container'>
+              <View className='city-selector-content'>
+                <View className='city-selector-header'>
+                  <Text className='city-selector-title'>选择城市</Text>
+                  <Text className='city-selector-close' onClick={() => setShowCitySelector(false)}>✕</Text>
+                </View>
+                
+                {/* 城市搜索框 */}
+                <View className='city-search-box'>
+                  <Text className='city-search-icon'>🔍</Text>
+                  <Input 
+                    className='city-search-input'
+                    placeholder='输入城市名称搜索'
+                    value={citySearchKeyword}
+                    onChange={(e) => handleCitySearch(e.target.value)}
+                  />
+                </View>
+                
+                {/* 城市列表 */}
+                <ScrollView 
+                  className='city-list-container'
+                  scrollY
+                  style={{ flex: 1 }}
+                >
+                  {citySearchKeyword ? (
+                    /* 搜索结果 */
+                    <View className='city-section'>
+                      <Text className='section-title'>搜索结果</Text>
+                      <View className='city-list'>
+                        {filteredCities.length > 0 ? (
+                          filteredCities.map(city => (
+                            <View 
+                              key={city.id} 
+                              className='city-item'
+                              onClick={() => handleCitySelect(city)}
+                            >
+                              <Text>{city.name}</Text>
+                            </View>
+                          ))
+                        ) : (
+                          <View className='no-result'>
+                            <Text>未找到匹配的城市</Text>
+                          </View>
+                        )}
                       </View>
                     </View>
-                  ))}
-                </>
-              )}
-            </ScrollView>
-          </View>
-        </View>
+                  ) : (
+                    /* 热门城市和按字母排序的城市 */
+                    <>
+                      {/* 热门城市 */}
+                      <View className='city-section'>
+                        <Text className='section-title'>热门城市</Text>
+                        <View className='hot-cities'>
+                          {citiesData.hot.map(city => (
+                            <View 
+                              key={city.id} 
+                              className='hot-city-item'
+                              onClick={() => handleCitySelect(city)}
+                            >
+                              <Text>{city.name}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                      
+                      {/* 按字母排序的城市 */}
+                      {letters.map(letter => (
+                        <View key={letter} className='city-section'>
+                          <Text className='section-title'>{letter}</Text>
+                          <View className='city-list'>
+                            {citiesData[letter].map(city => (
+                              <View 
+                                key={city.id} 
+                                className='city-item'
+                                onClick={() => handleCitySelect(city)}
+                              >
+                                <Text>{city.name}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      ))}
+                    </>
+                  )}
+                </ScrollView>
+              </View>
+            </View>
+          )}
+        </>
       )}
     </View>
   )
