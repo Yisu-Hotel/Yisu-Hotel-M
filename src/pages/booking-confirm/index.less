@@ -1,0 +1,288 @@
+.booking-confirm-page {
+  background: #f5f5f5;
+  min-height: 100vh;
+  padding-bottom: 120rpx;
+
+  .header-info {
+    background: #fff;
+    padding: 20rpx;
+    margin-bottom: 20rpx;
+    .hotel-name {
+      font-size: 32rpx;
+      font-weight: bold;
+      color: #333;
+      display: block;
+      margin-bottom: 16rpx;
+    }
+    .date-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16rpx;
+      .date {
+        font-size: 28rpx;
+        color: #333;
+      }
+      .night {
+        font-size: 24rpx;
+        color: #666;
+        margin-left: 16rpx;
+      }
+      .room-detail-link {
+        margin-left: auto;
+        font-size: 24rpx;
+        color: #0088ff;
+      }
+    }
+    .room-info-row {
+      margin-bottom: 16rpx;
+      .room-name {
+        font-size: 28rpx;
+        color: #333;
+        display: block;
+      }
+      .room-bed, .room-breakfast {
+        font-size: 24rpx;
+        color: #666;
+        margin-right: 16rpx;
+      }
+    }
+    .cancel-confirm-row {
+      display: flex;
+      gap: 30rpx;
+      .cancel-item, .confirm-item {
+        display: flex;
+        align-items: center;
+        .check-icon {
+          color: #06d6a0;
+          margin-right: 8rpx;
+        }
+        .cancel-text, .confirm-text {
+          font-size: 22rpx;
+          color: #333;
+        }
+      }
+    }
+  }
+
+  .loading-bar {
+    background: #fff3e0;
+    padding: 12rpx 20rpx;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20rpx;
+    .loading-icon {
+      margin-right: 8rpx;
+    }
+    .loading-text {
+      font-size: 24rpx;
+      color: #f57c00;
+    }
+  }
+
+  .booking-info-section, .discount-section, .special-request-section, .invoice-section {
+    background: #fff;
+    padding: 20rpx;
+    margin-bottom: 20rpx;
+    .section-title {
+      font-size: 28rpx;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 20rpx;
+      display: block;
+    }
+  }
+
+  .booking-info-section {
+    .room-count-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20rpx;
+      .remaining {
+        font-size: 24rpx;
+        color: #f56c6c;
+        font-weight: bold;
+      }
+      .room-count-control {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 20rpx;
+        .control-btn {
+          width: 40rpx;
+          height: 40rpx;
+          border: 1rpx solid #ddd;
+          border-radius: 50%;
+          text-align: center;
+          line-height: 40rpx;
+          font-size: 28rpx;
+          color: #666;
+        }
+        .room-count {
+          font-size: 28rpx;
+          color: #333;
+        }
+      }
+    }
+    .guest-info-row {
+      margin-bottom: 20rpx;
+      .label {
+        font-size: 24rpx;
+        color: #333;
+        display: inline-block;
+        width: 140rpx;
+      }
+      .input {
+        border: 1rpx solid #eee;
+        border-radius: 8rpx;
+        padding: 12rpx;
+        font-size: 24rpx;
+        width: 400rpx;
+        display: inline-block;
+      }
+      .add-guest-icon {
+        margin-left: 16rpx;
+        font-size: 28rpx;
+        color: #0088ff;
+      }
+      .phone-input-wrap {
+        display: flex;
+        align-items: center;
+        border: 1rpx solid #eee;
+        border-radius: 8rpx;
+        padding: 12rpx;
+        width: 400rpx;
+        display: inline-block;
+        .country-code {
+          font-size: 24rpx;
+          color: #333;
+          margin-right: 16rpx;
+        }
+        .phone-input {
+          font-size: 24rpx;
+          border: none;
+          outline: none;
+          flex: 1;
+        }
+        .scan-icon {
+          margin-left: 16rpx;
+          font-size: 28rpx;
+          color: #0088ff;
+        }
+      }
+      .phone-tip {
+        font-size: 22rpx;
+        color: #999;
+        margin-top: 8rpx;
+        margin-left: 140rpx;
+      }
+    }
+  }
+
+  .discount-section {
+    .total-discount {
+      text-align: right;
+      font-size: 24rpx;
+      color: #f56c6c;
+      margin-bottom: 16rpx;
+    }
+    .discount-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16rpx;
+      .discount-name {
+        font-size: 24rpx;
+        color: #333;
+      }
+      .discount-value {
+        font-size: 24rpx;
+        color: #666;
+      }
+    }
+  }
+
+  .special-request-section {
+    .request-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16rpx;
+      .tag {
+        background: #f0f2f5;
+        color: #666;
+        padding: 8rpx 16rpx;
+        border-radius: 20rpx;
+        font-size: 22rpx;
+      }
+      .more-request {
+        color: #0088ff;
+        font-size: 22rpx;
+      }
+    }
+  }
+
+  .invoice-section {
+    display: flex;
+    align-items: center;
+    .invoice-info {
+      font-size: 24rpx;
+      color: #333;
+    }
+    .invoice-help {
+      margin-left: 8rpx;
+      width: 32rpx;
+      height: 32rpx;
+      border: 1rpx solid #999;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 32rpx;
+      font-size: 20rpx;
+      color: #999;
+    }
+  }
+
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    padding: 20rpx;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.05);
+    .price-info {
+      flex: 1;
+      .pay-type {
+        font-size: 22rpx;
+        color: #666;
+        display: block;
+      }
+      .price {
+        font-size: 32rpx;
+        font-weight: bold;
+        color: #f56c6c;
+        margin-top: 4rpx;
+      }
+      .detail-link {
+        font-size: 20rpx;
+        color: #0088ff;
+        margin-left: 8rpx;
+      }
+      .new-user-tag {
+        background: #ff6b6b;
+        color: #fff;
+        padding: 2rpx 8rpx;
+        border-radius: 4rpx;
+        font-size: 20rpx;
+        margin-left: 8rpx;
+      }
+    }
+    .pay-btn {
+      background: #0088ff;
+      color: #fff;
+      border: none;
+      border-radius: 8rpx;
+      padding: 16rpx 32rpx;
+      font-size: 28rpx;
+    }
+  }
+}

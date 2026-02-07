@@ -1,16 +1,19 @@
-export default defineAppConfig({
-  pages: [
-
-  'pages/hotel-detail/index',// 酒店详情页（注意路径和你的详情页一致）
-  'pages/index/index'        // 首页（可选）
-     // 酒店列表页
-      
-],
-
+// src/app.config.js
+export default {
+  pages: ["pages/hotel-detail/index",  // 房型详情页
+    "pages/booking-confirm/index" ,// 预订确认页
+    "pages/index/index"         // 团队首页（保留）
+    
+    
+  ],
   window: {
-    backgroundTextStyle: 'light',
-    navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: '酒店查询',
-    navigationBarTextStyle: 'black'
+    backgroundTextStyle: "light",
+    navigationBarBackgroundColor: "#fff",
+    navigationBarTitleText: "酒店预订",
+    navigationBarTextStyle: "black"
+  },
+  // 路由模式（团队项目建议用 hash，兼容性更好）
+  router: {
+    mode: "hash"
   }
-})
+};
