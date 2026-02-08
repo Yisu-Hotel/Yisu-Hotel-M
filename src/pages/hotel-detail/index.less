@@ -3,6 +3,38 @@
   min-height: 100vh;
   padding-bottom: 20rpx;
 
+  /* 返回按钮样式（新增：放在最顶部，保证层级正确） */
+  .back-btn {
+    padding: 16rpx 20rpx;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-bottom: 1rpx solid #f5f5f5;
+    position: relative;
+    z-index: 10;
+  }
+  .back-icon {
+    font-size: 32rpx;
+    color: #333;
+    margin-right: 8rpx;
+  }
+  .back-text {
+    font-size: 28rpx;
+    color: #333;
+  }
+
+  /* 加载中样式（新增：全局兜底样式） */
+  .loading-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .loading-text {
+    font-size: 32rpx;
+    color: #666;
+  }
+
   /* 顶部轮播图 */
   .banner-swiper {
     width: 100%;
