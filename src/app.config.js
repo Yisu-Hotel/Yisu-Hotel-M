@@ -8,7 +8,8 @@ export default defineAppConfig({
     'pages/city-select/city-select',
     'pages/test-page/test-page',
     'pages/hotel-detail/index', // 酒店详情页
-    'pages/booking-confirm/index' // 酒店预订确认页
+    'pages/booking-confirm/index', // 酒店预订确认页
+    'pages/payment/index' // 支付页
     
   ],
 
