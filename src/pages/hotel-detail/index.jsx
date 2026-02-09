@@ -74,6 +74,8 @@ export default function HotelDetail() {
   // 修复：使用 React 原生 useState
   const [hotelData, setHotelData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedFilters, setSelectedFilters] = useState([]);
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   useEffect(() => {
     // 强制从URL解析id（兼容H5端）
@@ -89,6 +91,22 @@ export default function HotelDetail() {
       setLoading(false);
     }, 300);
   }, []);
+
+  // 处理筛选标签点击
+  const handleFilterTagClick = (tag) => {
+    setSelectedFilters(prev => {
+      if (prev.includes(tag)) {
+        return prev.filter(item => item !== tag);
+      } else {
+        return [...prev, tag];
+      }
+    });
+  };
+
+  // 处理筛选按钮点击
+  const handleFilterClick = () => {
+    setShowFilterModal(true);
+  };
 
   // 加载中状态
   if (loading) {
@@ -186,12 +204,39 @@ export default function HotelDetail() {
 
       {/* 房型筛选栏 */}
       <View className="room-filter-row">
-        <Text className="filter-tag">双床房</Text>
-        <Text className="filter-tag">家庭房</Text>
-        <Text className="filter-tag">大床房</Text>
-        <Text className="filter-tag">免费取消</Text>
-        <Text className="filter-tag">≥35㎡</Text>
-        <View className="filter-more">筛选 ▾</View>
+        <Text 
+          className={`filter-tag ${selectedFilters.includes('双床房') ? 'selected' : ''}`} 
+          onClick={() => handleFilterTagClick('双床房')}
+        >
+          双床房
+        </Text>
+        <Text 
+          className={`filter-tag ${selectedFilters.includes('家庭房') ? 'selected' : ''}`} 
+          onClick={() => handleFilterTagClick('家庭房')}
+        >
+          家庭房
+        </Text>
+        <Text 
+          className={`filter-tag ${selectedFilters.includes('大床房') ? 'selected' : ''}`} 
+          onClick={() => handleFilterTagClick('大床房')}
+        >
+          大床房
+        </Text>
+        <Text 
+          className={`filter-tag ${selectedFilters.includes('免费取消') ? 'selected' : ''}`} 
+          onClick={() => handleFilterTagClick('免费取消')}
+        >
+          免费取消
+        </Text>
+        <Text 
+          className={`filter-tag ${selectedFilters.includes('≥35㎡') ? 'selected' : ''}`} 
+          onClick={() => handleFilterTagClick('≥35㎡')}
+        >
+          ≥35㎡
+        </Text>
+        <View className="filter-more" onClick={handleFilterClick}>
+          筛选 ▾
+        </View>
       </View>
 
       {/* 房型列表（核心修改：预订按钮跳转路径） */}
