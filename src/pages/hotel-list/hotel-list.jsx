@@ -1,4 +1,4 @@
-import { View, Text, Image, ScrollView, Button, Swiper, Switch } from '@tarojs/components'
+import { View, Text, Image, ScrollView, Button, Switch } from '@tarojs/components'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, showToast, navigateTo, showModal, startPullDownRefresh, stopPullDownRefresh } from '@tarojs/taro'
 import { hotelApi } from '../../services/api'
@@ -30,7 +30,6 @@ export default function HotelList () {
     minRating: 0
   })
   const [collectedHotels, setCollectedHotels] = useState(new Set())
-  const [isLoading, setIsLoading] = useState(false)
   const scrollViewRef = useRef(null)
 
   // 初始化页面
@@ -41,7 +40,7 @@ export default function HotelList () {
   // 当showFilter为true时，同步tempFilters为当前filters的值
   useEffect(() => {
     if (showFilter) {
-      setTempFilters(filters)
+      setTempFilters({ ...filters })
     }
   }, [showFilter, filters])
 
@@ -67,7 +66,8 @@ export default function HotelList () {
         }
         
         setTotalCount(searchResult.data.total || 0)
-        setHasMore(newHotels.length >= (params.pageSize || 10))
+        // 修正hasMore判断逻辑：是否还有更多数据 = 当前加载的数量 < 总数量
+        setHasMore((params.page * (params.pageSize || 10)) < searchResult.data.total)
         setPage(params.page)
       } else {
         showToast({
@@ -76,7 +76,7 @@ export default function HotelList () {
         })
       }
     } catch (error) {
-      console.log('搜索酒店失败', error)
+      console.error('搜索酒店失败', error)
       showToast({
         title: '搜索失败，请稍后重试',
         icon: 'none'
@@ -100,7 +100,8 @@ export default function HotelList () {
         keyword: '',
         checkInDate: new Date().toISOString().split('T')[0],
         checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        nights: 1
+        nights: 1,
+        pageSize: 10
       }
       
       console.log('使用默认参数初始化:', defaultParams)
@@ -117,7 +118,7 @@ export default function HotelList () {
       await searchHotels({ ...defaultParams, page: 1 })
       
     } catch (error) {
-      console.log('初始化页面失败', error)
+      console.error('初始化页面失败', error)
       showToast({
         title: '加载失败，请稍后重试',
         icon: 'none'
@@ -128,6 +129,8 @@ export default function HotelList () {
   // 下拉刷新
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
+    // 手动触发下拉刷新动画（兼容部分端）
+    startPullDownRefresh()
     setPage(1)
     setHotels([])
     setHasMore(true)
@@ -136,16 +139,16 @@ export default function HotelList () {
 
   // 加载更多
   const handleLoadMore = useCallback(async () => {
-    if (!hasMore || loadingMore) return
+    if (!hasMore || loadingMore || loading) return
     
     setLoadingMore(true)
     await searchHotels({ ...searchParams, page: page + 1 })
-  }, [hasMore, loadingMore, page, searchParams, searchHotels])
+  }, [hasMore, loadingMore, loading, page, searchParams, searchHotels])
 
-  // 查看酒店详情
+  // 查看酒店详情 - 修复：修改跳转路径为正确的详情页路径
   const handleHotelClick = useCallback((hotelId) => {
     navigateTo({
-      url: `/pages/hotel-detail/hotel-detail?id=${hotelId}&returnUrl=/pages/hotel-list/hotel-list`
+      url: `/pages/hotel-detail/index?id=${hotelId}&returnUrl=/pages/hotel-list/hotel-list`
     })
   }, [])
 
@@ -194,12 +197,14 @@ export default function HotelList () {
 
   // 重置筛选
   const handleResetFilter = useCallback(() => {
-    setFilters({
+    const resetFilters = {
       priceRange: [0, 5000],
       starLevels: [],
       amenities: [],
       minRating: 0
-    })
+    }
+    setFilters(resetFilters)
+    setTempFilters(resetFilters)
     setPage(1)
     setHotels([])
     setHasMore(true)
@@ -336,7 +341,7 @@ export default function HotelList () {
 
   // 处理筛选确认
   const handleFilterConfirm = useCallback(() => {
-    setFilters(tempFilters)
+    setFilters({ ...tempFilters })
     setShowFilter(false)
     setPage(1)
     setHotels([])
@@ -355,7 +360,12 @@ export default function HotelList () {
       <View className='filter-section'>
         <View className='filter-header'>
           <Text className='filter-title'>筛选条件</Text>
-          <Text className='filter-reset' onClick={() => setTempFilters({ priceRange: [0, 5000], starLevels: [], amenities: [], minRating: 0 })}>重置</Text>
+          <Text className='filter-reset' onClick={() => setTempFilters({ 
+            priceRange: [0, 5000], 
+            starLevels: [], 
+            amenities: [], 
+            minRating: 0 
+          })}>重置</Text>
         </View>
         
         {/* 价格区间 */}
@@ -382,10 +392,11 @@ export default function HotelList () {
                 className={`star-option ${tempFilters.starLevels.includes(index + 2) ? 'selected' : ''}`}
                 onClick={() => {
                   const newStarLevels = [...tempFilters.starLevels]
-                  if (newStarLevels.includes(index + 2)) {
-                    newStarLevels.splice(newStarLevels.indexOf(index + 2), 1)
+                  const targetLevel = index + 2
+                  if (newStarLevels.includes(targetLevel)) {
+                    newStarLevels.splice(newStarLevels.indexOf(targetLevel), 1)
                   } else {
-                    newStarLevels.push(index + 2)
+                    newStarLevels.push(targetLevel)
                   }
                   setTempFilters({ ...tempFilters, starLevels: newStarLevels })
                 }}
@@ -524,6 +535,7 @@ export default function HotelList () {
         enablePullDownRefresh={true}
         onPullDownRefresh={handleRefresh}
         onReachBottom={handleLoadMore}
+        onReachBottomDistance={50}
         refreshing={refreshing}
       >
         {loading && page === 1 ? (
@@ -559,4 +571,3 @@ export default function HotelList () {
     </View>
   )
 }
-

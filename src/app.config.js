@@ -1,3 +1,4 @@
+// src/app.config.js
 export default defineAppConfig({
   pages: [
     'pages/index/index',
@@ -5,14 +6,11 @@ export default defineAppConfig({
     'pages/my/my',
     'pages/hotel-list/hotel-list',
     'pages/city-select/city-select',
-    'pages/test-page/test-page'
+    'pages/test-page/test-page',
+    'pages/hotel-detail/index', // 酒店详情页
+    'pages/booking-confirm/index', // 酒店预订确认页
+    'pages/payment/index' // 支付页
   ],
-
-  'pages/hotel-detail/index',// 酒店详情页（注意路径和你的详情页一致）
-  'pages/index/index'        // 首页（可选）
-     // 酒店列表页
-      
-],
 
   window: {
     backgroundTextStyle: 'light',
@@ -20,6 +18,7 @@ export default defineAppConfig({
     navigationBarTitleText: '酒店查询',
     navigationBarTextStyle: 'black'
   },
+
   tabBar: {
     color: '#999',
     selectedColor: '#1890ff',
@@ -40,4 +39,4 @@ export default defineAppConfig({
       }
     ]
   }
-})
+});

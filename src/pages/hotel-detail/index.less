@@ -1,473 +1,330 @@
-
-// src/pages/hotel-detail/index.less
-/*.hotel-detail-page {
-  background: #f7f8fa;
-  min-height: 100vh;
-  padding-bottom: 80px;
-
-  .loading-wrapper, .error-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 60vh;
-    color: #666;
-  }
-
-  .error-text {
-    color: #f56c6c;
-  }
-
-  .date-bar {
-    background: #fff;
-    padding: 12px 16px;
-    text-align: center;
-    font-size: 14px;
-    color: #333;
-    border-bottom: 1px solid #eee;
-  }
-
-  .hotel-cover {
-    width: 100%;
-    height: 220px;
-  }
-
-  .hotel-info-card {
-    background: #fff;
-    margin: 12px 0;
-    padding: 16px;
-
-    .hotel-name {
-      font-size: 20px;
-      font-weight: bold;
-      color: #333;
-      display: block;
-      margin-bottom: 12px;
-    }
-
-    .hotel-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-
-      .hotel-score {
-        background: #0088ff;
-        color: #fff;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 12px;
-      }
-
-      .hotel-price {
-        font-size: 18px;
-        color: #f56c6c;
-        font-weight: bold;
-      }
-    }
-
-    .hotel-address {
-      font-size: 14px;
-      color: #666;
-    }
-  }
-
-  .facilities-section, .desc-section {
-    background: #fff;
-    margin-bottom: 12px;
-    padding: 16px;
-
-    .section-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #333;
-      display: block;
-      margin-bottom: 12px;
-    }
-
-    .facilities-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-
-      .facility-tag {
-        background: #f0f2f5;
-        color: #666;
-        padding: 4px 10px;
-        border-radius: 16px;
-        font-size: 12px;
-      }
-    }
-
-    .desc-content {
-      font-size: 14px;
-      color: #666;
-      line-height: 1.6;
-    }
-  }
-
-  .book-section {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #fff;
-    padding: 12px 16px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-
-    .book-btn {
-      background: #0088ff;
-      color: #fff;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-    }
-  }
-}*/
-// src/pages/hotel-detail/index.less
 .hotel-detail-page {
-  background: #f7f8fa;
+  background: #fff;
   min-height: 100vh;
-  padding-bottom: 80px;
+  padding-bottom: 20rpx;
 
-  .loading-wrapper, .error-wrapper {
+  /* 返回按钮样式（新增：放在最顶部，保证层级正确） */
+  .back-btn {
+    padding: 16rpx 20rpx;
     display: flex;
-    flex-direction: column;
     align-items: center;
+    background: #fff;
+    border-bottom: 1rpx solid #f5f5f5;
+    position: relative;
+    z-index: 10;
+  }
+  .back-icon {
+    font-size: 32rpx;
+    color: #333;
+    margin-right: 8rpx;
+  }
+  .back-text {
+    font-size: 28rpx;
+    color: #333;
+  }
+
+  /* 加载中样式（新增：全局兜底样式） */
+  .loading-container {
+    min-height: 100vh;
+    display: flex;
     justify-content: center;
-    height: 60vh;
+    align-items: center;
+  }
+  .loading-text {
+    font-size: 32rpx;
     color: #666;
   }
 
-  .error-text {
-    color: #f56c6c;
-  }
-
-  /* 顶部大图 + 房型信息 */
-  .top-banner {
-    position: relative;
+  /* 顶部轮播图 */
+  .banner-swiper {
     width: 100%;
-    height: 300px;
-    .banner-image {
+    height: 300rpx;
+    .banner-img {
       width: 100%;
       height: 100%;
     }
-    .banner-overlay {
+    .banner-room-tag {
       position: absolute;
-      bottom: 60px;
-      left: 16px;
-      color: #fff;
-      .room-type-name {
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 8px;
-      }
-      .room-type-desc {
-        font-size: 16px;
-      }
+      top: 20rpx;
+      left: 20rpx;
+      background: #fff;
+      color: #333;
+      padding: 8rpx 16rpx;
+      border-radius: 20rpx;
+      font-size: 28rpx;
+      font-weight: bold;
     }
-    .banner-tabs {
+    .banner-room-desc {
       position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      top: 60rpx;
+      left: 20rpx;
       background: rgba(0,0,0,0.3);
-      display: flex;
-      align-items: center;
-      padding: 8px 16px;
-      .tab {
-        color: #fff;
-        font-size: 14px;
-        margin-right: 16px;
-        &.active {
-          font-weight: bold;
-          border-bottom: 2px solid #fff;
-          padding-bottom: 4px;
-        }
-      }
-      .tab-icon {
-        margin-left: auto;
-      }
+      color: #fff;
+      padding: 4rpx 12rpx;
+      border-radius: 16rpx;
+      font-size: 22rpx;
     }
   }
 
-  /* 酒店名称 + 标签 */
+  /* 酒店名称+标签 */
   .hotel-header {
-    background: #fff;
-    padding: 16px;
-    margin-top: 12px;
+    padding: 20rpx 20rpx 10rpx;
     .hotel-name {
-      font-size: 20px;
+      font-size: 32rpx;
       font-weight: bold;
       color: #333;
       display: block;
-      margin-bottom: 8px;
     }
     .hotel-tag {
       background: #ffd166;
       color: #333;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      margin-right: 8px;
+      padding: 4rpx 12rpx;
+      border-radius: 8rpx;
+      font-size: 22rpx;
+      margin-top: 8rpx;
+      display: inline-block;
     }
   }
 
-  /* 设施图标行 */
+  /* 设施图标栏 */
   .facilities-row {
-    background: #fff;
-    padding: 16px;
-    margin-top: 12px;
+    padding: 16rpx 20rpx;
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
+    align-items: center;
+    gap: 30rpx;
+    border-bottom: 1rpx solid #f5f5f5;
     .facility-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 60px;
       .facility-icon {
-        font-size: 20px;
-        margin-bottom: 4px;
+        font-size: 32rpx;
+        margin-bottom: 4rpx;
       }
       .facility-text {
-        font-size: 12px;
+        font-size: 22rpx;
         color: #666;
-        text-align: center;
       }
+    }
+    .facility-more {
+      margin-left: auto;
+      font-size: 24rpx;
+      color: #0088ff;
     }
   }
 
-  /* 评分 + 地址信息 */
+  /* 评分+位置栏 */
   .score-address-row {
-    background: #fff;
-    padding: 16px;
-    margin-top: 12px;
+    padding: 20rpx;
     display: flex;
     justify-content: space-between;
+    border-bottom: 1rpx solid #f5f5f5;
     .score-block {
-      flex: 1;
       .score {
-        font-size: 24px;
+        font-size: 36rpx;
         font-weight: bold;
         color: #06d6a0;
-        margin-right: 8px;
       }
-      .score-label {
-        font-size: 14px;
+      .score-level {
+        font-size: 24rpx;
         color: #666;
+        margin-left: 8rpx;
       }
-      .review-text {
-        font-size: 14px;
+      .comment-count {
+        font-size: 22rpx;
+        color: #0088ff;
+        display: block;
+        margin-top: 4rpx;
+      }
+      .score-desc {
+        font-size: 24rpx;
         color: #666;
-        margin-top: 8px;
+        margin-top: 8rpx;
       }
     }
     .address-block {
-      flex: 1;
+      text-align: right;
       .distance {
-        font-size: 14px;
+        font-size: 24rpx;
         color: #666;
-        margin-bottom: 4px;
       }
       .address {
-        font-size: 14px;
+        font-size: 24rpx;
         color: #333;
-        margin-bottom: 8px;
+        margin-top: 4rpx;
+        display: block;
       }
       .map-btn {
         background: #f0f2f5;
         color: #333;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
+        padding: 6rpx 16rpx;
+        border-radius: 8rpx;
+        font-size: 22rpx;
         display: inline-block;
+        margin-top: 8rpx;
       }
     }
   }
 
-  /* 订房优惠栏 */
-  .promotions-row {
-    background: #fff;
-    padding: 16px;
-    margin-top: 12px;
+  /* 优惠标签栏 */
+  .discount-row {
+    padding: 16rpx 20rpx;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    .promo-title {
-      font-size: 14px;
-      color: #333;
-      margin-right: 12px;
+    gap: 12rpx;
+    border-bottom: 1rpx solid #f5f5f5;
+    .discount-tag {
+      background: #f0f2f5;
+      color: #666;
+      padding: 6rpx 16rpx;
+      border-radius: 20rpx;
+      font-size: 22rpx;
     }
-    .promo-tag {
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      margin-right: 8px;
-      margin-bottom: 8px;
-      &.primary {
-        background: #ff6b6b;
-        color: #fff;
-      }
-      &.default {
-        background: #f0f2f5;
-        color: #666;
-      }
-    }
-    .get-coupon-btn {
+    .coupon-btn {
+      margin-left: auto;
       background: #ff6b6b;
       color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-size: 12px;
-      padding: 4px 12px;
-      margin-left: auto;
+      padding: 6rpx 20rpx;
+      border-radius: 20rpx;
+      font-size: 22rpx;
     }
   }
 
-  /* 日期选择栏 */
-  .date-select-row {
-    background: #fff;
-    padding: 16px;
-    margin-top: 12px;
-    .date-tabs {
-      display: flex;
-      margin-bottom: 12px;
-      .date-tab {
-        font-size: 14px;
-        color: #666;
-        margin-right: 16px;
-        &.active {
-          color: #ff6b6b;
-          font-weight: bold;
-          border-bottom: 2px solid #ff6b6b;
-          padding-bottom: 4px;
-        }
-      }
-    }
-    .date-info {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      .date-range {
-        font-size: 18px;
+  /* 日期+房间人数栏 */
+  .date-guest-row {
+    padding: 20rpx;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1rpx solid #f5f5f5;
+    .date-part {
+      .date {
+        font-size: 28rpx;
         font-weight: bold;
         color: #333;
       }
-      .nights {
-        font-size: 14px;
+      .night {
+        font-size: 22rpx;
         color: #666;
+        margin-top: 4rpx;
       }
     }
-    .guest-count {
-      font-size: 14px;
-      color: #333;
+    .guest-part {
+      .guest {
+        font-size: 24rpx;
+        color: #333;
+      }
     }
   }
 
-  /* 房型筛选标签 */
-  .room-filters {
-    background: #fff;
-    padding: 12px 16px;
-    margin-top: 12px;
+  /* 房型筛选栏 */
+  .room-filter-row {
+    padding: 16rpx 20rpx;
     display: flex;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 16rpx;
+    border-bottom: 1rpx solid #f5f5f5;
     .filter-tag {
       background: #f0f2f5;
       color: #666;
-      padding: 4px 10px;
-      border-radius: 16px;
-      font-size: 12px;
+      padding: 8rpx 20rpx;
+      border-radius: 20rpx;
+      font-size: 24rpx;
     }
-    .filter-btn {
-      background: #f0f2f5;
-      color: #666;
-      padding: 4px 10px;
-      border-radius: 16px;
-      font-size: 12px;
+    .filter-more {
       margin-left: auto;
+      font-size: 24rpx;
+      color: #666;
     }
   }
 
-  /* 推荐房型卡片 */
-  .recommended-section {
-    margin-top: 12px;
-    .recommended-title {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 8px;
-      padding: 0 16px;
+  /* 房型列表 */
+  .room-list {
+    padding: 20rpx;
+    .recommend-tag {
+      font-size: 22rpx;
+      color: #ff6b6b;
+      margin-bottom: 16rpx;
+      .tag-icon {
+        margin-right: 4rpx;
+      }
     }
-    .room-card {
-      background: #fff;
-      padding: 12px;
+    .room-item {
       display: flex;
-      margin-bottom: 12px;
-      .room-image {
-        width: 100px;
-        height: 100px;
-        border-radius: 8px;
-        margin-right: 12px;
+      background: #fff;
+      border-radius: 12rpx;
+      box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+      overflow: hidden;
+      margin-bottom: 20rpx;
+      .room-img {
+        width: 200rpx;
+        height: 160rpx;
       }
       .room-info {
         flex: 1;
+        padding: 16rpx;
         .room-header {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 8px;
           .room-name {
-            font-size: 16px;
+            font-size: 28rpx;
             font-weight: bold;
             color: #333;
           }
           .room-code {
-            font-size: 12px;
+            font-size: 22rpx;
             color: #999;
           }
         }
-        .room-desc, .room-window, .room-breakfast, .room-cancel {
-          font-size: 12px;
+        .room-desc, .room-note, .room-service {
+          font-size: 22rpx;
           color: #666;
-          margin-bottom: 4px;
+          margin-top: 8rpx;
         }
         .room-tags {
           display: flex;
-          flex-wrap: wrap;
-          gap: 4px;
-          margin-bottom: 8px;
-          .room-tag {
+          gap: 8rpx;
+          margin-top: 12rpx;
+          .tag {
             background: #e3f2fd;
             color: #0288d1;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
+            padding: 4rpx 12rpx;
+            border-radius: 8rpx;
+            font-size: 20rpx;
           }
         }
-        .room-price-row {
+        .price-book-row {
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          .price-block {
+          align-items: flex-end;
+          margin-top: 16rpx;
+          .price-part {
             .original-price {
-              font-size: 12px;
+              font-size: 22rpx;
               color: #999;
               text-decoration: line-through;
-              margin-right: 8px;
             }
-            .discount-price {
-              font-size: 18px;
+            .current-price {
+              font-size: 32rpx;
               font-weight: bold;
               color: #f56c6c;
+              margin-left: 8rpx;
+            }
+            .discount-info {
+              font-size: 20rpx;
+              color: #666;
+              display: block;
+              margin-top: 4rpx;
             }
           }
-          .book-now-btn {
+          .book-btn {
             background: #0088ff;
             color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            padding: 6px 12px;
+            padding: 10rpx 24rpx;
+            border-radius: 8rpx;
+            font-size: 24rpx;
+            cursor: pointer;
           }
         }
       }

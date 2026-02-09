@@ -50,10 +50,10 @@
     "@tarojs/plugin-platform-swan": "4.1.11",
     "@tarojs/plugin-platform-tt": "4.1.11",
     "@tarojs/plugin-platform-weapp": "4.1.11",
-    "@tarojs/react": "4.1.11",
+    "@tarojs/react": "^4.1.11",
     "@tarojs/runtime": "4.1.11",
     "@tarojs/shared": "4.1.11",
-    "@tarojs/taro": "4.1.11",
+    "@tarojs/taro": "^4.1.11",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "taro-ui": "^3.3.0"
@@ -70,14 +70,12 @@
     "@types/minimatch": "^5",
     "@types/react": "^18.0.0",
     "@vitejs/plugin-react": "^4.3.0",
-
     "babel-preset-taro": "4.1.11",
     "eslint": "^8.57.0",
     "eslint-config-taro": "4.1.11",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.4.0",
     "husky": "^9.1.7",
-
     "less": "^4.5.1",
     "less-loader": "^12.3.1",
     "lint-staged": "^16.1.2",
@@ -88,6 +86,5 @@
     "stylelint-config-standard": "^38.0.0",
     "terser": "^5.30.4",
     "vite": "^4.2.0"
-
   }
 }
