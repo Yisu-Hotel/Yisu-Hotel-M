@@ -105,7 +105,13 @@ export default function HotelDetail() {
 
   // 处理筛选按钮点击
   const handleFilterClick = () => {
-    setShowFilterModal(true);
+    // 这里可以实现筛选模态框的显示逻辑
+    console.log('筛选按钮点击');
+    // 由于没有实现筛选模态框的 UI，使用 Taro 的 showToast 来提示
+    Taro.showToast({
+      title: '筛选功能正在开发中',
+      icon: 'none'
+    });
   };
 
   // 加载中状态
