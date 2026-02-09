@@ -28,41 +28,10 @@ const mockHotelData = {
         id: 'room1',
         name: '舒适大床房',
         desc: '1张1.8米床',
-        note: '朝南采光好',
-        service: '无早餐',
-        tags: ['在线付'],
-        originalPrice: 1280,
-        currentPrice: 1080,
-        img: 'https://img95.699pic.com/photo/50120/2225.jpg_wh300.jpg'
-      }
-    ]
-  },
-  "18": {
-    bannerList: ['https://img95.699pic.com/photo/50120/2224.jpg_wh860.jpg'],
-    hotelInfo: {
-      name: '测试酒店18',
-      tag: '特惠优选',
-      openYear: '2020年开业',
-      features: ['免费WiFi', '停车场'],
-      score: 4.5,
-      commentCount: 800,
-      scoreDesc: '性价比超高',
-      distance: '距地铁站500米',
-      address: '测试区测试路18号'
-    },
-    discountTags: ['订房优惠', '首住特惠'],
-    dateRange: '2月7日 - 2月8日',
-    stayNight: '1晚',
-    roomGuest: '1间 1人',
-    roomList: [
-      {
-        id: 'room18',
-        name: '舒适大床房',
-        desc: '1张1.8米床',
-        note: '朝南采光好',
-        service: '无早餐',
-        tags: ['在线付'],
-        originalPrice: 299,
+        note: '入住时间14:00后 | 退房时间12:00前',
+        service: '免费WiFi | 免费停车 | 空调 | 电视',
+        tags: ['免费取消', '含早餐'],
+        originalPrice: 289,
         currentPrice: 189,
         img: 'https://img95.699pic.com/photo/50120/2225.jpg_wh300.jpg'
       }
@@ -75,7 +44,12 @@ export default function HotelDetail() {
   const [hotelData, setHotelData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedFilters, setSelectedFilters] = useState([]);
-  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [filterOptions, setFilterOptions] = useState({
+    roomTypes: [],
+    facilities: [],
+    services: []
+  });
 
   useEffect(() => {
     // 强制从URL解析id（兼容H5端）
@@ -105,7 +79,51 @@ export default function HotelDetail() {
 
   // 处理筛选按钮点击
   const handleFilterClick = () => {
-    setShowFilterModal(true);
+    console.log('筛选按钮点击');
+    // 切换筛选面板的显示状态
+    setShowFilterPanel(!showFilterPanel);
+  };
+
+  // 处理筛选选项点击
+  const handleFilterOptionClick = (category, option) => {
+    setFilterOptions(prev => {
+      const currentOptions = prev[category];
+      if (currentOptions.includes(option)) {
+        // 取消选择
+        return {
+          ...prev,
+          [category]: currentOptions.filter(item => item !== option)
+        };
+      } else {
+        // 选择
+        return {
+          ...prev,
+          [category]: [...currentOptions, option]
+        };
+      }
+    });
+  };
+
+  // 处理重置筛选
+  const handleResetFilter = () => {
+    setFilterOptions({
+      roomTypes: [],
+      facilities: [],
+      services: []
+    });
+  };
+
+  // 处理确定筛选
+  const handleConfirmFilter = () => {
+    console.log('确定筛选', filterOptions);
+    // 这里可以根据筛选选项过滤房间列表
+    // 暂时只关闭筛选面板
+    setShowFilterPanel(false);
+    // 显示筛选成功提示
+    Taro.showToast({
+      title: '筛选已应用',
+      icon: 'none'
+    });
   };
 
   // 加载中状态
@@ -120,26 +138,26 @@ export default function HotelDetail() {
   // 无数据兜底
   if (!hotelData) {
     return (
-      <View className="empty-container">
-        <Text>未找到酒店数据</Text>
+      <View className="loading-container">
+        <Text className="loading-text">暂无酒店信息</Text>
       </View>
     );
   }
 
+  // 主渲染
   return (
-    <ScrollView className="hotel-detail-page" scrollY>
+    <ScrollView className="hotel-detail-page">
       {/* 返回按钮 */}
       <View className="back-btn" onClick={() => Taro.navigateBack()}>
         <Text className="back-icon">←</Text>
-        <Text className="back-text">返回酒店列表</Text>
+        <Text className="back-text">返回</Text>
       </View>
 
-      {/* 轮播图 */}
-      <Swiper className="banner-swiper" indicatorDots circular autoplay>
+      {/* 顶部轮播图 */}
+      <Swiper className="banner-swiper">
         {hotelData.bannerList.map((img, idx) => (
           <SwiperItem key={idx}>
             <Image className="banner-img" src={img} mode="widthFix" />
-            <View className="banner-room-tag">轻奢大床房</View>
           </SwiperItem>
         ))}
       </Swiper>
@@ -152,20 +170,23 @@ export default function HotelDetail() {
 
       {/* 设施图标栏 */}
       <View className="facilities-row">
-        <View className="facility-item">
-          <Text className="facility-icon">🏢</Text>
-          <Text className="facility-text">{hotelData.hotelInfo.openYear}</Text>
-        </View>
-        {hotelData.hotelInfo.features.slice(0, 4).map((feature, idx) => (
-          <View key={idx} className="facility-item">
-            <Text className="facility-icon">
-              {feature === '免费WiFi' ? '📶' : 
-               feature === '停车场' ? '🅿️' : '🚪'}
-            </Text>
-            <Text className="facility-text">{feature}</Text>
-          </View>
-        ))}
-        <View className="facility-more">设施政策 &gt;</View>
+        <Text className="facility-item">
+          <Text className="facility-icon">📶</Text>
+          <Text className="facility-text">WiFi</Text>
+        </Text>
+        <Text className="facility-item">
+          <Text className="facility-icon">🚗</Text>
+          <Text className="facility-text">停车场</Text>
+        </Text>
+        <Text className="facility-item">
+          <Text className="facility-icon">🧹</Text>
+          <Text className="facility-text">清洁</Text>
+        </Text>
+        <Text className="facility-item">
+          <Text className="facility-icon">👨‍💼</Text>
+          <Text className="facility-text">服务</Text>
+        </Text>
+        <Text className="facility-more">更多 ▾</Text>
       </View>
 
       {/* 评分+位置栏 */}
@@ -174,12 +195,12 @@ export default function HotelDetail() {
           <Text className="score">{hotelData.hotelInfo.score}</Text>
           <Text className="score-level">超棒</Text>
           <Text className="comment-count">{hotelData.hotelInfo.commentCount}条 &gt;</Text>
-          <Text className="score-desc">“{hotelData.hotelInfo.scoreDesc}”</Text>
+          <Text className="score-desc">{hotelData.hotelInfo.scoreDesc}</Text>
         </View>
         <View className="address-block">
           <Text className="distance">{hotelData.hotelInfo.distance}</Text>
           <Text className="address">{hotelData.hotelInfo.address}</Text>
-          <View className="map-btn">地图</View>
+          <Text className="map-btn">查看地图</Text>
         </View>
       </View>
 
@@ -188,18 +209,16 @@ export default function HotelDetail() {
         {hotelData.discountTags.map((tag, idx) => (
           <Text key={idx} className="discount-tag">{tag}</Text>
         ))}
-        <View className="coupon-btn">领券</View>
+        <Text className="coupon-btn">领券</Text>
       </View>
 
       {/* 日期+房间人数栏 */}
       <View className="date-guest-row">
         <View className="date-part">
           <Text className="date">{hotelData.dateRange}</Text>
-          <Text className="night">共{hotelData.stayNight}</Text>
+          <Text className="night">{hotelData.stayNight}</Text>
         </View>
-        <View className="guest-part">
-          <Text className="guest">{hotelData.roomGuest}</Text>
-        </View>
+        <Text className="guest">{hotelData.roomGuest}</Text>
       </View>
 
       {/* 房型筛选栏 */}
@@ -239,7 +258,7 @@ export default function HotelDetail() {
         </View>
       </View>
 
-      {/* 房型列表（核心修改：预订按钮跳转路径） */}
+      {/* 房型列表 */}
       <View className="room-list">
         <View className="recommend-tag">
           <Text className="tag-icon">♦</Text>
@@ -281,6 +300,116 @@ export default function HotelDetail() {
           </View>
         ))}
       </View>
+
+      {/* 筛选面板 */}
+      {showFilterPanel && (
+        <View className="filter-panel">
+          <View className="filter-panel-header">
+            <Text className="filter-panel-title">筛选</Text>
+            <Text className="filter-panel-close" onClick={handleFilterClick}>×</Text>
+          </View>
+          <ScrollView className="filter-panel-content">
+            {/* 房型 */}
+            <View className="filter-section">
+              <Text className="filter-section-title">房型</Text>
+              <View className="filter-options">
+                <Text 
+                  className={`filter-option ${filterOptions.roomTypes.includes('大床房') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('roomTypes', '大床房')}
+                >
+                  大床房
+                </Text>
+                <Text 
+                  className={`filter-option ${filterOptions.roomTypes.includes('双床房') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('roomTypes', '双床房')}
+                >
+                  双床房
+                </Text>
+                <Text 
+                  className={`filter-option ${filterOptions.roomTypes.includes('三床房') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('roomTypes', '三床房')}
+                >
+                  三床房
+                </Text>
+                <Text 
+                  className={`filter-option ${filterOptions.roomTypes.includes('电竞房') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('roomTypes', '电竞房')}
+                >
+                  电竞房
+                </Text>
+                <Text 
+                  className={`filter-option ${filterOptions.roomTypes.includes('多床房') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('roomTypes', '多床房')}
+                >
+                  多床房
+                </Text>
+              </View>
+            </View>
+            
+            {/* 设施 */}
+            <View className="filter-section">
+              <Text className="filter-section-title">设施</Text>
+              <View className="filter-options">
+                <Text 
+                  className={`filter-option ${filterOptions.facilities.includes('空调') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('facilities', '空调')}
+                >
+                  空调
+                </Text>
+                <Text 
+                  className={`filter-option ${filterOptions.facilities.includes('电脑') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('facilities', '电脑')}
+                >
+                  电脑
+                </Text>
+                <Text 
+                  className={`filter-option ${filterOptions.facilities.includes('客房宽带') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('facilities', '客房宽带')}
+                >
+                  客房宽带
+                </Text>
+                <Text 
+                  className={`filter-option ${filterOptions.facilities.includes('吹风机') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('facilities', '吹风机')}
+                >
+                  吹风机
+                </Text>
+              </View>
+            </View>
+            
+            {/* 服务优选 */}
+            <View className="filter-section">
+              <Text className="filter-section-title">服务优选</Text>
+              <View className="filter-options">
+                <Text 
+                  className={`filter-option ${filterOptions.services.includes('可取消') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('services', '可取消')}
+                >
+                  可取消
+                </Text>
+                <Text 
+                  className={`filter-option ${filterOptions.services.includes('不满意退') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('services', '不满意退')}
+                >
+                  不满意退
+                </Text>
+                <Text 
+                  className={`filter-option ${filterOptions.services.includes('可订') ? 'selected' : ''}`}
+                  onClick={() => handleFilterOptionClick('services', '可订')}
+                >
+                  可订
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+          <View className="filter-panel-footer">
+            <Text className="filter-reset-btn" onClick={handleResetFilter}>重置</Text>
+            <View className="filter-confirm-btn" onClick={handleConfirmFilter}>
+              <Text className="filter-confirm-text">确定</Text>
+            </View>
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 }
