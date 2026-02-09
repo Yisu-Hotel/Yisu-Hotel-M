@@ -10,7 +10,6 @@ export default defineAppConfig({
     'pages/hotel-detail/index', // 酒店详情页
     'pages/booking-confirm/index', // 酒店预订确认页
     'pages/payment/index' // 支付页
-    
   ],
 
   window: {
