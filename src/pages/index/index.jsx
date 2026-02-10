@@ -456,6 +456,14 @@ export default function Index () {
     })
   }, [])
 
+  // 处理收藏按钮点击
+  const handleCollectClick = useCallback(() => {
+    // 模拟未登录状态，跳转到注册页
+    navigateTo({
+      url: '/pages/register/register'
+    })
+  }, [])
+
   // 处理快捷标签点击
   const handleTagClick = useCallback((tag) => {
     console.log('点击标签', tag)
@@ -561,7 +569,7 @@ export default function Index () {
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京王府井希尔顿酒店</Text>
-                  <Button className='collect-btn'>收藏</Button>
+                  <Button className='collect-btn' onClick={handleCollectClick}>收藏</Button>
                 </View>
                 <Text className='hotel-address'>北京市东城区王府井东街8号</Text>
                 <View className='hotel-footer'>
@@ -584,7 +592,7 @@ export default function Index () {
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京国贸大酒店</Text>
-                  <Button className='collect-btn'>收藏</Button>
+                  <Button className='collect-btn' onClick={handleCollectClick}>收藏</Button>
                 </View>
                 <Text className='hotel-address'>北京市朝阳区建国门外大街1号</Text>
                 <View className='hotel-footer'>
@@ -607,7 +615,7 @@ export default function Index () {
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京三里屯洲际酒店</Text>
-                  <Button className='collect-btn'>收藏</Button>
+                  <Button className='collect-btn' onClick={handleCollectClick}>收藏</Button>
                 </View>
                 <Text className='hotel-address'>北京市朝阳区三里屯北路1号</Text>
                 <View className='hotel-footer'>

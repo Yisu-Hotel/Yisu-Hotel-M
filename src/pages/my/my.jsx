@@ -1,4 +1,5 @@
 import { View, Text, Button, Image } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import { useCallback } from 'react'
 import './my.less'
 
@@ -13,10 +14,17 @@ export default function MyPage () {
     console.log('点击订单状态:', status)
   }, [])
 
+  // 处理登录/注册点击
+  const handleLoginRegisterClick = useCallback(() => {
+    Taro.navigateTo({
+      url: '/pages/register/register'
+    })
+  }, [])
+
   return (
     <View className='my-page'>
       {/* 个人信息区域 */}
-      <View className='user-info-section'>
+      <View className='user-info-section' onClick={handleLoginRegisterClick}>
         <Image 
           className='user-avatar' 
           src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square' 
