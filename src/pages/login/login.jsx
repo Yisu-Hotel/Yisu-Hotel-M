@@ -42,7 +42,13 @@ export default function Login() {
     // 模拟登录请求
     setTimeout(() => {
       setIsLoading(false);
-      // 登录成功，跳转到首页
+      // 登录成功，保存登录状态到本地存储
+      Taro.setStorageSync('isLoggedIn', true);
+      Taro.setStorageSync('userInfo', {
+        name: '用户',
+        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
+      });
+      // 跳转到首页
       Taro.switchTab({
         url: '/pages/index/index'
       });
@@ -58,7 +64,13 @@ export default function Login() {
     });
     
     setTimeout(() => {
-      // 授权成功，跳转到首页
+      // 授权成功，保存登录状态到本地存储
+      Taro.setStorageSync('isLoggedIn', true);
+      Taro.setStorageSync('userInfo', {
+        name: '用户',
+        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
+      });
+      // 跳转到首页
       Taro.switchTab({
         url: '/pages/index/index'
       });

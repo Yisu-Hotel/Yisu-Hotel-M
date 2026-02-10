@@ -11,7 +11,8 @@ export default defineAppConfig({
     'pages/booking-confirm/index',
     'pages/register/register',
     'pages/register-success/register-success',
-    'pages/login/login'
+    'pages/login/login',
+    'pages/payment/index'
   ],
   window: {
     backgroundTextStyle: 'light',

@@ -107,16 +107,14 @@ export default function Register() {
 
   // 跳转到登录页
   const handleGoToLogin = () => {
-    console.log('点击了立即登录');
-    Taro.redirectTo({
-      url: '/pages/login/login',
-      success: function(res) {
-        console.log('跳转成功', res);
-      },
-      fail: function(err) {
-        console.log('跳转失败', err);
-      }
-    });
+    console.log('handleGoToLogin函数被调用');
+    try {
+      Taro.navigateTo({
+        url: '/pages/login/login'
+      });
+    } catch (error) {
+      console.error('跳转失败:', error);
+    }
   };
 
   return (
@@ -275,22 +273,12 @@ export default function Register() {
       <View className="register-footer">
         <Text className="login-text">
           已有账号？
-          <Button 
-            className="login-link-btn" 
+          <Text 
+            className="login-link" 
             onClick={handleGoToLogin}
-            style={{ 
-              padding: 0, 
-              margin: 0, 
-              backgroundColor: 'transparent', 
-              color: '#0088ff', 
-              fontSize: '24rpx', 
-              height: 'auto', 
-              lineHeight: 'normal',
-              marginLeft: '8rpx'
-            }}
           >
             立即登录
-          </Button>
+          </Text>
         </Text>
       </View>
     </View>
