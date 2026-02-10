@@ -6,7 +6,6 @@ export default defineAppConfig({
     'pages/my/my',
     'pages/hotel-list/hotel-list',
     'pages/city-select/city-select',
-    'pages/test-page/test-page',
     'pages/hotel-detail/index',
     'pages/booking-confirm/index',
     'pages/register/register',

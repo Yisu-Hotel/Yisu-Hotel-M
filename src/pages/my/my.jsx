@@ -12,7 +12,7 @@ export default function MyPage () {
   })
 
   // 检查登录状态
-  useEffect(() => {
+  const checkLoginStatus = () => {
     // 从本地存储中获取登录状态
     const loggedIn = Taro.getStorageSync('isLoggedIn') || false
     setIsLoggedIn(loggedIn)
@@ -22,6 +22,17 @@ export default function MyPage () {
     if (userInfoFromStorage) {
       setUserInfo(userInfoFromStorage)
     }
+  }
+
+  useEffect(() => {
+    // 初始检查登录状态
+    checkLoginStatus()
+    
+    // 定期检查登录状态，确保状态能够及时更新
+    const interval = setInterval(checkLoginStatus, 1000)
+    
+    // 清理定时器
+    return () => clearInterval(interval)
   }, [])
 
   // 处理菜单点击
