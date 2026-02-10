@@ -1,0 +1,286 @@
+import React, { useState, useEffect } from 'react';
+import Taro from '@tarojs/taro';
+import { View, Text, Input, Button, Image, Checkbox } from '@tarojs/components';
+import './register.less';
+
+export default function Register() {
+  // 状态管理
+  const [activeTab, setActiveTab] = useState('phone'); // 'phone' 或 'third-party'
+  const [phone, setPhone] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 倒计时逻辑
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  // 表单校验
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!phone) {
+      newErrors.phone = '请输入手机号';
+    } else if (!/^1[3-9]\d{9}$/.test(phone)) {
+      newErrors.phone = '请输入正确的手机号';
+    }
+    
+    if (!verificationCode) {
+      newErrors.verificationCode = '请输入验证码';
+    }
+    
+    if (!password) {
+      newErrors.password = '请设置密码';
+    } else if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,16}$/.test(password)) {
+      newErrors.password = '密码需6-16位，包含数字和字母';
+    }
+    
+    if (!agreeTerms) {
+      newErrors.agreeTerms = '请阅读并同意用户协议和隐私政策';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // 获取验证码
+  const handleGetVerificationCode = () => {
+    if (!phone) {
+      setErrors(prev => ({ ...prev, phone: '请输入手机号' }));
+      return;
+    }
+    
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      setErrors(prev => ({ ...prev, phone: '请输入正确的手机号' }));
+      return;
+    }
+    
+    // 模拟发送验证码
+    setCountdown(60);
+    Taro.showToast({
+      title: '验证码已发送',
+      icon: 'none'
+    });
+  };
+
+  // 注册
+  const handleRegister = () => {
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    // 模拟注册请求
+    setTimeout(() => {
+      setIsLoading(false);
+      // 注册成功，跳转到注册成功页
+      Taro.navigateTo({
+        url: '/pages/register-success/register-success'
+      });
+    }, 1500);
+  };
+
+  // 第三方快捷注册
+  const handleThirdPartyRegister = (platform) => {
+    // 模拟第三方授权
+    Taro.showToast({
+      title: `${platform}授权中...`,
+      icon: 'loading'
+    });
+    
+    setTimeout(() => {
+      // 授权成功，跳转到注册成功页
+      Taro.navigateTo({
+        url: '/pages/register-success/register-success'
+      });
+    }, 1500);
+  };
+
+  // 跳转到登录页
+  const handleGoToLogin = () => {
+    console.log('handleGoToLogin函数被调用');
+    try {
+      Taro.navigateTo({
+        url: '/pages/login/login'
+      });
+    } catch (error) {
+      console.error('跳转失败:', error);
+    }
+  };
+
+  return (
+    <View className="register-page">
+      {/* 顶部标题 */}
+      <View className="register-header">
+        <Text className="register-title">注册账号</Text>
+      </View>
+
+      {/* 注册方式选择 */}
+      <View className="register-tabs">
+        <View 
+          className={`register-tab ${activeTab === 'phone' ? 'active' : ''}`}
+          onClick={() => setActiveTab('phone')}
+        >
+          <Text className="register-tab-text">手机号注册</Text>
+        </View>
+        <View 
+          className={`register-tab ${activeTab === 'third-party' ? 'active' : ''}`}
+          onClick={() => setActiveTab('third-party')}
+        >
+          <Text className="register-tab-text">第三方快捷注册</Text>
+        </View>
+      </View>
+
+      {/* 手机号注册表单 */}
+      {activeTab === 'phone' && (
+        <View className="register-form">
+          {/* 手机号输入 */}
+          <View className="form-item">
+            <View className="phone-input-container">
+              <Text className="country-code">+86</Text>
+              <Input 
+                className="phone-input" 
+                placeholder="请输入手机号"
+                value={phone}
+                onInput={(e) => setPhone(e.detail.value)}
+                onBlur={() => {
+                  if (phone && !/^1[3-9]\d{9}$/.test(phone)) {
+                    setErrors(prev => ({ ...prev, phone: '请输入正确的手机号' }));
+                  } else {
+                    setErrors(prev => ({ ...prev, phone: '' }));
+                  }
+                }}
+              />
+            </View>
+            {errors.phone && <Text className="error-message">{errors.phone}</Text>}
+          </View>
+
+          {/* 验证码输入 */}
+          <View className="form-item">
+            <View style={{ display: 'flex', flexDirection: 'column', marginBottom: '16rpx' }}>
+              <Input 
+                className="verification-code-input" 
+                placeholder="请输入验证码"
+                value={verificationCode}
+                onInput={(e) => setVerificationCode(e.detail.value)}
+                style={{ height: '60rpx', fontSize: '28rpx', borderBottom: '1rpx solid #e5e5e5', paddingBottom: '16rpx' }}
+              />
+            </View>
+            <Button 
+              className={`get-code-btn ${countdown > 0 ? 'disabled' : ''}`}
+              disabled={countdown > 0}
+              onClick={handleGetVerificationCode}
+              style={{ width: '100%', height: '60rpx', fontSize: '24rpx' }}
+            >
+              {countdown > 0 ? `${countdown}秒后重发` : '获取验证码'}
+            </Button>
+            {errors.verificationCode && <Text className="error-message">{errors.verificationCode}</Text>}
+          </View>
+
+          {/* 密码输入 */}
+          <View className="form-item">
+            <View className="password-input-container">
+              <Input 
+                className="password-input" 
+                placeholder="请设置密码（6-16位，含数字和字母）"
+                value={password}
+                onInput={(e) => setPassword(e.detail.value)}
+                type={showPassword ? 'text' : 'password'}
+                onBlur={() => {
+                  if (password && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,16}$/.test(password)) {
+                    setErrors(prev => ({ ...prev, password: '密码需6-16位，包含数字和字母' }));
+                  } else {
+                    setErrors(prev => ({ ...prev, password: '' }));
+                  }
+                }}
+              />
+              <Text 
+                className="password-toggle" 
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? '隐藏' : '显示'}
+              </Text>
+            </View>
+            {errors.password && <Text className="error-message">{errors.password}</Text>}
+          </View>
+
+          {/* 协议勾选 */}
+          <View className="form-item">
+            <View className="terms-container">
+              <Checkbox 
+                checked={agreeTerms} 
+                onChange={(e) => setAgreeTerms(e.detail.value)}
+              />
+              <Text className="terms-text">
+                我已阅读并同意
+                <Text className="terms-link">《用户协议》</Text>
+                和
+                <Text className="terms-link">《隐私政策》</Text>
+              </Text>
+            </View>
+            {errors.agreeTerms && <Text className="error-message">{errors.agreeTerms}</Text>}
+          </View>
+
+          {/* 注册按钮 */}
+          <Button 
+            className={`register-btn ${agreeTerms ? 'enabled' : ''}`}
+            disabled={!agreeTerms}
+            loading={isLoading}
+            onClick={handleRegister}
+          >
+            注册
+          </Button>
+        </View>
+      )}
+
+      {/* 第三方快捷注册 */}
+      {activeTab === 'third-party' && (
+        <View className="third-party-register">
+          <View className="third-party-title">选择注册方式</View>
+          <View className="third-party-options">
+            <View 
+              className="third-party-option"
+              onClick={() => handleThirdPartyRegister('微信')}
+            >
+              <View className="third-party-icon wechat">
+                <Text className="icon-text">微信</Text>
+              </View>
+              <Text className="third-party-text">微信注册</Text>
+            </View>
+            <View 
+              className="third-party-option"
+              onClick={() => handleThirdPartyRegister('支付宝')}
+            >
+              <View className="third-party-icon alipay">
+                <Text className="icon-text">支付宝</Text>
+              </View>
+              <Text className="third-party-text">支付宝注册</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* 底部快捷入口 */}
+      <View className="register-footer">
+        <Text className="login-text">
+          已有账号？
+          <Text 
+            className="login-link" 
+            onClick={handleGoToLogin}
+          >
+            立即登录
+          </Text>
+        </Text>
+      </View>
+    </View>
+  );
+}

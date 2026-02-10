@@ -1,0 +1,193 @@
+.login-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 40rpx 24rpx;
+
+  /* 顶部标题 */
+  .login-header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40rpx;
+  }
+  .login-title {
+    font-size: 36rpx;
+    font-weight: bold;
+    color: #333;
+  }
+
+  /* 登录方式选择 */
+  .login-tabs {
+    display: flex;
+    background: #fff;
+    border-radius: 12rpx;
+    margin-bottom: 32rpx;
+    overflow: hidden;
+  }
+  .login-tab {
+    flex: 1;
+    padding: 24rpx;
+    text-align: center;
+    cursor: pointer;
+  }
+  .login-tab.active {
+    background: #0088ff;
+  }
+  .login-tab-text {
+    font-size: 28rpx;
+    color: #666;
+  }
+  .login-tab.active .login-tab-text {
+    color: #fff;
+    font-weight: bold;
+  }
+
+  /* 登录表单 */
+  .login-form {
+    background: #fff;
+    border-radius: 12rpx;
+    padding: 32rpx 24rpx;
+    margin-bottom: 32rpx;
+  }
+  .form-item {
+    margin-bottom: 32rpx;
+  }
+  .phone-input-container {
+    display: flex;
+    align-items: center;
+    border-bottom: 1rpx solid #e5e5e5;
+    padding-bottom: 16rpx;
+  }
+  .country-code {
+    font-size: 28rpx;
+    color: #333;
+    margin-right: 16rpx;
+  }
+  .phone-input {
+    flex: 1;
+    font-size: 28rpx;
+    color: #333;
+  }
+  .password-input-container {
+    display: flex;
+    align-items: center;
+    border-bottom: 1rpx solid #e5e5e5;
+    padding-bottom: 16rpx;
+  }
+  .password-input {
+    flex: 1;
+    font-size: 28rpx;
+    color: #333;
+  }
+  .password-toggle {
+    font-size: 24rpx;
+    color: #0088ff;
+    cursor: pointer;
+  }
+  .forgot-password {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8rpx;
+  }
+  .forgot-password-text {
+    font-size: 24rpx;
+    color: #0088ff;
+    cursor: pointer;
+  }
+  .remember-password-container {
+    display: flex;
+    align-items: center;
+  }
+  .remember-password-text {
+    font-size: 24rpx;
+    color: #333;
+    margin-left: 12rpx;
+  }
+  .error-message {
+    font-size: 20rpx;
+    color: #ff4d4f;
+    margin-top: 8rpx;
+  }
+  .login-btn {
+    width: 100%;
+    height: 80rpx;
+    border-radius: 8rpx;
+    font-size: 28rpx;
+    background: #0088ff;
+    color: #fff;
+    margin-top: 16rpx;
+  }
+
+  /* 第三方快捷登录 */
+  .third-party-login {
+    background: #fff;
+    border-radius: 12rpx;
+    padding: 32rpx 24rpx;
+    margin-bottom: 32rpx;
+  }
+  .third-party-title {
+    font-size: 28rpx;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 32rpx;
+    text-align: center;
+  }
+  .third-party-options {
+    display: flex;
+    justify-content: space-around;
+  }
+  .third-party-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+  }
+  .third-party-icon {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16rpx;
+  }
+  .third-party-icon.wechat {
+    background: #07c160;
+  }
+  .third-party-icon.alipay {
+    background: #1677ff;
+  }
+  .icon-text {
+    font-size: 24rpx;
+    color: #fff;
+  }
+  .third-party-text {
+    font-size: 24rpx;
+    color: #333;
+  }
+
+  /* 底部快捷入口 */
+  .login-footer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24rpx;
+  }
+  .register-text {
+    font-size: 24rpx;
+    color: #666;
+  }
+  .register-link {
+    color: #0088ff;
+    margin-left: 8rpx;
+    cursor: pointer;
+  }
+
+  /* 安全提示 */
+  .safety-tip {
+    display: flex;
+    justify-content: center;
+  }
+  .safety-tip-text {
+    font-size: 20rpx;
+    color: #999;
+  }
+}

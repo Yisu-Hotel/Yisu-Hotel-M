@@ -1,8 +1,29 @@
 import { View, Text, Button, Image } from '@tarojs/components'
-import { useCallback } from 'react'
+import Taro from '@tarojs/taro'
+import { useCallback, useState, useEffect } from 'react'
 import './my.less'
 
 export default function MyPage () {
+  // 登录状态管理
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userInfo, setUserInfo] = useState({
+    name: '用户',
+    avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
+  })
+
+  // 检查登录状态
+  useEffect(() => {
+    // 从本地存储中获取登录状态
+    const loggedIn = Taro.getStorageSync('isLoggedIn') || false
+    setIsLoggedIn(loggedIn)
+    
+    // 从本地存储中获取用户信息
+    const userInfoFromStorage = Taro.getStorageSync('userInfo')
+    if (userInfoFromStorage) {
+      setUserInfo(userInfoFromStorage)
+    }
+  }, [])
+
   // 处理菜单点击
   const handleMenuClick = useCallback((menu) => {
     console.log('点击菜单:', menu)
@@ -13,20 +34,43 @@ export default function MyPage () {
     console.log('点击订单状态:', status)
   }, [])
 
+  // 处理登录/注册点击
+  const handleLoginRegisterClick = useCallback(() => {
+    Taro.navigateTo({
+      url: '/pages/register/register'
+    })
+  }, [])
+
   return (
     <View className='my-page'>
       {/* 个人信息区域 */}
-      <View className='user-info-section'>
-        <Image 
-          className='user-avatar' 
-          src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square' 
-        />
-        <View className='user-info'>
-          <Text className='user-name'>登录/注册</Text>
-          <Text className='user-id'>点击登录享受更多权益</Text>
+      {isLoggedIn ? (
+        // 已登录状态
+        <View className='user-info-section'>
+          <Image 
+            className='user-avatar' 
+            src={userInfo.avatar} 
+          />
+          <View className='user-info'>
+            <Text className='user-name'>{userInfo.name}</Text>
+            <Text className='user-id'>登录成功，享受会员权益</Text>
+          </View>
+          <View className='user-arrow'>›</View>
         </View>
-        <View className='user-arrow'>›</View>
-      </View>
+      ) : (
+        // 未登录状态
+        <View className='user-info-section' onClick={handleLoginRegisterClick}>
+          <Image 
+            className='user-avatar' 
+            src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square' 
+          />
+          <View className='user-info'>
+            <Text className='user-name'>登录/注册</Text>
+            <Text className='user-id'>点击登录享受更多权益</Text>
+          </View>
+          <View className='user-arrow'>›</View>
+        </View>
+      )}
 
       {/* 订单管理区域 */}
       <View className='order-section'>
