@@ -239,24 +239,29 @@ export default function Register() {
         {/* 协议勾选 */}
         <View className="form-item">
           <View className="terms-container">
-            <Checkbox 
-              checked={agreeTerms} 
-              onChange={(e) => {
-                const value = e.detail.value;
-                console.log('Checkbox onChange value:', value);
-                setAgreeTerms(value);
+            <View 
+              className="terms-checkbox-container" 
+              onClick={() => {
+                const newAgreeTerms = !agreeTerms;
+                console.log('Terms container clicked, newAgreeTerms:', newAgreeTerms);
+                setAgreeTerms(newAgreeTerms);
                 // 勾选时清除协议错误信息
-                if (value) {
+                if (newAgreeTerms) {
                   setErrors(prev => ({ ...prev, agreeTerms: '' }));
                 }
               }}
-            />
-            <Text className="terms-text">
-              我已阅读并同意
-              <Text className="terms-link">《用户协议》</Text>
-              和
-              <Text className="terms-link">《隐私政策》</Text>
-            </Text>
+              style={{ display: 'flex', alignItems: 'center' }}
+            >
+              <View className={`custom-checkbox ${agreeTerms ? 'checked' : ''}`}>
+                {agreeTerms && <Text className="checkbox-check">✓</Text>}
+              </View>
+              <Text className="terms-text">
+                我已阅读并同意
+                <Text className="terms-link">《用户协议》</Text>
+                和
+                <Text className="terms-link">《隐私政策》</Text>
+              </Text>
+            </View>
           </View>
           {errors.agreeTerms && <Text className="error-message">{errors.agreeTerms}</Text>}
         </View>

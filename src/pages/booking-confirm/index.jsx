@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Text, Image, Button, Input, Checkbox, Swiper, SwiperItem, Navigator } from '@tarojs/components'
-import { AtIcon } from 'taro-ui'
+import { AtIcon, AtToast } from 'taro-ui'
 import Taro from '@tarojs/taro'
 import './index.less'
 
@@ -51,12 +51,21 @@ const BookingConfirm = () => {
 
   // 3. 简化的验证逻辑（降低验证门槛，优先保证跳转）
   const validateGuestInfo = () => {
-    // 临时简化：直接返回true，跳过所有验证，确保跳转逻辑能够被执行
+    // 临时简化：只要有内容就通过，方便测试跳转
+    if (!guestInfo.name || guestInfo.name.trim() === '') {
+      AtToast({ text: '请输入住客姓名', type: 'error', duration: 2000 })
+      return false
+    }
+    // 简化手机号验证：只要长度够就通过
+    if (!guestInfo.phone || guestInfo.phone.replace(/\s+/g, '').length !== 11) {
+      AtToast({ text: '请输入正确的手机号码', type: 'error', duration: 2000 })
+      return false
+    }
     return true
   }
 
   // 4. 核心：修复后的立即支付点击逻辑
-  const handleSubmitBooking = useCallback(() => {
+  const handleSubmitBooking = async () => {
     console.log('立即支付按钮被点击了') // 用于调试
     
     // 验证信息
@@ -71,9 +80,6 @@ const BookingConfirm = () => {
       console.log('跳转支付页，订单ID：', mockBookingId)
       
       // 关键：跳转到支付页（确保路由路径正确）
-      console.log('准备跳转，URL：', `/pages/payment/index?booking_id=${mockBookingId}`)
-      
-      // 使用navigateTo跳转到支付页
       Taro.navigateTo({
         url: `/pages/payment/index?booking_id=${mockBookingId}`,
         success: () => {
@@ -81,16 +87,16 @@ const BookingConfirm = () => {
         },
         fail: (err) => {
           console.error('跳转失败：', err)
-          Taro.showToast({ title: '跳转支付页失败', icon: 'none', duration: 2000 })
+          AtToast({ text: '跳转支付页失败', type: 'error', duration: 2000 })
         }
       })
     } catch (error) {
       console.error('提交订单异常：', error)
-      Taro.showToast({ title: '提交订单失败', icon: 'none', duration: 2000 })
+      AtToast({ text: '提交订单失败', type: 'error', duration: 2000 })
     } finally {
       setLoading(false)
     }
-  }, [])
+  }
 
   // 5. 特殊要求选择逻辑
   const handleSpecialRequestToggle = (id) => {
@@ -103,12 +109,6 @@ const BookingConfirm = () => {
 
   return (
     <View className='booking-confirm-page'>
-      {/* 返回按钮 */}
-      <View className='back-button' onClick={() => Taro.navigateBack()}>
-        <Text className='back-icon'>←</Text>
-        <Text className='back-text'>返回</Text>
-      </View>
-      
       {/* 顶部酒店信息 */}
       <View className='header-section'>
         <View className='hotel-info'>
@@ -263,13 +263,15 @@ const BookingConfirm = () => {
           </View>
         </View>
         {/* 关键：确保onClick绑定正确，无拼写错误 */}
-        <View
+        <Button
           className='pay-btn'
           onClick={handleSubmitBooking}
+          loading={loading}
+          disabled={loading}
           hoverClass='pay-btn-hover' // 增加点击反馈
         >
-          {loading ? '处理中...' : '立即支付'}
-        </View>
+          立即支付
+        </Button>
       </View>
     </View>
   )
