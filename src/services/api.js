@@ -36,7 +36,7 @@ async function request(url, options = {}) {
     
     // 检查响应状态
     if (!response.ok) {
-      throw new Error(data.message || '请求失败');
+      throw new Error(data.msg || '请求失败');
     }
     
     return data;

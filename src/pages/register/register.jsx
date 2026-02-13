@@ -28,6 +28,8 @@ export default function Register() {
   const validateForm = () => {
     const newErrors = {};
     
+    console.log('validateForm called, agreeTerms:', agreeTerms);
+    
     if (!phone) {
       newErrors.phone = '请输入手机号';
     } else if (!/^1[3-9]\d{9}$/.test(phone)) {
@@ -48,6 +50,7 @@ export default function Register() {
       newErrors.agreeTerms = '请阅读并同意用户协议和隐私政策';
     }
     
+    console.log('validateForm errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -78,7 +81,7 @@ export default function Register() {
       } else {
         // 验证码发送失败
         Taro.showToast({
-          title: response.message || '验证码发送失败',
+          title: response.msg || '验证码发送失败',
           icon: 'none'
         });
       }
@@ -100,27 +103,40 @@ export default function Register() {
     setIsLoading(true);
     
     try {
+      console.log('开始注册，参数:', {
+        phone: phone,
+        code: verificationCode,
+        password: password,
+        agreed: agreeTerms
+      });
+      
       // 使用真实的API调用进行注册
       const response = await userApi.register({
         phone: phone,
         code: verificationCode,
-        password: password
+        password: password,
+        agreed: agreeTerms
       });
+      
+      console.log('注册响应:', response);
       
       if (response.code === 0) {
         // 注册成功，跳转到注册成功页
+        console.log('注册成功，跳转到注册成功页');
         Taro.navigateTo({
           url: '/pages/register-success/register-success'
         });
       } else {
         // 注册失败，显示错误信息
+        console.log('注册失败:', response.msg);
         Taro.showToast({
-          title: response.message || '注册失败',
+          title: response.msg || '注册失败',
           icon: 'none'
         });
       }
     } catch (error) {
       // 处理网络错误等异常
+      console.error('注册异常:', error);
       Taro.showToast({
         title: error.message || '注册失败，请检查网络连接',
         icon: 'none'
@@ -239,18 +255,21 @@ export default function Register() {
 
           {/* 协议勾选 */}
           <View className="form-item">
-            <View className="terms-container">
-              <Checkbox 
-                checked={agreeTerms} 
-                onChange={(value) => {
-                  console.log('Checkbox onChange value:', value);
-                  setAgreeTerms(value);
-                  // 勾选时清除协议错误信息
-                  if (value) {
-                    setErrors(prev => ({ ...prev, agreeTerms: '' }));
-                  }
-                }}
-              />
+            <View 
+              className="terms-container" 
+              onClick={() => {
+                const newValue = !agreeTerms;
+                console.log('Terms container clicked, new value:', newValue);
+                setAgreeTerms(newValue);
+                // 勾选时清除协议错误信息
+                if (newValue) {
+                  setErrors(prev => ({ ...prev, agreeTerms: '' }));
+                }
+              }}
+            >
+              <View className={`checkbox ${agreeTerms ? 'checked' : ''}`}>
+                {agreeTerms && <Text className="checkbox-check">✓</Text>}
+              </View>
               <Text className="terms-text">
                 我已阅读并同意
                 <Text className="terms-link">《用户协议》</Text>
@@ -264,7 +283,7 @@ export default function Register() {
           {/* 注册按钮 */}
           <Button 
             className={`register-btn ${agreeTerms ? 'enabled' : ''}`}
-            disabled={!agreeTerms}
+            disabled={!agreeTerms || isLoading}
             loading={isLoading}
             onClick={handleRegister}
             style={{ 
