@@ -112,6 +112,42 @@
   .terms-container {
     display: flex;
     align-items: center;
+    cursor: pointer;
+  }
+  .checkbox {
+    width: 28rpx;
+    height: 28rpx;
+    border: 2rpx solid #ccc;
+    border-radius: 4rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+  .checkbox.checked {
+    background-color: #0088ff;
+    border-color: #0088ff;
+  }
+  .checkbox-check {
+    color: #fff;
+    font-size: 20rpx;
+    font-weight: bold;
+  }
+  /* 自定义checkbox样式 */
+  .custom-checkbox {
+    width: 28rpx;
+    height: 28rpx;
+    border: 2rpx solid #ccc;
+    border-radius: 4rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    margin-right: 12rpx;
+  }
+  .custom-checkbox.checked {
+    background-color: #0088ff;
+    border-color: #0088ff;
   }
   .terms-text {
     font-size: 22rpx;

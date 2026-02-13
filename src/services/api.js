@@ -23,6 +23,16 @@ async function request(url, options = {}) {
     }
     
     // 发送请求
+    console.log('API请求开始:', {
+      url: fullUrl,
+      method: options.method || 'GET',
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+      data: options.body ? JSON.parse(options.body) : undefined,
+    });
+    
     const response = await Taro.request({
       url: fullUrl,
       method: options.method || 'GET',
@@ -33,11 +43,19 @@ async function request(url, options = {}) {
       data: options.body ? JSON.parse(options.body) : undefined,
     });
     
+    console.log('API请求响应:', {
+      statusCode: response.statusCode,
+      data: response.data,
+      header: response.header,
+    });
+    
     // 检查响应状态
     if (response.statusCode === 200) {
       return response.data;
     } else {
-      throw new Error(response.data.message || '请求失败');
+      // 检查response.data是否存在
+      const errorMessage = response.data && response.data.message ? response.data.message : '未知错误';
+      throw new Error(`请求失败 (${response.statusCode}): ${errorMessage}`);
     }
   } catch (error) {
     console.error('API请求错误:', error);
@@ -87,12 +105,12 @@ export const userApi = {
 
   // 获取用户信息
   getUserInfo: async () => {
-    return request('/mobile/user/profile');
+    return request('/mobile/user/info');
   },
 
   // 更新用户信息
   updateUserInfo: async (userData) => {
-    return request('/mobile/user/profile', {
+    return request('/mobile/user/update', {
       method: 'PUT',
       body: JSON.stringify(userData),
     });
@@ -125,12 +143,12 @@ export const orderApi = {
   // 获取订单列表
   getOrders: async (params) => {
     const queryString = new URLSearchParams(params).toString();
-    return request(`/mobile/booking?${queryString}`);
+    return request(`/mobile/booking/list?${queryString}`);
   },
 
   // 获取订单详情
   getOrderDetail: async (orderId) => {
-    return request(`/mobile/booking/${orderId}`);
+    return request(`/mobile/booking/detail/${orderId}`);
   },
 
   // 创建订单
@@ -143,7 +161,7 @@ export const orderApi = {
 
   // 取消订单
   cancelOrder: async (orderId) => {
-    return request(`/mobile/booking/${orderId}/cancel`, {
+    return request(`/mobile/booking/cancel/${orderId}`, {
       method: 'POST',
     });
   },
