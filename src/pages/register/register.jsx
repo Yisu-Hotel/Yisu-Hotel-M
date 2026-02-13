@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { View, Text, Input, Button, Image, Checkbox } from '@tarojs/components';
-<<<<<<< HEAD
-=======
 import { userApi } from '../../services/api';
->>>>>>> y
 import './register.less';
 
 export default function Register() {
@@ -56,11 +53,7 @@ export default function Register() {
   };
 
   // 获取验证码
-<<<<<<< HEAD
-  const handleGetVerificationCode = () => {
-=======
   const handleGetVerificationCode = async () => {
->>>>>>> y
     if (!phone) {
       setErrors(prev => ({ ...prev, phone: '请输入手机号' }));
       return;
@@ -71,18 +64,6 @@ export default function Register() {
       return;
     }
     
-<<<<<<< HEAD
-    // 模拟发送验证码
-    setCountdown(60);
-    Taro.showToast({
-      title: '验证码已发送',
-      icon: 'none'
-    });
-  };
-
-  // 注册
-  const handleRegister = () => {
-=======
     try {
       // 使用真实的API调用发送验证码
       const response = await userApi.getVerificationCode(phone);
@@ -112,23 +93,12 @@ export default function Register() {
 
   // 注册
   const handleRegister = async () => {
->>>>>>> y
     if (!validateForm()) {
       return;
     }
     
     setIsLoading(true);
     
-<<<<<<< HEAD
-    // 模拟注册请求
-    setTimeout(() => {
-      setIsLoading(false);
-      // 注册成功，跳转到注册成功页
-      Taro.navigateTo({
-        url: '/pages/register-success/register-success'
-      });
-    }, 1500);
-=======
     try {
       // 使用真实的API调用进行注册
       const response = await userApi.register({
@@ -158,7 +128,6 @@ export default function Register() {
     } finally {
       setIsLoading(false);
     }
->>>>>>> y
   };
 
   // 第三方快捷注册
@@ -196,7 +165,6 @@ export default function Register() {
         <Text className="register-title">注册账号</Text>
       </View>
 
-<<<<<<< HEAD
       {/* 注册方式选择 */}
       <View className="register-tabs">
         <View 
@@ -216,10 +184,6 @@ export default function Register() {
       {/* 手机号注册表单 */}
       {activeTab === 'phone' && (
         <View className="register-form">
-=======
-      {/* 手机号注册表单 */}
-      <View className="register-form">
->>>>>>> y
           {/* 手机号输入 */}
           <View className="form-item">
             <View className="phone-input-container">
@@ -295,10 +259,8 @@ export default function Register() {
             <View className="terms-container">
               <Checkbox 
                 checked={agreeTerms} 
-<<<<<<< HEAD
-                onChange={(e) => setAgreeTerms(e.detail.value)}
-=======
-                onChange={(value) => {
+                onChange={(e) => {
+                  const value = e.detail.value;
                   console.log('Checkbox onChange value:', value);
                   setAgreeTerms(value);
                   // 勾选时清除协议错误信息
@@ -306,7 +268,6 @@ export default function Register() {
                     setErrors(prev => ({ ...prev, agreeTerms: '' }));
                   }
                 }}
->>>>>>> y
               />
               <Text className="terms-text">
                 我已阅读并同意
@@ -324,8 +285,6 @@ export default function Register() {
             disabled={!agreeTerms}
             loading={isLoading}
             onClick={handleRegister}
-<<<<<<< HEAD
-=======
             style={{ 
               width: '100%', 
               height: '80rpx', 
@@ -334,12 +293,10 @@ export default function Register() {
               backgroundColor: agreeTerms ? '#0088ff' : '#ccc',
               color: '#fff'
             }}
->>>>>>> y
           >
             注册
           </Button>
         </View>
-<<<<<<< HEAD
       )}
 
       {/* 第三方快捷注册 */}
@@ -368,8 +325,6 @@ export default function Register() {
           </View>
         </View>
       )}
-=======
->>>>>>> y
 
       {/* 底部快捷入口 */}
       <View className="register-footer">
