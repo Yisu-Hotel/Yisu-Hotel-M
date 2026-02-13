@@ -170,6 +170,12 @@ const PaymentPage = () => {
 
   return (
     <View className='payment-page'>
+      {/* 返回按钮 */}
+      <View className='back-button' onClick={() => Taro.navigateBack()}>
+        <Text className='back-icon'>←</Text>
+        <Text className='back-text'>返回</Text>
+      </View>
+      
       {/* 顶部安全收银台 */}
       <View className='header-section'>
         <Text className='title'>安全收银台</Text>

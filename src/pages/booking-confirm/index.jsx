@@ -109,6 +109,12 @@ const BookingConfirm = () => {
 
   return (
     <View className='booking-confirm-page'>
+      {/* 返回按钮 */}
+      <View className='back-button' onClick={() => Taro.navigateBack()}>
+        <Text className='back-icon'>←</Text>
+        <Text className='back-text'>返回</Text>
+      </View>
+      
       {/* 顶部酒店信息 */}
       <View className='header-section'>
         <View className='hotel-info'>

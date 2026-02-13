@@ -13,17 +13,49 @@
   z-index: 100;
   background-color: #fff;
   border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-}
 
-.filter-info {
-  display: flex;
-  flex: 1;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  .filter-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #000;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+
+      &:active {
+        background-color: #f0f0f0;
+      }
+    }
+
+    .page-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #000;
+    }
+  }
+
+  .filter-info {
+    display: flex;
+    flex: 1;
+    overflow-x: auto;
+    padding: 0 16px 8px;
+  }
+
+  .filter-actions {
+    display: flex;
+    align-items: center;
+    padding: 0 16px 12px;
+    position: relative;
+    justify-content: flex-end;
+  }
 }
 
 .filter-info .filter-item {
@@ -47,11 +79,6 @@
   font-size: 13px;
   color: #333;
   width: auto;
-}
-
-.filter-actions {
-  display: flex;
-  align-items: center;
 }
 
 .action-button {
@@ -159,13 +186,15 @@
 /* 排序选项 */
 .sort-options {
   position: absolute;
-  top: 60px;
+  top: 100%;
   right: 16px;
+  margin-top: 8px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   z-index: 200;
   min-width: 160px;
+  max-width: 200px;
 }
 
 .sort-option {
