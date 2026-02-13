@@ -1,6 +1,6 @@
 import { View, Text, Image, ScrollView, Button, Switch } from '@tarojs/components'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter, showToast, navigateTo, showModal, startPullDownRefresh, stopPullDownRefresh } from '@tarojs/taro'
+import { useRouter, showToast, navigateTo, redirectTo, showModal, startPullDownRefresh, stopPullDownRefresh } from '@tarojs/taro'
 import { hotelApi } from '../../services/api'
 import DateSelector from '../../components/DateSelector'
 import './hotel-list.less'
@@ -37,7 +37,7 @@ export default function HotelList () {
   // 初始化页面
   useEffect(() => {
     initPage()
-  }, [])
+  }, [router.query])
 
   // 当showFilter为true时，同步tempFilters为当前filters的值
   useEffect(() => {
@@ -96,9 +96,13 @@ export default function HotelList () {
   // 初始化页面数据
   const initPage = useCallback(async () => {
     try {
+      // 检查是否从城市选择页面返回
+      const cityFromParams = router.query.city
+      console.log('从路由参数获取的城市:', cityFromParams)
+      
       // 无论是否有参数，都使用默认参数初始化
       const defaultParams = {
-        city: '北京',
+        city: cityFromParams || '北京',
         keyword: '',
         checkInDate: new Date().toISOString().split('T')[0],
         checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
@@ -236,7 +240,8 @@ export default function HotelList () {
 
   // 处理城市选择
   const handleCitySelect = useCallback(() => {
-    navigateTo({
+    // 使用redirectTo替换当前页面，避免在导航栈中添加新页面
+    redirectTo({
       url: `/pages/city-select/city-select?returnUrl=/pages/hotel-list/hotel-list`
     })
   }, [])
@@ -358,12 +363,7 @@ export default function HotelList () {
       <View className='filter-section'>
         <View className='filter-header'>
           <Text className='filter-title'>筛选条件</Text>
-          <Text className='filter-reset' onClick={() => setTempFilters({ 
-            priceRange: [0, 5000], 
-            starLevels: [], 
-            amenities: [], 
-            minRating: 0 
-          })}>重置</Text>
+          <Text className='filter-reset' onClick={handleResetFilter}>重置</Text>
         </View>
         
         {/* 价格区间 */}
@@ -456,7 +456,7 @@ export default function HotelList () {
         </View>
       </View>
     )
-  }, [tempFilters, handleFilterConfirm, handleFilterCancel])
+  }, [tempFilters, handleFilterConfirm, handleFilterCancel, handleResetFilter])
 
   // 渲染排序选项
   const renderSortOptions = useCallback(() => {
@@ -488,7 +488,7 @@ export default function HotelList () {
       <View className='filter-header-fixed'>
         <View className='filter-header-top'>
           {/* 返回按钮 */}
-          <View className='back-button' onClick={() => Taro.navigateTo({ url: '/pages/index/index' })}>
+          <View className='back-button' onClick={() => Taro.navigateBack()}>
             <Text style={{ fontSize: '20px' }}>←</Text>
             <Text>返回</Text>
           </View>
