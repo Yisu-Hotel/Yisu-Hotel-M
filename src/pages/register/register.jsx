@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { View, Text, Input, Button, Image, Checkbox } from '@tarojs/components';
+<<<<<<< HEAD
+=======
+import { userApi } from '../../services/api';
+>>>>>>> y
 import './register.less';
 
 export default function Register() {
@@ -52,7 +56,11 @@ export default function Register() {
   };
 
   // 获取验证码
+<<<<<<< HEAD
   const handleGetVerificationCode = () => {
+=======
+  const handleGetVerificationCode = async () => {
+>>>>>>> y
     if (!phone) {
       setErrors(prev => ({ ...prev, phone: '请输入手机号' }));
       return;
@@ -63,6 +71,7 @@ export default function Register() {
       return;
     }
     
+<<<<<<< HEAD
     // 模拟发送验证码
     setCountdown(60);
     Taro.showToast({
@@ -73,12 +82,44 @@ export default function Register() {
 
   // 注册
   const handleRegister = () => {
+=======
+    try {
+      // 使用真实的API调用发送验证码
+      const response = await userApi.getVerificationCode(phone);
+      
+      if (response.code === 0) {
+        // 验证码发送成功，开始倒计时
+        setCountdown(60);
+        Taro.showToast({
+          title: '验证码已发送，请查收',
+          icon: 'none'
+        });
+      } else {
+        // 验证码发送失败
+        Taro.showToast({
+          title: response.message || '验证码发送失败',
+          icon: 'none'
+        });
+      }
+    } catch (error) {
+      // 处理网络错误等异常
+      Taro.showToast({
+        title: error.message || '验证码发送失败，请检查网络连接',
+        icon: 'none'
+      });
+    }
+  };
+
+  // 注册
+  const handleRegister = async () => {
+>>>>>>> y
     if (!validateForm()) {
       return;
     }
     
     setIsLoading(true);
     
+<<<<<<< HEAD
     // 模拟注册请求
     setTimeout(() => {
       setIsLoading(false);
@@ -87,6 +128,37 @@ export default function Register() {
         url: '/pages/register-success/register-success'
       });
     }, 1500);
+=======
+    try {
+      // 使用真实的API调用进行注册
+      const response = await userApi.register({
+        phone: phone,
+        code: verificationCode,
+        password: password
+      });
+      
+      if (response.code === 0) {
+        // 注册成功，跳转到注册成功页
+        Taro.navigateTo({
+          url: '/pages/register-success/register-success'
+        });
+      } else {
+        // 注册失败，显示错误信息
+        Taro.showToast({
+          title: response.message || '注册失败',
+          icon: 'none'
+        });
+      }
+    } catch (error) {
+      // 处理网络错误等异常
+      Taro.showToast({
+        title: error.message || '注册失败，请检查网络连接',
+        icon: 'none'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+>>>>>>> y
   };
 
   // 第三方快捷注册
@@ -124,6 +196,7 @@ export default function Register() {
         <Text className="register-title">注册账号</Text>
       </View>
 
+<<<<<<< HEAD
       {/* 注册方式选择 */}
       <View className="register-tabs">
         <View 
@@ -143,6 +216,10 @@ export default function Register() {
       {/* 手机号注册表单 */}
       {activeTab === 'phone' && (
         <View className="register-form">
+=======
+      {/* 手机号注册表单 */}
+      <View className="register-form">
+>>>>>>> y
           {/* 手机号输入 */}
           <View className="form-item">
             <View className="phone-input-container">
@@ -218,7 +295,18 @@ export default function Register() {
             <View className="terms-container">
               <Checkbox 
                 checked={agreeTerms} 
+<<<<<<< HEAD
                 onChange={(e) => setAgreeTerms(e.detail.value)}
+=======
+                onChange={(value) => {
+                  console.log('Checkbox onChange value:', value);
+                  setAgreeTerms(value);
+                  // 勾选时清除协议错误信息
+                  if (value) {
+                    setErrors(prev => ({ ...prev, agreeTerms: '' }));
+                  }
+                }}
+>>>>>>> y
               />
               <Text className="terms-text">
                 我已阅读并同意
@@ -236,10 +324,22 @@ export default function Register() {
             disabled={!agreeTerms}
             loading={isLoading}
             onClick={handleRegister}
+<<<<<<< HEAD
+=======
+            style={{ 
+              width: '100%', 
+              height: '80rpx', 
+              borderRadius: '8rpx', 
+              fontSize: '28rpx',
+              backgroundColor: agreeTerms ? '#0088ff' : '#ccc',
+              color: '#fff'
+            }}
+>>>>>>> y
           >
             注册
           </Button>
         </View>
+<<<<<<< HEAD
       )}
 
       {/* 第三方快捷注册 */}
@@ -268,6 +368,8 @@ export default function Register() {
           </View>
         </View>
       )}
+=======
+>>>>>>> y
 
       {/* 底部快捷入口 */}
       <View className="register-footer">

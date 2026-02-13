@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import Taro from '@tarojs/taro';
 import { View, Text, Input, Button, Checkbox } from '@tarojs/components';
+<<<<<<< HEAD
+=======
+import { userApi } from '../../services/api';
+>>>>>>> y
 import './login.less';
 
 export default function Login() {
@@ -32,13 +36,18 @@ export default function Login() {
   };
 
   // 登录
+<<<<<<< HEAD
   const handleLogin = () => {
+=======
+  const handleLogin = async () => {
+>>>>>>> y
     if (!validateForm()) {
       return;
     }
     
     setIsLoading(true);
     
+<<<<<<< HEAD
     // 模拟登录请求
     setTimeout(() => {
       setIsLoading(false);
@@ -53,6 +62,41 @@ export default function Login() {
         url: '/pages/index/index'
       });
     }, 1500);
+=======
+    try {
+      // 使用真实的API调用进行登录
+      const response = await userApi.login({
+        phone: phone,
+        password: password
+      });
+      
+      if (response.code === 0) {
+        // 登录成功，保存登录状态和token到本地存储
+        Taro.setStorageSync('isLoggedIn', true);
+        Taro.setStorageSync('userInfo', response.data.user);
+        Taro.setStorageSync('token', response.data.token);
+        
+        // 跳转到首页
+        Taro.switchTab({
+          url: '/pages/index/index'
+        });
+      } else {
+        // 登录失败，显示错误信息
+        Taro.showToast({
+          title: response.message || '登录失败',
+          icon: 'none'
+        });
+      }
+    } catch (error) {
+      // 处理网络错误等异常
+      Taro.showToast({
+        title: error.message || '登录失败，请检查网络连接',
+        icon: 'none'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+>>>>>>> y
   };
 
   // 第三方快捷登录
@@ -100,6 +144,7 @@ export default function Login() {
         <Text className="login-title">登录账号</Text>
       </View>
 
+<<<<<<< HEAD
       {/* 登录方式选择 */}
       <View className="login-tabs">
         <View 
@@ -119,6 +164,10 @@ export default function Login() {
       {/* 手机号登录表单 */}
       {activeTab === 'phone' && (
         <View className="login-form">
+=======
+      {/* 手机号登录表单 */}
+      <View className="login-form">
+>>>>>>> y
           {/* 手机号输入 */}
           <View className="form-item">
             <View className="phone-input-container">
@@ -190,6 +239,7 @@ export default function Login() {
             登录
           </Button>
         </View>
+<<<<<<< HEAD
       )}
 
       {/* 第三方快捷登录 */}
@@ -218,6 +268,8 @@ export default function Login() {
           </View>
         </View>
       )}
+=======
+>>>>>>> y
 
       {/* 底部快捷入口 */}
       <View className="login-footer">

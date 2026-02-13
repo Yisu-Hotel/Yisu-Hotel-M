@@ -2,6 +2,7 @@ import { View, Text, Image, ScrollView, Button, Switch } from '@tarojs/component
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, showToast, navigateTo, showModal, startPullDownRefresh, stopPullDownRefresh } from '@tarojs/taro'
 import { hotelApi } from '../../services/api'
+import DateSelector from '../../components/DateSelector'
 import './hotel-list.less'
 
 export default function HotelList () {
@@ -16,6 +17,7 @@ export default function HotelList () {
   const [hasMore, setHasMore] = useState(true)
   const [showFilter, setShowFilter] = useState(false)
   const [showSort, setShowSort] = useState(false)
+  const [showDateSelector, setShowDateSelector] = useState(false)
   const [sortType, setSortType] = useState('default') // default, price_asc, price_desc, distance
   const [filters, setFilters] = useState({
     priceRange: [0, 5000],
@@ -56,7 +58,7 @@ export default function HotelList () {
         ...filters
       })
       
-      if (searchResult.success && searchResult.data) {
+      if (searchResult.code === 0 && searchResult.data) {
         const newHotels = searchResult.data.hotels || []
         
         if (params.page === 1) {
@@ -71,14 +73,14 @@ export default function HotelList () {
         setPage(params.page)
       } else {
         showToast({
-          title: '搜索失败，请稍后重试',
+          title: searchResult.message || '搜索失败，请稍后重试',
           icon: 'none'
         })
       }
     } catch (error) {
       console.error('搜索酒店失败', error)
       showToast({
-        title: '搜索失败，请稍后重试',
+        title: error.message || '搜索失败，请稍后重试',
         icon: 'none'
       })
     } finally {
@@ -241,34 +243,30 @@ export default function HotelList () {
 
   // 处理日期选择
   const handleDateSelect = useCallback(() => {
-    // 这里可以跳转到日期选择页面，或者使用弹窗选择日期
-    showModal({
-      title: '日期选择',
-      content: '选择入住和退房日期',
-      confirmText: '确定',
-      cancelText: '取消',
-      success: (res) => {
-        if (res.confirm) {
-          // 模拟选择了新日期
-          const newCheckInDate = new Date().toISOString().split('T')[0]
-          const newCheckOutDate = new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0]
-          
-          const newParams = {
-            ...searchParams,
-            checkInDate: newCheckInDate,
-            checkOutDate: newCheckOutDate,
-            nights: 2
-          }
-          
-          setSearchParams(newParams)
-          setPage(1)
-          setHotels([])
-          setHasMore(true)
-          searchHotels({ ...newParams, page: 1 })
-        }
-      }
-    })
+    setShowDateSelector(true)
+  }, [])
+
+  // 处理日期选择确认
+  const handleDateConfirm = useCallback((checkInDate, checkOutDate, nights) => {
+    const newParams = {
+      ...searchParams,
+      checkInDate,
+      checkOutDate,
+      nights
+    }
+    
+    setSearchParams(newParams)
+    setShowDateSelector(false)
+    setPage(1)
+    setHotels([])
+    setHasMore(true)
+    searchHotels({ ...newParams, page: 1 })
   }, [searchParams, searchHotels])
+
+  // 处理日期选择取消
+  const handleDateCancel = useCallback(() => {
+    setShowDateSelector(false)
+  }, [])
 
   // 渲染酒店卡片
   const renderHotelCard = useCallback((hotel) => {
@@ -488,6 +486,15 @@ export default function HotelList () {
     <View className='hotel-list'>
       {/* 顶部核心筛选头 */}
       <View className='filter-header-fixed'>
+        <View className='filter-header-top'>
+          {/* 返回按钮 */}
+          <View className='back-button' onClick={() => Taro.navigateTo({ url: '/pages/index/index' })}>
+            <Text style={{ fontSize: '20px' }}>←</Text>
+            <Text>返回</Text>
+          </View>
+          <Text className='page-title'>酒店列表</Text>
+          <View style={{ width: 60 }} />
+        </View>
         <View className='filter-info'>
           <View className='filter-item' onClick={handleCitySelect}>
             <Text className='filter-label'>城市</Text>
@@ -514,18 +521,29 @@ export default function HotelList () {
             <Text style={{ fontSize: '20px' }}>⚙️</Text>
             <Text>筛选</Text>
           </View>
-          <View className='action-button' onClick={() => setShowSort(!showSort)}>
-            <Text style={{ fontSize: '20px' }}>🔽</Text>
-            <Text>排序</Text>
+          <View style={{ position: 'relative' }}>
+            <View className='action-button' onClick={() => setShowSort(!showSort)}>
+              <Text style={{ fontSize: '20px' }}>🔽</Text>
+              <Text>排序</Text>
+            </View>
+            
+            {/* 排序选项 */}
+            {showSort && renderSortOptions()}
           </View>
         </View>
       </View>
 
       {/* 详细筛选区域 */}
       {showFilter && renderFilterSection()}
-      
-      {/* 排序选项 */}
-      {showSort && renderSortOptions()}
+
+      {/* 日期选择器 */}
+      <DateSelector
+        visible={showDateSelector}
+        onCancel={handleDateCancel}
+        onConfirm={handleDateConfirm}
+        initialCheckIn={searchParams.checkInDate}
+        initialCheckOut={searchParams.checkOutDate}
+      />
 
       {/* 酒店列表 */}
       <ScrollView 

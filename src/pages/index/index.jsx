@@ -637,14 +637,21 @@ export default function Index () {
         /* 首页搜索区域 */
         <>
           {/* 顶部Banner */}
-          <View className='banner' onClick={handleBannerClick}>
-            <Image 
-              src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount&image_size=landscape_16_9" 
-              className='banner-image'
-              mode="aspectFill"
-              onClick={handleBannerClick}
-            />
-            <View className='banner-text' onClick={handleBannerClick}>春节特惠，低至 8 折</View>
+          <View className='banner-container'>
+            <View className='banner' onClick={handleBannerClick}>
+              <Image 
+                src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount&image_size=landscape_16_9" 
+                className='banner-image'
+                mode="aspectFill"
+                onClick={handleBannerClick}
+              />
+              <View className='banner-text' onClick={handleBannerClick}>春节特惠，低至 8 折</View>
+            </View>
+            {/* 登录注册按钮 */}
+            <View className='login-register-buttons'>
+              <Text className='login-button' onClick={() => Taro.navigateTo({ url: '/pages/login/login' })}>登录</Text>
+              <Text className='register-button' onClick={() => Taro.navigateTo({ url: '/pages/register/register' })}>注册</Text>
+            </View>
           </View>
 
           {/* 核心查询区域 */}
@@ -715,7 +722,7 @@ export default function Index () {
 
             {/* 查询按钮 */}
               <Button className='search-button' onClick={handleSearch}>
-                查询
+                🔍 查询
               </Button>
           </View>
 
