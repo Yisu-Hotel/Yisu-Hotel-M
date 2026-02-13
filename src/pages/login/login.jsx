@@ -6,7 +6,6 @@ import './login.less';
 
 export default function Login() {
   // 状态管理
-  const [activeTab, setActiveTab] = useState('phone'); // 'phone' 或 'third-party'
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -75,28 +74,6 @@ export default function Login() {
     }
   };
 
-  // 第三方快捷登录
-  const handleThirdPartyLogin = (platform) => {
-    // 模拟第三方授权
-    Taro.showToast({
-      title: `${platform}授权中...`,
-      icon: 'loading'
-    });
-    
-    setTimeout(() => {
-      // 授权成功，保存登录状态到本地存储
-      Taro.setStorageSync('isLoggedIn', true);
-      Taro.setStorageSync('userInfo', {
-        name: '用户',
-        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
-      });
-      // 跳转到首页
-      Taro.switchTab({
-        url: '/pages/index/index'
-      });
-    }, 1500);
-  };
-
   // 跳转到注册页
   const handleGoToRegister = () => {
     Taro.navigateTo({
@@ -120,124 +97,79 @@ export default function Login() {
         <Text className="login-title">登录账号</Text>
       </View>
 
-      {/* 登录方式选择 */}
-      <View className="login-tabs">
-        <View 
-          className={`login-tab ${activeTab === 'phone' ? 'active' : ''}`}
-          onClick={() => setActiveTab('phone')}
-        >
-          <Text className="login-tab-text">手机号登录</Text>
-        </View>
-        <View 
-          className={`login-tab ${activeTab === 'third-party' ? 'active' : ''}`}
-          onClick={() => setActiveTab('third-party')}
-        >
-          <Text className="login-tab-text">第三方快捷登录</Text>
-        </View>
-      </View>
-
       {/* 手机号登录表单 */}
-      {activeTab === 'phone' && (
-        <View className="login-form">
-          {/* 手机号输入 */}
-          <View className="form-item">
-            <View className="phone-input-container">
-              <Text className="country-code">+86</Text>
-              <Input 
-                className="phone-input" 
-                placeholder="请输入手机号"
-                value={phone}
-                onInput={(e) => setPhone(e.detail.value)}
-                onBlur={() => {
-                  if (phone && !/^1[3-9]\d{9}$/.test(phone)) {
-                    setErrors(prev => ({ ...prev, phone: '请输入正确的手机号' }));
-                  } else {
-                    setErrors(prev => ({ ...prev, phone: '' }));
-                  }
-                }}
-              />
-            </View>
-            {errors.phone && <Text className="error-message">{errors.phone}</Text>}
+      <View className="login-form">
+        {/* 手机号输入 */}
+        <View className="form-item">
+          <View className="phone-input-container">
+            <Text className="country-code">+86</Text>
+            <Input 
+              className="phone-input" 
+              placeholder="请输入手机号"
+              value={phone}
+              onInput={(e) => setPhone(e.detail.value)}
+              onBlur={() => {
+                if (phone && !/^1[3-9]\d{9}$/.test(phone)) {
+                  setErrors(prev => ({ ...prev, phone: '请输入正确的手机号' }));
+                } else {
+                  setErrors(prev => ({ ...prev, phone: '' }));
+                }
+              }}
+            />
           </View>
-
-          {/* 密码输入 */}
-          <View className="form-item">
-            <View className="password-input-container">
-              <Input 
-                className="password-input" 
-                placeholder="请输入密码"
-                value={password}
-                onInput={(e) => setPassword(e.detail.value)}
-                type={showPassword ? 'text' : 'password'}
-                onBlur={() => {
-                  if (password && password.length < 6) {
-                    setErrors(prev => ({ ...prev, password: '密码长度不能少于6位' }));
-                  } else {
-                    setErrors(prev => ({ ...prev, password: '' }));
-                  }
-                }}
-              />
-              <Text 
-                className="password-toggle" 
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? '隐藏' : '显示'}
-              </Text>
-            </View>
-            <View className="forgot-password">
-              <Text className="forgot-password-text" onClick={handleForgotPassword}>忘记密码？</Text>
-            </View>
-            {errors.password && <Text className="error-message">{errors.password}</Text>}
-          </View>
-
-          {/* 记住密码 */}
-          <View className="form-item">
-            <View className="remember-password-container">
-              <Checkbox 
-                checked={rememberPassword} 
-                onChange={(e) => setRememberPassword(e.detail.value)}
-              />
-              <Text className="remember-password-text">记住密码</Text>
-            </View>
-          </View>
-
-          {/* 登录按钮 */}
-          <Button 
-            className="login-btn"
-            loading={isLoading}
-            onClick={handleLogin}
-          >
-            登录
-          </Button>
+          {errors.phone && <Text className="error-message">{errors.phone}</Text>}
         </View>
-      )}
 
-      {/* 第三方快捷登录 */}
-      {activeTab === 'third-party' && (
-        <View className="third-party-login">
-          <View className="third-party-title">选择登录方式</View>
-          <View className="third-party-options">
-            <View 
-              className="third-party-option"
-              onClick={() => handleThirdPartyLogin('微信')}
+        {/* 密码输入 */}
+        <View className="form-item">
+          <View className="password-input-container">
+            <Input 
+              className="password-input" 
+              placeholder="请输入密码"
+              value={password}
+              onInput={(e) => setPassword(e.detail.value)}
+              type={showPassword ? 'text' : 'password'}
+              onBlur={() => {
+                if (password && password.length < 6) {
+                  setErrors(prev => ({ ...prev, password: '密码长度不能少于6位' }));
+                } else {
+                  setErrors(prev => ({ ...prev, password: '' }));
+                }
+              }}
+            />
+            <Text 
+              className="password-toggle" 
+              onClick={() => setShowPassword(!showPassword)}
             >
-              <View className="third-party-icon wechat">
-                <Text className="icon-text">微信</Text>
-              </View>
-              <Text className="third-party-text">微信登录</Text>
-            </View>
-            <View 
-              className="third-party-option"
-              onClick={() => handleThirdPartyLogin('支付宝')}
-            >
-              <View className="third-party-icon alipay">
-                <Text className="icon-text">支付宝</Text>
-              </View>
-              <Text className="third-party-text">支付宝登录</Text>
-            </View>
+              {showPassword ? '隐藏' : '显示'}
+            </Text>
+          </View>
+          <View className="forgot-password">
+            <Text className="forgot-password-text" onClick={handleForgotPassword}>忘记密码？</Text>
+          </View>
+          {errors.password && <Text className="error-message">{errors.password}</Text>}
+        </View>
+
+        {/* 记住密码 */}
+        <View className="form-item">
+          <View className="remember-password-container">
+            <Checkbox 
+              checked={rememberPassword} 
+              onChange={(e) => setRememberPassword(e.detail.value)}
+            />
+            <Text className="remember-password-text">记住密码</Text>
           </View>
         </View>
-      )}
+
+        {/* 登录按钮 */}
+        <Button 
+          className="login-btn"
+          loading={isLoading}
+          onClick={handleLogin}
+        >
+          登录
+        </Button>
+      </View>
 
       {/* 底部快捷入口 */}
       <View className="login-footer">
