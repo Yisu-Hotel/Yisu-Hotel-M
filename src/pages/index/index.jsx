@@ -1,12 +1,7 @@
 import { View, Text, Button, Image, Input, ScrollView } from '@tarojs/components'
 import { useCallback, useState, useEffect } from 'react'
-<<<<<<< HEAD
 import { getLocation, showModal, navigateTo, showToast, useRouter } from '@tarojs/taro'
 import { hotelApi, cityApi } from '../../services/api'
-=======
-import { request, getLocation, showModal, navigateTo, showToast, useRouter } from '@tarojs/taro'
-import { hotelApi, locationApi } from '../../services/api'
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
 import './index.less'
 
 export default function Index () {
@@ -157,33 +152,9 @@ export default function Index () {
         type: 'wgs84',
         success: async (res) => {
           console.log('获取位置成功', res)
-<<<<<<< HEAD
           // 简化处理，直接使用默认城市北京
           setCurrentCity('北京')
           setLocationPermission(true)
-=======
-          try {
-            // 调用后端API根据坐标获取位置信息
-            const locationData = await locationApi.getLocationByCoords(
-              res.latitude, 
-              res.longitude
-            )
-            
-            if (locationData.success && locationData.data) {
-              setCurrentCity(locationData.data.city || '未知城市')
-              setLocationPermission(true)
-            } else {
-              // 模拟返回北京
-              setCurrentCity('北京')
-              setLocationPermission(true)
-            }
-          } catch (apiError) {
-            console.log('获取位置信息失败', apiError)
-            // 模拟返回北京
-            setCurrentCity('北京')
-            setLocationPermission(true)
-          }
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
         },
         fail: (err) => {
           console.log('获取位置失败', err)
@@ -463,21 +434,10 @@ export default function Index () {
   // 处理Banner点击
   const handleBannerClick = useCallback(() => {
     navigateTo({
-      url: '/pages/hotel-detail/hotel-detail?id=1'
+      url: '/pages/hotel-detail/index?id=1'
     })
   }, [])
 
-<<<<<<< HEAD
-  // 处理收藏按钮点击
-  const handleCollectClick = useCallback(() => {
-    // 模拟未登录状态，跳转到注册页
-    navigateTo({
-      url: '/pages/register/register'
-    })
-  }, [])
-
-=======
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
   // 处理快捷标签点击
   const handleTagClick = useCallback((tag) => {
     console.log('点击标签', tag)
@@ -583,11 +543,7 @@ export default function Index () {
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京王府井希尔顿酒店</Text>
-<<<<<<< HEAD
-                  <Button className='collect-btn' onClick={handleCollectClick}>收藏</Button>
-=======
                   <Button className='collect-btn'>收藏</Button>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
                 </View>
                 <Text className='hotel-address'>北京市东城区王府井东街8号</Text>
                 <View className='hotel-footer'>
@@ -610,11 +566,7 @@ export default function Index () {
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京国贸大酒店</Text>
-<<<<<<< HEAD
-                  <Button className='collect-btn' onClick={handleCollectClick}>收藏</Button>
-=======
                   <Button className='collect-btn'>收藏</Button>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
                 </View>
                 <Text className='hotel-address'>北京市朝阳区建国门外大街1号</Text>
                 <View className='hotel-footer'>
@@ -637,11 +589,7 @@ export default function Index () {
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京三里屯洲际酒店</Text>
-<<<<<<< HEAD
-                  <Button className='collect-btn' onClick={handleCollectClick}>收藏</Button>
-=======
                   <Button className='collect-btn'>收藏</Button>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
                 </View>
                 <Text className='hotel-address'>北京市朝阳区三里屯北路1号</Text>
                 <View className='hotel-footer'>
@@ -662,6 +610,17 @@ export default function Index () {
       ) : (
         /* 首页搜索区域 */
         <>
+          {/* 顶部导航栏 */}
+          <View className='top-nav'>
+            <View className='nav-left'>
+              <Text className='nav-title'>怡宿酒店</Text>
+            </View>
+            <View className='nav-right'>
+              <Text className='login-button' onClick={() => Taro.navigateTo({ url: '/pages/login/login' })}>登录</Text>
+              <Text className='register-button' onClick={() => Taro.navigateTo({ url: '/pages/register/register' })}>注册</Text>
+            </View>
+          </View>
+
           {/* 顶部Banner */}
           <View className='banner-container'>
             <View className='banner' onClick={handleBannerClick}>
@@ -673,40 +632,42 @@ export default function Index () {
               />
               <View className='banner-text' onClick={handleBannerClick}>春节特惠，低至 8 折</View>
             </View>
-            {/* 登录注册按钮 */}
-            <View className='login-register-buttons'>
-              <Text className='login-button' onClick={() => Taro.navigateTo({ url: '/pages/login/login' })}>登录</Text>
-              <Text className='register-button' onClick={() => Taro.navigateTo({ url: '/pages/register/register' })}>注册</Text>
-            </View>
           </View>
 
           {/* 核心查询区域 */}
           <View className='search-container'>
             {/* 当前地点 */}
             <View className='location-bar' onClick={handleCityClick}>
+              <Text className='location-icon'>📍</Text>
               <Text className='location-text'>{currentCity}</Text>
               <Text className='location-icon'>▾</Text>
+            </View>
+
+            {/* 日期选择框 */}
+            <View className='date-container' onClick={handleDateClick}>
+              <View className='date-item'>
+                <Text className='date-label'>入住日期</Text>
+                <Text className='date-value'>{checkInDate}</Text>
+                <Text className='date-week'>周五</Text>
+              </View>
+              <View className='date-separator'>
+                <Text className='date-night'>{calculateNights(checkInDate, checkOutDate)}晚</Text>
+              </View>
+              <View className='date-item'>
+                <Text className='date-label'>离店日期</Text>
+                <Text className='date-value'>{checkOutDate}</Text>
+                <Text className='date-week'>周六</Text>
+              </View>
             </View>
 
             {/* 关键字搜索框 */}
             <View className='search-input-container' style={{ position: 'relative', zIndex: 100 }}>
               <Text className='search-icon'>🔍</Text>
-<<<<<<< HEAD
               <Input 
                 className='search-input' 
                 placeholder="输入酒店名称 / 品牌 / 位置" 
                 value={keyword}
                 onInput={(e) => setKeyword(e.detail.value)}
-=======
-              <input 
-                className='search-input' 
-                placeholder="输入酒店名称 / 品牌 / 位置" 
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                onSubmit={handleSearch}
-                type="text"
-                autoComplete="off"
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
                 style={{ 
                   flex: 1, 
                   fontSize: '14px', 
@@ -720,27 +681,21 @@ export default function Index () {
               />
             </View>
 
-            {/* 日期选择框 */}
-            <View className='date-container' onClick={handleDateClick}>
-              <Text className='date-icon'>📅</Text>
-              <Text className='date-text'>
-                {checkInDate} - {checkOutDate} 共 {calculateNights(checkInDate, checkOutDate)} 晚
-              </Text>
-            </View>
-
             {/* 筛选条件栏 */}
             <View className='filter-bar'>
               <View className='filter-item' onClick={() => handleFilterClick('star')}>
                 <Text>星级</Text>
-                <Text className='filter-arrow'>▾</Text>
+                <Text className='filter-value'>不限</Text>
               </View>
+              <View className='filter-divider'></View>
               <View className='filter-item' onClick={() => handleFilterClick('price')}>
                 <Text>价格</Text>
-                <Text className='filter-arrow'>▾</Text>
+                <Text className='filter-value'>不限</Text>
               </View>
+              <View className='filter-divider'></View>
               <View className='filter-item' onClick={() => handleFilterClick('facility')}>
                 <Text>设施</Text>
-                <Text className='filter-arrow'>▾</Text>
+                <Text className='filter-value'>不限</Text>
               </View>
             </View>
 
@@ -755,9 +710,94 @@ export default function Index () {
             </ScrollView>
 
             {/* 查询按钮 */}
-              <Button className='search-button' onClick={handleSearch}>
-                🔍 查询
-              </Button>
+            <Button className='search-button' onClick={handleSearch}>
+              开始查询
+            </Button>
+          </View>
+
+          {/* 精选推荐酒店列表 */}
+          <View className='recommended-hotels'>
+            <View className='recommended-header'>
+              <Text className='recommended-title'>精选推荐</Text>
+              <Text className='recommended-more' onClick={() => navigateTo({ url: '/pages/hotel-list/hotel-list' })}>查看更多</Text>
+            </View>
+            
+            <ScrollView scrollY className='hotel-list'>
+              {/* 酒店项 1 */}
+              <View className='hotel-item' onClick={() => navigateTo({ url: '/pages/hotel-detail/index?id=1' })}>
+                <Image className='hotel-image' src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3' mode='aspectFill' />
+                <View className='hotel-info'>
+                  <View className='hotel-header'>
+                    <Text className='hotel-name'>北京王府井希尔顿酒店</Text>
+                    <View className='hotel-rating'>
+                      <Text className='rating-value'>4.9</Text>
+                    </View>
+                  </View>
+                  <Text className='hotel-address'>王府井·东单地区 · 距离故宫1.2km</Text>
+                  <View className='hotel-footer'>
+                    <View className='hotel-price'>
+                      <Text className='price-symbol'>¥</Text>
+                      <Text className='price-value'>1288</Text>
+                      <Text className='price-unit'>/晚</Text>
+                    </View>
+                    <View className='hotel-tags'>
+                      <Text className='hotel-tag'>口碑极佳</Text>
+                      <Text className='hotel-tag'>免费取消</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+              
+              {/* 酒店项 2 */}
+              <View className='hotel-item' onClick={() => navigateTo({ url: '/pages/hotel-detail/index?id=2' })}>
+                <Image className='hotel-image' src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=luxury%20hotel%20facade%20with%20modern%20design&image_size=landscape_4_3' mode='aspectFill' />
+                <View className='hotel-info'>
+                  <View className='hotel-header'>
+                    <Text className='hotel-name'>上海外滩华尔道夫酒店</Text>
+                    <View className='hotel-rating'>
+                      <Text className='rating-value'>4.8</Text>
+                    </View>
+                  </View>
+                  <Text className='hotel-address'>外滩 · 距离东方明珠3.8km</Text>
+                  <View className='hotel-footer'>
+                    <View className='hotel-price'>
+                      <Text className='price-symbol'>¥</Text>
+                      <Text className='price-value'>2588</Text>
+                      <Text className='price-unit'>/晚</Text>
+                    </View>
+                    <View className='hotel-tags'>
+                      <Text className='hotel-tag'>外滩江景</Text>
+                      <Text className='hotel-tag'>地下车库</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+              
+              {/* 酒店项 3 */}
+              <View className='hotel-item' onClick={() => navigateTo({ url: '/pages/hotel-detail/index?id=3' })}>
+                <Image className='hotel-image' src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=elegant%20hotel%20building%20with%20glass%20facade&image_size=landscape_4_3' mode='aspectFill' />
+                <View className='hotel-info'>
+                  <View className='hotel-header'>
+                    <Text className='hotel-name'>广州四季酒店</Text>
+                    <View className='hotel-rating'>
+                      <Text className='rating-value'>4.7</Text>
+                    </View>
+                  </View>
+                  <Text className='hotel-address'>珠江新城 · 距离广州塔2.5km</Text>
+                  <View className='hotel-footer'>
+                    <View className='hotel-price'>
+                      <Text className='price-symbol'>¥</Text>
+                      <Text className='price-value'>1888</Text>
+                      <Text className='price-unit'>/晚</Text>
+                    </View>
+                    <View className='hotel-tags'>
+                      <Text className='hotel-tag'>豪华江景</Text>
+                      <Text className='hotel-tag'>健身中心</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
           </View>
 
           {/* 日历组件 */}

@@ -2,11 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { View, Text, Image, ScrollView, Swiper, SwiperItem } from '@tarojs/components';
-<<<<<<< HEAD
 import { hotelApi } from '../../services/api';
-import './index.less';
-
-=======
 import './index.less';
 
 // 模拟数据（包含id=1的酒店，匹配你当前URL参数）
@@ -44,7 +40,6 @@ const mockHotelData = {
   }
 };
 
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
 export default function HotelDetail() {
   // 修复：使用 React 原生 useState
   const [hotelData, setHotelData] = useState(null);
@@ -58,7 +53,6 @@ export default function HotelDetail() {
   });
 
   useEffect(() => {
-<<<<<<< HEAD
     const fetchHotelDetail = async () => {
       try {
         setLoading(true);
@@ -76,14 +70,20 @@ export default function HotelDetail() {
         }
 
         // 调用API获取酒店详情
-        const response = await hotelApi.getHotelDetail(id);
-        if (response.code === 0 && response.data) {
-          setHotelData(response.data);
-        } else {
-          Taro.showToast({
-            title: response.msg || '获取酒店详情失败',
-            icon: 'none'
-          });
+        try {
+          const response = await hotelApi.getHotelDetail(id);
+          if (response.code === 0 && response.data) {
+            setHotelData(response.data);
+          } else {
+            // 使用模拟数据作为兜底
+            const data = mockHotelData[id] || mockHotelData["1"];
+            setHotelData(data);
+          }
+        } catch (error) {
+          // API调用失败时使用模拟数据
+          console.warn('API调用失败，使用模拟数据:', error);
+          const data = mockHotelData[id] || mockHotelData["1"];
+          setHotelData(data);
         }
       } catch (error) {
         console.error('获取酒店详情失败:', error);
@@ -92,26 +92,14 @@ export default function HotelDetail() {
           icon: 'none',
           duration: 2000
         });
+        // 使用模拟数据作为最终兜底
+        setHotelData(mockHotelData["1"]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchHotelDetail();
-=======
-    // 强制从URL解析id（兼容H5端）
-    const urlParams = new URLSearchParams(window.location.search);
-    const hotelId = urlParams.get('id') || "1"; // 兜底id=1
-
-    // 匹配数据
-    const data = mockHotelData[hotelId] || mockHotelData["1"];
-    
-    // 模拟加载延迟，避免渲染过快
-    setTimeout(() => {
-      setHotelData(data);
-      setLoading(false);
-    }, 300);
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
   }, []);
 
   // 处理筛选标签点击
@@ -203,11 +191,7 @@ export default function HotelDetail() {
 
       {/* 顶部轮播图 */}
       <Swiper className="banner-swiper">
-<<<<<<< HEAD
-        {hotelData.main_image_url && hotelData.main_image_url.map((img, idx) => (
-=======
-        {hotelData.bannerList.map((img, idx) => (
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
+        {(hotelData.main_image_url || hotelData.bannerList || []).map((img, idx) => (
           <SwiperItem key={idx}>
             <Image className="banner-img" src={img} mode="widthFix" />
           </SwiperItem>
@@ -216,78 +200,59 @@ export default function HotelDetail() {
 
       {/* 酒店名称+标签 */}
       <View className="hotel-header">
-<<<<<<< HEAD
-        <Text className="hotel-name">{hotelData.name}</Text>
-        {hotelData.star_rating && (
-          <Text className="hotel-tag">{hotelData.star_rating}星级</Text>
-        )}
-=======
-        <Text className="hotel-name">{hotelData.hotelInfo.name}</Text>
-        <Text className="hotel-tag">{hotelData.hotelInfo.tag}</Text>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
+        <Text className="hotel-name">{hotelData.name || hotelData.hotelInfo?.name || '酒店名称'}</Text>
+        <Text className="hotel-tag">{hotelData.star_rating ? `${hotelData.star_rating}星级` : hotelData.hotelInfo?.tag || '酒店标签'}</Text>
       </View>
 
       {/* 设施图标栏 */}
       <View className="facilities-row">
-<<<<<<< HEAD
         {hotelData.facilities && hotelData.facilities.slice(0, 4).map((facility, idx) => (
           <Text key={idx} className="facility-item">
             <Text className="facility-icon">📋</Text>
             <Text className="facility-text">{facility}</Text>
           </Text>
         ))}
-=======
-        <Text className="facility-item">
-          <Text className="facility-icon">📶</Text>
-          <Text className="facility-text">WiFi</Text>
-        </Text>
-        <Text className="facility-item">
-          <Text className="facility-icon">🚗</Text>
-          <Text className="facility-text">停车场</Text>
-        </Text>
-        <Text className="facility-item">
-          <Text className="facility-icon">🧹</Text>
-          <Text className="facility-text">清洁</Text>
-        </Text>
-        <Text className="facility-item">
-          <Text className="facility-icon">👨‍💼</Text>
-          <Text className="facility-text">服务</Text>
-        </Text>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
+        {(!hotelData.facilities || hotelData.facilities.length === 0) && (
+          <>
+            <Text className="facility-item">
+              <Text className="facility-icon">📶</Text>
+              <Text className="facility-text">WiFi</Text>
+            </Text>
+            <Text className="facility-item">
+              <Text className="facility-icon">🚗</Text>
+              <Text className="facility-text">停车场</Text>
+            </Text>
+            <Text className="facility-item">
+              <Text className="facility-icon">🧹</Text>
+              <Text className="facility-text">清洁</Text>
+            </Text>
+            <Text className="facility-item">
+              <Text className="facility-icon">👨‍💼</Text>
+              <Text className="facility-text">服务</Text>
+            </Text>
+          </>
+        )}
         <Text className="facility-more">更多 ▾</Text>
       </View>
 
       {/* 评分+位置栏 */}
       <View className="score-address-row">
         <View className="score-block">
-<<<<<<< HEAD
-          <Text className="score">{hotelData.rating}</Text>
+          <Text className="score">{hotelData.rating || hotelData.hotelInfo?.score || '0.0'}</Text>
           <Text className="score-level">{hotelData.rating >= 4.5 ? '超棒' : hotelData.rating >= 4 ? '很好' : '不错'}</Text>
-          <Text className="comment-count">{hotelData.review_count || 0}条 &gt;</Text>
+          <Text className="comment-count">{hotelData.review_count || hotelData.hotelInfo?.commentCount || 0}条 &gt;</Text>
+          {hotelData.hotelInfo?.scoreDesc && <Text className="score-desc">{hotelData.hotelInfo.scoreDesc}</Text>}
         </View>
         <View className="address-block">
-          <Text className="address">{hotelData.address}</Text>
-=======
-          <Text className="score">{hotelData.hotelInfo.score}</Text>
-          <Text className="score-level">超棒</Text>
-          <Text className="comment-count">{hotelData.hotelInfo.commentCount}条 &gt;</Text>
-          <Text className="score-desc">{hotelData.hotelInfo.scoreDesc}</Text>
-        </View>
-        <View className="address-block">
-          <Text className="distance">{hotelData.hotelInfo.distance}</Text>
-          <Text className="address">{hotelData.hotelInfo.address}</Text>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
+          {hotelData.hotelInfo?.distance && <Text className="distance">{hotelData.hotelInfo.distance}</Text>}
+          <Text className="address">{hotelData.address || hotelData.hotelInfo?.address || '酒店地址'}</Text>
           <Text className="map-btn">查看地图</Text>
         </View>
       </View>
 
       {/* 优惠标签栏 */}
       <View className="discount-row">
-<<<<<<< HEAD
-        {hotelData.tags && hotelData.tags.slice(0, 3).map((tag, idx) => (
-=======
-        {hotelData.discountTags.map((tag, idx) => (
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
+        {(hotelData.tags || hotelData.discountTags || []).slice(0, 3).map((tag, idx) => (
           <Text key={idx} className="discount-tag">{tag}</Text>
         ))}
         <Text className="coupon-btn">领券</Text>
@@ -296,17 +261,10 @@ export default function HotelDetail() {
       {/* 日期+房间人数栏 */}
       <View className="date-guest-row">
         <View className="date-part">
-<<<<<<< HEAD
-          <Text className="date">{new Date().toISOString().split('T')[0]} - {new Date(Date.now() + 86400000).toISOString().split('T')[0]}</Text>
-          <Text className="night">1晚</Text>
+          <Text className="date">{hotelData.dateRange || `${new Date().toISOString().split('T')[0]} - ${new Date(Date.now() + 86400000).toISOString().split('T')[0]}`}</Text>
+          <Text className="night">{hotelData.stayNight || '1晚'}</Text>
         </View>
-        <Text className="guest">1间 1人</Text>
-=======
-          <Text className="date">{hotelData.dateRange}</Text>
-          <Text className="night">{hotelData.stayNight}</Text>
-        </View>
-        <Text className="guest">{hotelData.roomGuest}</Text>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
+        <Text className="guest">{hotelData.roomGuest || '1间 1人'}</Text>
       </View>
 
       {/* 房型筛选栏 */}
@@ -352,56 +310,33 @@ export default function HotelDetail() {
           <Text className="tag-icon">♦</Text>
           <Text className="tag-text">猜您喜欢 本店大床房销量No.1</Text>
         </View>
-<<<<<<< HEAD
-        {hotelData.room_types && hotelData.room_types.map((room) => (
+        {((hotelData.room_types || hotelData.roomList) || []).map((room) => (
           <View key={room.id} className="room-item">
-            <Image className="room-img" src={room.image_url || hotelData.main_image_url[0]} mode="widthFix" />
-=======
-        {hotelData.roomList.map((room) => (
-          <View key={room.id} className="room-item">
-            <Image className="room-img" src={room.img} mode="widthFix" />
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
+            <Image className="room-img" src={room.image_url || room.img || (hotelData.main_image_url && hotelData.main_image_url[0])} mode="widthFix" />
             <View className="room-info">
               <View className="room-header">
                 <Text className="room-name">{room.name}</Text>
                 <Text className="room-code">{room.id}</Text>
               </View>
-<<<<<<< HEAD
-              <Text className="room-desc">{room.description}</Text>
-              <Text className="room-note">入住时间14:00后 | 退房时间12:00前</Text>
+              <Text className="room-desc">{room.description || room.desc || '房间描述'}</Text>
+              <Text className="room-note">{room.note || '入住时间14:00后 | 退房时间12:00前'}</Text>
+              {room.service && <Text className="room-service">{room.service}</Text>}
               <View className="room-tags">
-                {room.amenities && room.amenities.slice(0, 3).map((amenity, idx) => (
-                  <Text key={idx} className="tag">{amenity}</Text>
-=======
-              <Text className="room-desc">{room.desc}</Text>
-              <Text className="room-note">{room.note}</Text>
-              <Text className="room-service">{room.service}</Text>
-              <View className="room-tags">
-                {room.tags.map((tag, idx) => (
-                  <Text key={idx} className="tag">{tag}</Text>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
+                {(room.amenities || room.tags || []).slice(0, 3).map((item, idx) => (
+                  <Text key={idx} className="tag">{item}</Text>
                 ))}
               </View>
               <View className="price-book-row">
                 <View className="price-part">
-<<<<<<< HEAD
-                  <Text className="original-price">¥{room.original_price}</Text>
-                  <Text className="current-price">¥{room.price}</Text>
-=======
-                  <Text className="original-price">¥{room.originalPrice}</Text>
-                  <Text className="current-price">¥{room.currentPrice}</Text>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
+                  <Text className="original-price">¥{room.original_price || room.originalPrice || 0}</Text>
+                  <Text className="current-price">¥{room.price || room.currentPrice || 0}</Text>
                   <Text className="discount-info">新客体验钻石 会员出行 4项优惠</Text>
                 </View>
                 {/* 核心修改：跳转路径改为 /pages/booking-confirm/index */}
                 <View 
                   className="book-btn" 
                   onClick={() => Taro.navigateTo({
-<<<<<<< HEAD
                     url: `/pages/booking-confirm/index?hotelId=${hotelData.id}&roomId=${room.id}`
-=======
-                    url: '/pages/booking-confirm/index'
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
                   })}
                 >
                   预订

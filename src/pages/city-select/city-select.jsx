@@ -1,10 +1,6 @@
 import { View, Text, ScrollView, Input, Button } from '@tarojs/components'
 import { useState, useEffect, useCallback } from 'react'
-<<<<<<< HEAD
-import { useRouter, navigateTo, showToast } from '@tarojs/taro'
-=======
 import { useRouter, navigateTo, redirectTo, showToast } from '@tarojs/taro'
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
 import './city-select.less'
 
 export default function CitySelect () {
@@ -200,13 +196,6 @@ export default function CitySelect () {
   // 处理城市选择
   const handleCitySelect = useCallback((city) => {
     console.log('选择城市:', city)
-<<<<<<< HEAD
-    // 返回上一页并传递选择的城市
-    navigateTo({
-      url: `/pages/index/index?city=${encodeURIComponent(city.name)}`
-    })
-  }, [])
-=======
     console.log('路由参数:', router.query)
     
     // 获取返回URL，如果没有则默认返回首页
@@ -219,7 +208,6 @@ export default function CitySelect () {
       url: `${returnUrl}?city=${encodeURIComponent(city.name)}`
     })
   }, [router.query])
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
 
   // 处理搜索
   const handleSearch = useCallback((keyword) => {

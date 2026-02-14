@@ -1,10 +1,6 @@
 import { View, Text, Image, ScrollView, Button, Switch } from '@tarojs/components'
 import { useState, useEffect, useCallback, useRef } from 'react'
-<<<<<<< HEAD
-import { useRouter, showToast, navigateTo, showModal, startPullDownRefresh, stopPullDownRefresh } from '@tarojs/taro'
-=======
 import { useRouter, showToast, navigateTo, redirectTo, showModal, startPullDownRefresh, stopPullDownRefresh } from '@tarojs/taro'
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
 import { hotelApi } from '../../services/api'
 import DateSelector from '../../components/DateSelector'
 import './hotel-list.less'
@@ -41,11 +37,7 @@ export default function HotelList () {
   // 初始化页面
   useEffect(() => {
     initPage()
-<<<<<<< HEAD
-  }, [])
-=======
   }, [router.query])
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
 
   // 当showFilter为true时，同步tempFilters为当前filters的值
   useEffect(() => {
@@ -60,28 +52,14 @@ export default function HotelList () {
       setLoading(true)
       
       // 调用后端API搜索酒店，优先使用传入的sort参数
-<<<<<<< HEAD
-      const searchResult = await hotelApi.getHotelList({
-        location: params.city || '北京',
-        check_in_date: params.checkInDate,
-        check_out_date: params.checkOutDate,
-        keyword: params.keyword || '',
-        page: params.page,
-        pageSize: params.pageSize || 10,
-=======
       const searchResult = await hotelApi.searchHotels({
         ...params,
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
         sort: params.sort || sortType,
         ...filters
       })
       
       if (searchResult.code === 0 && searchResult.data) {
-<<<<<<< HEAD
-        const newHotels = searchResult.data.list || []
-=======
         const newHotels = searchResult.data.hotels || []
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
         
         if (params.page === 1) {
           setHotels(newHotels)
@@ -95,11 +73,7 @@ export default function HotelList () {
         setPage(params.page)
       } else {
         showToast({
-<<<<<<< HEAD
-          title: searchResult.msg || '搜索失败，请稍后重试',
-=======
           title: searchResult.message || '搜索失败，请稍后重试',
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
           icon: 'none'
         })
       }
@@ -122,11 +96,6 @@ export default function HotelList () {
   // 初始化页面数据
   const initPage = useCallback(async () => {
     try {
-<<<<<<< HEAD
-      // 无论是否有参数，都使用默认参数初始化
-      const defaultParams = {
-        city: '北京',
-=======
       // 检查是否从城市选择页面返回
       const cityFromParams = router.query.city
       console.log('从路由参数获取的城市:', cityFromParams)
@@ -134,7 +103,6 @@ export default function HotelList () {
       // 无论是否有参数，都使用默认参数初始化
       const defaultParams = {
         city: cityFromParams || '北京',
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
         keyword: '',
         checkInDate: new Date().toISOString().split('T')[0],
         checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
@@ -162,7 +130,7 @@ export default function HotelList () {
         icon: 'none'
       })
     }
-  }, [searchHotels])
+  }, [searchHotels, router.query])
 
   // 下拉刷新
   const handleRefresh = useCallback(async () => {
@@ -272,12 +240,8 @@ export default function HotelList () {
 
   // 处理城市选择
   const handleCitySelect = useCallback(() => {
-<<<<<<< HEAD
-    navigateTo({
-=======
     // 使用redirectTo替换当前页面，避免在导航栈中添加新页面
     redirectTo({
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
       url: `/pages/city-select/city-select?returnUrl=/pages/hotel-list/hotel-list`
     })
   }, [])
@@ -399,16 +363,7 @@ export default function HotelList () {
       <View className='filter-section'>
         <View className='filter-header'>
           <Text className='filter-title'>筛选条件</Text>
-<<<<<<< HEAD
-          <Text className='filter-reset' onClick={() => setTempFilters({ 
-            priceRange: [0, 5000], 
-            starLevels: [], 
-            amenities: [], 
-            minRating: 0 
-          })}>重置</Text>
-=======
           <Text className='filter-reset' onClick={handleResetFilter}>重置</Text>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
         </View>
         
         {/* 价格区间 */}
@@ -501,11 +456,7 @@ export default function HotelList () {
         </View>
       </View>
     )
-<<<<<<< HEAD
-  }, [tempFilters, handleFilterConfirm, handleFilterCancel])
-=======
   }, [tempFilters, handleFilterConfirm, handleFilterCancel, handleResetFilter])
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
 
   // 渲染排序选项
   const renderSortOptions = useCallback(() => {
@@ -537,11 +488,7 @@ export default function HotelList () {
       <View className='filter-header-fixed'>
         <View className='filter-header-top'>
           {/* 返回按钮 */}
-<<<<<<< HEAD
-          <View className='back-button' onClick={() => Taro.navigateTo({ url: '/pages/index/index' })}>
-=======
           <View className='back-button' onClick={() => Taro.navigateBack()}>
->>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
             <Text style={{ fontSize: '20px' }}>←</Text>
             <Text>返回</Text>
           </View>

@@ -2,9 +2,67 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   line-height: 1.4;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #f5f5f5, #e6f7ff);
   min-height: 100vh;
   padding-bottom: 20px;
+}
+
+/* 顶部导航栏 */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  .nav-left {
+    .nav-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1890ff;
+    }
+  }
+
+  .nav-right {
+    display: flex;
+    gap: 16px;
+
+    .login-button {
+      padding: 6px 12px;
+      background-color: transparent;
+      color: #1890ff;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &:active {
+        background-color: rgba(24, 144, 255, 0.1);
+        transform: scale(0.95);
+      }
+    }
+
+    .register-button {
+      padding: 6px 12px;
+      background-color: #1890ff;
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 2px 6px rgba(24, 144, 255, 0.3);
+      transition: all 0.3s ease;
+
+      &:active {
+        background-color: #40a9ff;
+        transform: scale(0.95);
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+      }
+    }
+  }
 }
 
 /* 顶部Banner */
@@ -25,48 +83,6 @@
   transition: all 0.3s ease;
 }
 
-.login-register-buttons {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  display: flex;
-  gap: 12px;
-  z-index: 10;
-
-  .login-button {
-    padding: 6px 12px;
-    background-color: rgba(255, 255, 255, 0.9);
-    color: #1890ff;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-
-    &:hover {
-      background-color: white;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-  }
-
-  .register-button {
-    padding: 6px 12px;
-    background-color: rgba(24, 144, 255, 0.9);
-    color: white;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-
-    &:hover {
-      background-color: #1890ff;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-  }
-}
 
 .banner:active {
   transform: scale(0.98);
@@ -96,13 +112,28 @@
 /* 核心查询区域 */
 .search-container {
   margin: 16px;
-  padding: 20px;
+  padding: 24px;
   background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 28px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   position: relative;
   z-index: 1;
   animation: fadeInUp 0.5s ease;
+  margin-top: -30px;
+  background: linear-gradient(135deg, #ffffff, #f9f9f9);
+  border: 2px solid #f8f9fa;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #1890ff, #52c41a, #faad14);
+    border-radius: 28px 28px 0 0;
+  }
 }
 
 /* 动画效果 */
@@ -133,9 +164,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
   cursor: pointer;
   user-select: none;
   z-index: 1000;
@@ -144,23 +176,25 @@
 }
 
 .location-bar:active {
-  background-color: #f8f9fa;
-  transform: translateX(4px);
+  background-color: #e9ecef;
+  transform: translateY(-2px);
 }
 
 .location-text {
+  flex: 1;
   font-size: 16px;
   font-weight: 500;
   color: #333;
+  margin: 0 12px;
 }
 
 .location-icon {
-  font-size: 14px;
-  color: #999;
+  font-size: 16px;
+  color: #666;
   transition: transform 0.2s ease;
 }
 
-.location-bar:active .location-icon {
+.location-bar:active .location-icon:last-child {
   transform: rotate(180deg);
 }
 
@@ -208,8 +242,9 @@
 .date-container {
   display: flex;
   align-items: center;
-  padding: 14px 16px;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  padding: 20px;
+  margin-bottom: 20px;
   background-color: #f8f9fa;
   border-radius: 12px;
   transition: all 0.3s ease;
@@ -221,61 +256,88 @@
   transform: translateY(-2px);
 }
 
-.date-icon {
-  margin-right: 12px;
-  color: #999;
-  font-size: 16px;
+.date-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
-.date-text {
-  flex: 1;
-  font-size: 14px;
+.date-label {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+.date-value {
+  font-size: 16px;
+  font-weight: 600;
   color: #333;
-  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.date-week {
+  font-size: 12px;
+  color: #666;
+}
+
+.date-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.date-night {
+  font-size: 12px;
+  color: #666;
+  padding: 4px 8px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* 筛选条件栏 */
 .filter-bar {
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 16px;
-  padding: 16px 0;
-  border-bottom: 1px solid #f0f0f0;
-  border-top: 1px solid #f0f0f0;
-  background-color: #fafafa;
-  border-radius: 8px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
 }
 
 .filter-item {
+  flex: 1;
   display: flex;
-  align-items: center;
   flex-direction: column;
+  align-items: center;
   cursor: pointer;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 8px 0;
   transition: all 0.2s ease;
 }
 
 .filter-item:active {
-  background-color: #e9ecef;
   transform: scale(0.95);
 }
 
-.filter-item Text {
+.filter-item Text:first-child {
   font-size: 14px;
-  color: #333;
-  font-weight: 400;
+  color: #666;
+  margin-bottom: 4px;
 }
 
-.filter-arrow {
+.filter-value {
   font-size: 12px;
   color: #999;
-  margin-top: 4px;
-  transition: transform 0.2s ease;
 }
 
-.filter-item:active .filter-arrow {
-  transform: rotate(180deg);
+.filter-divider {
+  width: 1px;
+  height: 32px;
+  background-color: #e0e0e0;
+  margin: 0 16px;
 }
 
 /* 快捷标签区 */
@@ -317,21 +379,22 @@
 /* 查询按钮 */
 .search-button {
   width: 100%;
-  height: 52px;
-  background-color: #1890ff;
+  height: 56px;
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
   color: white;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
-  border-radius: 12px;
+  border-radius: 16px;
   border: none;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   overflow: hidden;
+  margin-top: 8px;
 }
 
 .search-button::before {
@@ -350,9 +413,9 @@
 }
 
 .search-button:active {
-  background-color: #40a9ff;
-  transform: translateY(2px);
-  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.3);
+  background: linear-gradient(135deg, #40a9ff, #69c0ff);
+  transform: translateY(3px);
+  box-shadow: 0 3px 8px rgba(24, 144, 255, 0.4);
 }
 
 .search-button::after {
@@ -371,6 +434,271 @@
 .search-button:active::after {
   width: 300px;
   height: 300px;
+}
+
+/* 精选推荐酒店列表 */
+.recommended-hotels {
+  margin: 16px;
+  margin-top: 0;
+}
+
+.recommended-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.recommended-title {
+  font-size: 19px;
+  font-weight: 600;
+  color: #333;
+}
+
+.recommended-more {
+  font-size: 14px;
+  color: #1890ff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.recommended-more:active {
+  transform: translateX(4px);
+  color: #40a9ff;
+}
+
+/* 酒店列表 */
+.hotel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 酒店项 */
+.hotel-item {
+  background-color: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  transition: all 0.4s ease;
+  cursor: pointer;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.hotel-item:active {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* 酒店图片 */
+.hotel-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+  border-radius: 20px 20px 0 0;
+}
+
+.hotel-item:active .hotel-image {
+  transform: scale(1.05);
+}
+
+/* 酒店图片遮罩效果 */
+.hotel-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 220px;
+  background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.3) 100%);
+  border-radius: 20px 20px 0 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 酒店信息 */
+.hotel-info {
+  padding: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+/* 酒店头部 */
+.hotel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.hotel-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  flex: 1;
+  margin-right: 16px;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* 酒店评分 */
+.hotel-rating {
+  display: flex;
+  align-items: center;
+  background-color: #fff3e0;
+  padding: 6px 14px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.15);
+}
+
+.rating-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ff6b00;
+}
+
+/* 酒店地址 */
+.hotel-address {
+  font-size: 15px;
+  color: #666;
+  margin-bottom: 16px;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  
+  &::before {
+    content: '📍';
+    font-size: 14px;
+  }
+}
+
+/* 酒店底部 */
+.hotel-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f8f9fa;
+}
+
+/* 酒店价格 */
+.hotel-price {
+  display: flex;
+  align-items: baseline;
+  background: linear-gradient(135deg, #fff1f0, #fff7e6);
+  padding: 8px 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.1);
+}
+
+.price-symbol {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ff4d4f;
+  margin-right: 2px;
+}
+
+.price-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ff4d4f;
+  margin-right: 2px;
+}
+
+.price-unit {
+  font-size: 14px;
+  color: #999;
+}
+
+/* 酒店标签 */
+.hotel-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hotel-tag {
+  font-size: 12px;
+  color: #1890ff;
+  background-color: #e6f7ff;
+  padding: 6px 10px;
+  border-radius: 14px;
+  border: 1px solid #91d5ff;
+  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.hotel-tag:active {
+  transform: scale(0.95);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .hotel-image {
+    height: 180px;
+  }
+  
+  .hotel-name {
+    font-size: 18px;
+  }
+  
+  .price-value {
+    font-size: 22px;
+  }
+  
+  .hotel-info {
+    padding: 16px;
+  }
+  
+  .hotel-rating {
+    padding: 4px 12px;
+  }
+  
+  .rating-value {
+    font-size: 14px;
+  }
+  
+  .hotel-address {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+}
+
+@media (min-width: 414px) {
+  .hotel-image {
+    height: 240px;
+  }
+  
+  .hotel-name {
+    font-size: 22px;
+  }
+  
+  .price-value {
+    font-size: 26px;
+  }
+  
+  .hotel-info {
+    padding: 24px;
+  }
+  
+  .hotel-rating {
+    padding: 8px 16px;
+  }
+  
+  .rating-value {
+    font-size: 18px;
+  }
+  
+  .hotel-address {
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
 }
 
 
