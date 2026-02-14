@@ -197,7 +197,11 @@ export default function Index () {
         keyword: keyword,
         checkInDate: checkInDate || new Date().toISOString().split('T')[0],
         checkOutDate: checkOutDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        nights: calculateNights(checkInDate, checkOutDate) || 1
+        nights: calculateNights(checkInDate, checkOutDate) || 1,
+        selectedTags: selectedTags,
+        selectedFilterValue: selectedFilterValue,
+        selectedFacilities: selectedFacilities,
+        currentFilterType: currentFilterType
       }
       
       console.log('搜索参数:', params)
@@ -214,7 +218,7 @@ export default function Index () {
         icon: 'none'
       })
     }
-  }, [currentCity, keyword, checkInDate, checkOutDate, calculateNights])
+  }, [currentCity, keyword, checkInDate, checkOutDate, calculateNights, selectedTags, selectedFilterValue, selectedFacilities, currentFilterType])
 
   // 全国城市数据
   const citiesData = {
@@ -434,7 +438,7 @@ export default function Index () {
   // 处理Banner点击
   const handleBannerClick = useCallback(() => {
     navigateTo({
-      url: '/pages/hotel-detail/index?id=1'
+      url: '/pages/coupons/coupons'
     })
   }, [])
 
@@ -458,13 +462,7 @@ export default function Index () {
     console.log('点击筛选', filterType)
     setCurrentFilterType(filterType)
     
-    // 重置选中值
-    setSelectedFilterValue('')
-    
-    // 如果是设施筛选，重置设施选中状态
-    if (filterType === 'facility') {
-      setSelectedFacilities([])
-    }
+    // 不需要重置选中值，保持之前的选择状态
     
     setShowFilter(true)
   }, [])
@@ -613,7 +611,7 @@ export default function Index () {
           {/* 顶部导航栏 */}
           <View className='top-nav'>
             <View className='nav-left'>
-              <Text className='nav-title'>怡宿酒店</Text>
+              <Text className='nav-title'>易宿酒店</Text>
             </View>
             <View className='nav-right'>
               <Text className='login-button' onClick={() => Taro.navigateTo({ url: '/pages/login/login' })}>登录</Text>
@@ -685,17 +683,17 @@ export default function Index () {
             <View className='filter-bar'>
               <View className='filter-item' onClick={() => handleFilterClick('star')}>
                 <Text>星级</Text>
-                <Text className='filter-value'>不限</Text>
+                <Text className='filter-value'>{currentFilterType === 'star' && selectedFilterValue ? selectedFilterValue : '不限'}</Text>
               </View>
               <View className='filter-divider'></View>
               <View className='filter-item' onClick={() => handleFilterClick('price')}>
                 <Text>价格</Text>
-                <Text className='filter-value'>不限</Text>
+                <Text className='filter-value'>{currentFilterType === 'price' && selectedFilterValue ? selectedFilterValue : '不限'}</Text>
               </View>
               <View className='filter-divider'></View>
               <View className='filter-item' onClick={() => handleFilterClick('facility')}>
                 <Text>设施</Text>
-                <Text className='filter-value'>不限</Text>
+                <Text className='filter-value'>{selectedFacilities.length > 0 ? `${selectedFacilities.length}项` : '不限'}</Text>
               </View>
             </View>
 

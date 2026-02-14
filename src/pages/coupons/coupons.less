@@ -5,24 +5,26 @@
 
   // 返回按钮
   .back-button {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 100;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
     display: flex;
     align-items: center;
-    padding: 10px 15px;
-    background-color: rgba(255, 255, 255, 0.9);
+    padding: 8px 12px;
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
     .back-icon {
-      font-size: 20px;
-      margin-right: 5px;
-      color: #333;
+      font-size: 18px;
+      margin-right: 4px;
+      color: #1890ff;
     }
 
     .back-text {
-      font-size: 16px;
-      color: #333;
+      font-size: 14px;
+      color: #1890ff;
     }
   }
 

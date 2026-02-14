@@ -96,21 +96,40 @@ export default function HotelList () {
   // 初始化页面数据
   const initPage = useCallback(async () => {
     try {
+      // 检查是否从首页传递了查询参数
+      const paramsFromHome = router.query && router.query.params
+      let searchParamsData = {}
+      
+      if (paramsFromHome) {
+        try {
+          // 解析从首页传递的参数
+          searchParamsData = JSON.parse(decodeURIComponent(paramsFromHome))
+          console.log('从首页获取的查询参数:', searchParamsData)
+        } catch (error) {
+          console.error('解析参数失败:', error)
+          searchParamsData = {}
+        }
+      }
+      
       // 检查是否从城市选择页面返回
-      const cityFromParams = router.query.city
+      const cityFromParams = router.query && router.query.city
       console.log('从路由参数获取的城市:', cityFromParams)
       
-      // 无论是否有参数，都使用默认参数初始化
+      // 使用传递的参数或默认参数初始化
       const defaultParams = {
-        city: cityFromParams || '北京',
-        keyword: '',
-        checkInDate: new Date().toISOString().split('T')[0],
-        checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        nights: 1,
+        city: cityFromParams || searchParamsData.city || '北京',
+        keyword: searchParamsData.keyword || '',
+        checkInDate: searchParamsData.checkInDate || new Date().toISOString().split('T')[0],
+        checkOutDate: searchParamsData.checkOutDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        nights: searchParamsData.nights || 1,
+        selectedTags: searchParamsData.selectedTags || [],
+        selectedFilterValue: searchParamsData.selectedFilterValue || '',
+        selectedFacilities: searchParamsData.selectedFacilities || [],
+        currentFilterType: searchParamsData.currentFilterType || '',
         pageSize: 10
       }
       
-      console.log('使用默认参数初始化:', defaultParams)
+      console.log('使用参数初始化:', defaultParams)
       
       setSearchParams(defaultParams)
       
@@ -118,6 +137,14 @@ export default function HotelList () {
       setPage(1)
       setHotels([])
       setHasMore(true)
+      
+      // 处理从首页传递的筛选条件
+      if (searchParamsData.selectedFacilities && searchParamsData.selectedFacilities.length > 0) {
+        setFilters(prev => ({
+          ...prev,
+          amenities: searchParamsData.selectedFacilities
+        }))
+      }
       
       // 搜索酒店
       console.log('开始搜索酒店...')
