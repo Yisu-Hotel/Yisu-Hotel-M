@@ -10,6 +10,7 @@ export default defineAppConfig({
     'pages/history/history', // 历史页面
     'pages/hotel-list/hotel-list',
     'pages/city-select/city-select',
+    'pages/test-page/test-page',
     'pages/hotel-detail/index', // 酒店详情页
     'pages/booking-confirm/index', // 酒店预订确认页
     'pages/payment/index', // 支付页

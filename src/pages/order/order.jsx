@@ -159,16 +159,22 @@ export default function OrderPage () {
           <Text>全部</Text>
         </View>
         <View 
-          className={`filter-item ${activeStatus === 'pending' ? 'active' : ''}`}
-          onClick={() => setActiveStatus('pending')}
+          className={`filter-item ${activeStatus === 'pending_pay' ? 'active' : ''}`}
+          onClick={() => setActiveStatus('pending_pay')}
         >
           <Text>待支付</Text>
         </View>
         <View 
-          className={`filter-item ${activeStatus === 'paid' ? 'active' : ''}`}
-          onClick={() => setActiveStatus('paid')}
+          className={`filter-item ${activeStatus === 'pending_confirm' ? 'active' : ''}`}
+          onClick={() => setActiveStatus('pending_confirm')}
         >
-          <Text>已付款</Text>
+          <Text>待确认</Text>
+        </View>
+        <View 
+          className={`filter-item ${activeStatus === 'pending_checkin' ? 'active' : ''}`}
+          onClick={() => setActiveStatus('pending_checkin')}
+        >
+          <Text>待入住</Text>
         </View>
         <View 
           className={`filter-item ${activeStatus === 'completed' ? 'active' : ''}`}

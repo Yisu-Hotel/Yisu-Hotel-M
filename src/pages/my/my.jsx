@@ -18,7 +18,11 @@ export default function MyPage () {
       if (loggedIn && token) {
         try {
           // 使用真实API获取用户信息
+<<<<<<< HEAD
           const response = await userApi.getProfile()
+=======
+          const response = await userApi.getUserInfo()
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
           
           if (response.code === 0 && response.data) {
             const userData = response.data
@@ -82,6 +86,7 @@ export default function MyPage () {
     })
   }, [])
 
+<<<<<<< HEAD
   // 处理登录/注册点击
   const handleLoginRegisterClick = useCallback(() => {
     Taro.navigateTo({
@@ -89,6 +94,8 @@ export default function MyPage () {
     })
   }, [])
 
+=======
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
   return (
     <View className='my-page'>
       {/* 个人信息区域 */}
@@ -96,10 +103,17 @@ export default function MyPage () {
         <View className='user-info-section'>
           <Image 
             className='user-avatar' 
+<<<<<<< HEAD
             src={userInfo.avatar || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'} 
           />
           <View className='user-info'>
             <Text className='user-name'>{userInfo.nickname || userInfo.phone}</Text>
+=======
+            src={userInfo.profile?.avatar || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'} 
+          />
+          <View className='user-info'>
+            <Text className='user-name'>{userInfo.profile?.nickname || userInfo.phone}</Text>
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
             <Text className='user-id'>已登录</Text>
           </View>
           <View className='user-arrow'>›</View>

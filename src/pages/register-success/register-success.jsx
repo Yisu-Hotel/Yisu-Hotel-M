@@ -6,6 +6,15 @@ import './register-success.less';
 export default function RegisterSuccess() {
   // 进入首页
   const handleGoToHome = () => {
+<<<<<<< HEAD
+=======
+    // 保存登录状态到本地存储
+    Taro.setStorageSync('isLoggedIn', true);
+    Taro.setStorageSync('userInfo', {
+      name: '用户',
+      avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
+    });
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
     Taro.switchTab({
       url: '/pages/index/index'
     });
@@ -13,6 +22,15 @@ export default function RegisterSuccess() {
 
   // 进入个人中心
   const handleGoToProfile = () => {
+<<<<<<< HEAD
+=======
+    // 保存登录状态到本地存储
+    Taro.setStorageSync('isLoggedIn', true);
+    Taro.setStorageSync('userInfo', {
+      name: '用户',
+      avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
+    });
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
     Taro.switchTab({
       url: '/pages/my/my'
     });
@@ -20,6 +38,15 @@ export default function RegisterSuccess() {
 
   // 完善个人信息
   const handleCompleteProfile = () => {
+<<<<<<< HEAD
+=======
+    // 保存登录状态到本地存储
+    Taro.setStorageSync('isLoggedIn', true);
+    Taro.setStorageSync('userInfo', {
+      name: '用户',
+      avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
+    });
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
     // 跳转到个人资料编辑页
     Taro.navigateTo({
       url: '/pages/profile-edit/profile-edit'
@@ -28,6 +55,15 @@ export default function RegisterSuccess() {
 
   // 查看我的收藏
   const handleViewFavorites = () => {
+<<<<<<< HEAD
+=======
+    // 保存登录状态到本地存储
+    Taro.setStorageSync('isLoggedIn', true);
+    Taro.setStorageSync('userInfo', {
+      name: '用户',
+      avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
+    });
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
     // 跳转到收藏列表页
     Taro.navigateTo({
       url: '/pages/favorites/favorites'
@@ -36,6 +72,15 @@ export default function RegisterSuccess() {
 
   // 开始预订酒店
   const handleStartBooking = () => {
+<<<<<<< HEAD
+=======
+    // 保存登录状态到本地存储
+    Taro.setStorageSync('isLoggedIn', true);
+    Taro.setStorageSync('userInfo', {
+      name: '用户',
+      avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
+    });
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
     Taro.switchTab({
       url: '/pages/index/index'
     });

@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
+<<<<<<< HEAD
 import { View, Text, Input, Button, Checkbox } from '@tarojs/components';
 import { authApi } from '../../services/api';
+=======
+import { View, Text, Input, Button, Image, Checkbox } from '@tarojs/components';
+import { userApi } from '../../services/api';
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
 import './register.less';
 
 export default function Register() {
   // 状态管理
+<<<<<<< HEAD
+=======
+  const [activeTab, setActiveTab] = useState('phone'); // 'phone' 或 'third-party'
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
   const [phone, setPhone] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [password, setPassword] = useState('');
@@ -68,7 +77,11 @@ export default function Register() {
     
     try {
       // 使用真实的API调用发送验证码
+<<<<<<< HEAD
       const response = await authApi.sendCode(phone, 'register');
+=======
+      const response = await userApi.getVerificationCode(phone);
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
       
       if (response.code === 0) {
         // 验证码发送成功，开始倒计时
@@ -110,7 +123,11 @@ export default function Register() {
       });
       
       // 使用真实的API调用进行注册
+<<<<<<< HEAD
       const response = await authApi.register({
+=======
+      const response = await userApi.register({
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
         phone: phone,
         code: verificationCode,
         password: password,
@@ -119,6 +136,7 @@ export default function Register() {
       
       console.log('注册响应:', response);
       
+<<<<<<< HEAD
       if (response.code === 0 && response.data) {
         // 注册成功，保存token和用户信息
         Taro.setStorageSync('token', response.data.token);
@@ -129,6 +147,13 @@ export default function Register() {
         console.log('注册成功，跳转到首页');
         Taro.switchTab({
           url: '/pages/index/index'
+=======
+      if (response.code === 0) {
+        // 注册成功，跳转到注册成功页
+        console.log('注册成功，跳转到注册成功页');
+        Taro.navigateTo({
+          url: '/pages/register-success/register-success'
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
         });
       } else {
         // 注册失败，显示错误信息
@@ -150,6 +175,25 @@ export default function Register() {
     }
   };
 
+<<<<<<< HEAD
+=======
+  // 第三方快捷注册
+  const handleThirdPartyRegister = (platform) => {
+    // 模拟第三方授权
+    Taro.showToast({
+      title: `${platform}授权中...`,
+      icon: 'loading'
+    });
+    
+    setTimeout(() => {
+      // 授权成功，跳转到注册成功页
+      Taro.navigateTo({
+        url: '/pages/register-success/register-success'
+      });
+    }, 1500);
+  };
+
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
   // 跳转到登录页
   const handleGoToLogin = () => {
     console.log('handleGoToLogin函数被调用');
@@ -171,6 +215,7 @@ export default function Register() {
 
       {/* 手机号注册表单 */}
       <View className="register-form">
+<<<<<<< HEAD
         {/* 手机号输入 */}
         <View className="form-item">
           <View className="phone-input-container">
@@ -258,6 +303,93 @@ export default function Register() {
               style={{ display: 'flex', alignItems: 'center' }}
             >
               <View className={`custom-checkbox ${agreeTerms ? 'checked' : ''}`}>
+=======
+          {/* 手机号输入 */}
+          <View className="form-item">
+            <View className="phone-input-container">
+              <Text className="country-code">+86</Text>
+              <Input 
+                className="phone-input" 
+                placeholder="请输入手机号"
+                value={phone}
+                onInput={(e) => setPhone(e.detail.value)}
+                onBlur={() => {
+                  if (phone && !/^1[3-9]\d{9}$/.test(phone)) {
+                    setErrors(prev => ({ ...prev, phone: '请输入正确的手机号' }));
+                  } else {
+                    setErrors(prev => ({ ...prev, phone: '' }));
+                  }
+                }}
+              />
+            </View>
+            {errors.phone && <Text className="error-message">{errors.phone}</Text>}
+          </View>
+
+          {/* 验证码输入 */}
+          <View className="form-item">
+            <View style={{ display: 'flex', flexDirection: 'column', marginBottom: '16rpx' }}>
+              <Input 
+                className="verification-code-input" 
+                placeholder="请输入验证码"
+                value={verificationCode}
+                onInput={(e) => setVerificationCode(e.detail.value)}
+                style={{ height: '60rpx', fontSize: '28rpx', borderBottom: '1rpx solid #e5e5e5', paddingBottom: '16rpx' }}
+              />
+            </View>
+            <Button 
+              className={`get-code-btn ${countdown > 0 ? 'disabled' : ''}`}
+              disabled={countdown > 0}
+              onClick={handleGetVerificationCode}
+              style={{ width: '100%', height: '60rpx', fontSize: '24rpx' }}
+            >
+              {countdown > 0 ? `${countdown}秒后重发` : '获取验证码'}
+            </Button>
+            {errors.verificationCode && <Text className="error-message">{errors.verificationCode}</Text>}
+          </View>
+
+          {/* 密码输入 */}
+          <View className="form-item">
+            <View className="password-input-container">
+              <Input 
+                className="password-input" 
+                placeholder="请设置密码（6-16位，含数字和字母）"
+                value={password}
+                onInput={(e) => setPassword(e.detail.value)}
+                type={showPassword ? 'text' : 'password'}
+                onBlur={() => {
+                  if (password && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,16}$/.test(password)) {
+                    setErrors(prev => ({ ...prev, password: '密码需6-16位，包含数字和字母' }));
+                  } else {
+                    setErrors(prev => ({ ...prev, password: '' }));
+                  }
+                }}
+              />
+              <Text 
+                className="password-toggle" 
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? '隐藏' : '显示'}
+              </Text>
+            </View>
+            {errors.password && <Text className="error-message">{errors.password}</Text>}
+          </View>
+
+          {/* 协议勾选 */}
+          <View className="form-item">
+            <View 
+              className="terms-container" 
+              onClick={() => {
+                const newValue = !agreeTerms;
+                console.log('Terms container clicked, new value:', newValue);
+                setAgreeTerms(newValue);
+                // 勾选时清除协议错误信息
+                if (newValue) {
+                  setErrors(prev => ({ ...prev, agreeTerms: '' }));
+                }
+              }}
+            >
+              <View className={`checkbox ${agreeTerms ? 'checked' : ''}`}>
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
                 {agreeTerms && <Text className="checkbox-check">✓</Text>}
               </View>
               <Text className="terms-text">
@@ -267,6 +399,7 @@ export default function Register() {
                 <Text className="terms-link">《隐私政策》</Text>
               </Text>
             </View>
+<<<<<<< HEAD
           </View>
           {errors.agreeTerms && <Text className="error-message">{errors.agreeTerms}</Text>}
         </View>
@@ -289,6 +422,29 @@ export default function Register() {
           注册
         </Button>
       </View>
+=======
+            {errors.agreeTerms && <Text className="error-message">{errors.agreeTerms}</Text>}
+          </View>
+
+          {/* 注册按钮 */}
+          <Button 
+            className={`register-btn ${agreeTerms ? 'enabled' : ''}`}
+            disabled={!agreeTerms || isLoading}
+            loading={isLoading}
+            onClick={handleRegister}
+            style={{ 
+              width: '100%', 
+              height: '80rpx', 
+              borderRadius: '8rpx', 
+              fontSize: '28rpx',
+              backgroundColor: agreeTerms ? '#0088ff' : '#ccc',
+              color: '#fff'
+            }}
+          >
+            注册
+          </Button>
+        </View>
+>>>>>>> ee7d0988c4a4042b63c1b98e8428eacf0b6459dd
 
       {/* 底部快捷入口 */}
       <View className="register-footer">

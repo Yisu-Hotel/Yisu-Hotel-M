@@ -74,8 +74,6 @@ export default function Login() {
     }
   };
 
-
-
   // 跳转到注册页
   const handleGoToRegister = () => {
     Taro.navigateTo({
