@@ -21,7 +21,11 @@ export default function OrderPage () {
 
   // 当状态变化时获取订单数据
   useEffect(() => {
-    fetchOrders()
+    try {
+      fetchOrders()
+    } catch (error) {
+      console.error('初始化订单数据失败:', error)
+    }
   }, [activeStatus])
 
   // 获取订单数据

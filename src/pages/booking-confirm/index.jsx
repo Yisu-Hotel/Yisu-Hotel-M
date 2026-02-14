@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { View, Text, Image, Button, Input, Checkbox, Swiper, SwiperItem, Navigator } from '@tarojs/components'
 import { AtIcon, AtToast } from 'taro-ui'
 import Taro from '@tarojs/taro'
+import { orderApi } from '../../services/api'
 import './index.less'
 
 const BookingConfirm = () => {
@@ -75,24 +76,54 @@ const BookingConfirm = () => {
     try {
       setLoading(true)
       
-      // 模拟生成订单ID（后续替换为真实接口返回）
-      const mockBookingId = 'BK_' + Date.now()
-      console.log('跳转支付页，订单ID：', mockBookingId)
+      // 使用真实API调用创建订单
+      const orderData = {
+        hotel_id: hotelId,
+        room_type_id: selectedRoomId,
+        check_in_date: checkInDate,
+        check_out_date: checkOutDate,
+        contact_name: contactName,
+        contact_phone: contactPhone,
+        special_requests: specialRequests.filter(item => item.selected).map(item => item.text).join('; ')
+      };
       
-      // 关键：跳转到支付页（确保路由路径正确）
-      Taro.navigateTo({
-        url: `/pages/payment/index?booking_id=${mockBookingId}`,
-        success: () => {
-          console.log('跳转支付页成功')
-        },
-        fail: (err) => {
-          console.error('跳转失败：', err)
-          AtToast({ text: '跳转支付页失败', type: 'error', duration: 2000 })
-        }
-      })
+      console.log('创建订单，参数：', orderData);
+      
+      const response = await orderApi.createOrder(orderData);
+      
+      if (response.code === 0 && response.data && response.data.booking_id) {
+        console.log('订单创建成功，订单ID：', response.data.booking_id);
+        
+        // 跳转到支付页
+        Taro.navigateTo({
+          url: `/pages/payment/index?booking_id=${response.data.booking_id}`,
+          success: () => {
+            console.log('跳转支付页成功')
+          },
+          fail: (err) => {
+            console.error('跳转失败：', err)
+            Taro.showToast({
+              title: '跳转支付页失败',
+              icon: 'none',
+              duration: 2000
+            })
+          }
+        })
+      } else {
+        console.error('订单创建失败：', response.msg || '未知错误');
+        Taro.showToast({
+          title: response.msg || '订单创建失败',
+          icon: 'none',
+          duration: 2000
+        })
+      }
     } catch (error) {
-      console.error('提交订单异常：', error)
-      AtToast({ text: '提交订单失败', type: 'error', duration: 2000 })
+      console.error('提交订单异常：', error);
+      Taro.showToast({
+        title: '提交订单失败，请检查网络连接',
+        icon: 'none',
+        duration: 2000
+      })
     } finally {
       setLoading(false)
     }

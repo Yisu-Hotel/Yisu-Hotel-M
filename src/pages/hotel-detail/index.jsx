@@ -2,42 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { View, Text, Image, ScrollView, Swiper, SwiperItem } from '@tarojs/components';
+import { hotelApi } from '../../services/api';
 import './index.less';
-
-// 模拟数据（包含id=1的酒店，匹配你当前URL参数）
-const mockHotelData = {
-  "1": {
-    bannerList: ['https://img95.699pic.com/photo/50120/2224.jpg_wh860.jpg'],
-    hotelInfo: {
-      name: '北京王府井希尔顿酒店',
-      tag: '优享会',
-      openYear: '2019年开业',
-      features: ['免费WiFi', '停车场'],
-      score: 4.8,
-      commentCount: 128,
-      scoreDesc: '环境干净舒适',
-      distance: '距地铁站0.5km',
-      address: '北京市东城区王府井东街8号'
-    },
-    discountTags: ['订房优惠', '首住特惠'],
-    dateRange: '2月8日 - 2月9日',
-    stayNight: '1晚',
-    roomGuest: '1间 1人',
-    roomList: [
-      {
-        id: 'room1',
-        name: '舒适大床房',
-        desc: '1张1.8米床',
-        note: '入住时间14:00后 | 退房时间12:00前',
-        service: '免费WiFi | 免费停车 | 空调 | 电视',
-        tags: ['免费取消', '含早餐'],
-        originalPrice: 289,
-        currentPrice: 189,
-        img: 'https://img95.699pic.com/photo/50120/2225.jpg_wh300.jpg'
-      }
-    ]
-  }
-};
 
 export default function HotelDetail() {
   // 修复：使用 React 原生 useState
@@ -56,14 +22,64 @@ export default function HotelDetail() {
     const urlParams = new URLSearchParams(window.location.search);
     const hotelId = urlParams.get('id') || "1"; // 兜底id=1
 
-    // 匹配数据
-    const data = mockHotelData[hotelId] || mockHotelData["1"];
-    
-    // 模拟加载延迟，避免渲染过快
-    setTimeout(() => {
-      setHotelData(data);
-      setLoading(false);
-    }, 300);
+    // 使用真实API调用获取酒店详情
+    const fetchHotelDetail = async () => {
+      try {
+        setLoading(true);
+        const response = await hotelApi.getHotelDetail(hotelId);
+        
+        if (response.code === 0 && response.data) {
+          // 格式化数据以匹配前端期望的格式
+          const formattedData = {
+            bannerList: [response.data.main_image_url],
+            hotelInfo: {
+              name: response.data.name,
+              tag: '',
+              openYear: '',
+              features: response.data.facilities.map(f => f.name),
+              score: response.data.rating,
+              commentCount: 0,
+              scoreDesc: '',
+              distance: `${response.data.distance.toFixed(1)}km`,
+              address: response.data.address
+            },
+            discountTags: [],
+            dateRange: '',
+            stayNight: '1晚',
+            roomGuest: '1间 1人',
+            roomList: [
+              {
+                id: 'room1',
+                name: '标准间',
+                desc: '1张1.8米床',
+                note: '入住时间14:00后 | 退房时间12:00前',
+                service: response.data.services.map(s => s.name).join(' | '),
+                tags: ['免费取消', '含早餐'],
+                originalPrice: response.data.min_price + 100,
+                currentPrice: response.data.min_price,
+                img: response.data.main_image_url
+              }
+            ]
+          };
+          setHotelData(formattedData);
+        } else {
+          Taro.showToast({
+            title: response.msg || '获取酒店详情失败',
+            icon: 'none'
+          });
+        }
+      } catch (error) {
+        console.error('获取酒店详情失败:', error);
+        Taro.showToast({
+          title: '获取酒店详情失败，请检查网络连接',
+          icon: 'none'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHotelDetail();
   }, []);
 
   // 处理筛选标签点击

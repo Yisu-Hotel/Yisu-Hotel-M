@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import Taro from '@tarojs/taro';
 import { View, Text, Input, Button, Checkbox } from '@tarojs/components';
+import { userApi } from '../../services/api';
 import './login.less';
 
 export default function Login() {
   // 状态管理
-  const [activeTab, setActiveTab] = useState('phone'); // 'phone' 或 'third-party'
+  // 固定为手机号登录，因为已移除第三方登录选项
+  const activeTab = 'phone'; // 'phone' 或 'third-party'
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,38 +34,49 @@ export default function Login() {
   };
 
   // 登录
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validateForm()) {
       return;
     }
     
     setIsLoading(true);
     
-    // 模拟登录请求
-    setTimeout(() => {
-      setIsLoading(false);
-      // 登录成功，跳转到首页
-      Taro.switchTab({
-        url: '/pages/index/index'
+    try {
+      // 使用真实的API调用进行登录
+      const response = await userApi.login({
+        phone: phone,
+        password: password
       });
-    }, 1500);
+      
+      if (response.code === 0) {
+        // 登录成功，保存登录状态到本地存储
+        Taro.setStorageSync('isLoggedIn', true);
+        Taro.setStorageSync('userInfo', response.data.user);
+        Taro.setStorageSync('token', response.data.token);
+        
+        // 跳转到首页
+        Taro.switchTab({
+          url: '/pages/index/index'
+        });
+      } else {
+        // 登录失败，显示错误信息
+        Taro.showToast({
+          title: response.message || '登录失败',
+          icon: 'none'
+        });
+      }
+    } catch (error) {
+      // 处理网络错误等异常
+      Taro.showToast({
+        title: error.message || '登录失败，请检查网络连接',
+        icon: 'none'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // 第三方快捷登录
-  const handleThirdPartyLogin = (platform) => {
-    // 模拟第三方授权
-    Taro.showToast({
-      title: `${platform}授权中...`,
-      icon: 'loading'
-    });
-    
-    setTimeout(() => {
-      // 授权成功，跳转到首页
-      Taro.switchTab({
-        url: '/pages/index/index'
-      });
-    }, 1500);
-  };
+  // 第三方快捷登录功能已移除
 
   // 跳转到注册页
   const handleGoToRegister = () => {
@@ -91,22 +104,14 @@ export default function Login() {
       {/* 登录方式选择 */}
       <View className="login-tabs">
         <View 
-          className={`login-tab ${activeTab === 'phone' ? 'active' : ''}`}
-          onClick={() => setActiveTab('phone')}
+          className={`login-tab active`}
         >
           <Text className="login-tab-text">手机号登录</Text>
-        </View>
-        <View 
-          className={`login-tab ${activeTab === 'third-party' ? 'active' : ''}`}
-          onClick={() => setActiveTab('third-party')}
-        >
-          <Text className="login-tab-text">第三方快捷登录</Text>
         </View>
       </View>
 
       {/* 手机号登录表单 */}
-      {activeTab === 'phone' && (
-        <View className="login-form">
+      <View className="login-form">
           {/* 手机号输入 */}
           <View className="form-item">
             <View className="phone-input-container">
@@ -178,34 +183,6 @@ export default function Login() {
             登录
           </Button>
         </View>
-      )}
-
-      {/* 第三方快捷登录 */}
-      {activeTab === 'third-party' && (
-        <View className="third-party-login">
-          <View className="third-party-title">选择登录方式</View>
-          <View className="third-party-options">
-            <View 
-              className="third-party-option"
-              onClick={() => handleThirdPartyLogin('微信')}
-            >
-              <View className="third-party-icon wechat">
-                <Text className="icon-text">微信</Text>
-              </View>
-              <Text className="third-party-text">微信登录</Text>
-            </View>
-            <View 
-              className="third-party-option"
-              onClick={() => handleThirdPartyLogin('支付宝')}
-            >
-              <View className="third-party-icon alipay">
-                <Text className="icon-text">支付宝</Text>
-              </View>
-              <Text className="third-party-text">支付宝登录</Text>
-            </View>
-          </View>
-        </View>
-      )}
 
       {/* 底部快捷入口 */}
       <View className="login-footer">
