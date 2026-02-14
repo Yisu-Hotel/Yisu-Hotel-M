@@ -24,7 +24,7 @@ async function request(url, options = {}) {
     
     // 发送请求
     console.log('API请求开始:', {
-      url: fullUrl,
+      fullUrl: fullUrl,
       method: options.method || 'GET',
       headers: {
         ...defaultHeaders,
@@ -33,29 +33,34 @@ async function request(url, options = {}) {
       data: options.body ? JSON.parse(options.body) : undefined,
     });
     
-    const response = await Taro.request({
-      url: fullUrl,
-      method: options.method || 'GET',
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
-      data: options.body ? JSON.parse(options.body) : undefined,
-    });
-    
-    console.log('API请求响应:', {
-      statusCode: response.statusCode,
-      data: response.data,
-      header: response.header,
-    });
-    
-    // 检查响应状态
-    if (response.statusCode === 200) {
-      return response.data;
-    } else {
-      // 检查response.data是否存在
-      const errorMessage = response.data && response.data.message ? response.data.message : '未知错误';
-      throw new Error(`请求失败 (${response.statusCode}): ${errorMessage}`);
+    try {
+      const response = await Taro.request({
+        url: fullUrl,
+        method: options.method || 'GET',
+        headers: {
+          ...defaultHeaders,
+          ...options.headers,
+        },
+        data: options.body ? JSON.parse(options.body) : undefined,
+      });
+      
+      console.log('API请求响应:', {
+        statusCode: response.statusCode,
+        data: response.data,
+        header: response.header,
+      });
+      
+      // 检查响应状态
+      if (response.statusCode === 200) {
+        return response.data;
+      } else {
+        // 检查response.data是否存在
+        const errorMessage = response.data && response.data.message ? response.data.message : '未知错误';
+        throw new Error(`请求失败 (${response.statusCode}): ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error('API请求异常:', error);
+      throw error;
     }
   } catch (error) {
     console.error('API请求错误:', error);

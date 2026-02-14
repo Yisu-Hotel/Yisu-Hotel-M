@@ -20,7 +20,7 @@ export default function MyPage () {
           // 使用真实API获取用户信息
           const response = await userApi.getUserInfo()
           
-          if (response.code === 0 && response.data) {
+          if (response && response.code === 0 && response.data) {
             const userData = response.data
             setIsLoggedIn(true)
             setUserInfo(userData)
@@ -37,10 +37,20 @@ export default function MyPage () {
         } catch (error) {
           console.error('获取用户信息失败:', error)
           // 网络错误或其他问题，保持本地存储的状态
-          const info = Taro.getStorageSync('userInfo')
-          if (info) {
-            setIsLoggedIn(true)
-            setUserInfo(info)
+          try {
+            const info = Taro.getStorageSync('userInfo')
+            const loggedIn = Taro.getStorageSync('isLoggedIn') || false
+            if (info && loggedIn) {
+              setIsLoggedIn(true)
+              setUserInfo(info)
+            } else {
+              setIsLoggedIn(false)
+              setUserInfo(null)
+            }
+          } catch (storageError) {
+            console.error('读取本地存储失败:', storageError)
+            setIsLoggedIn(false)
+            setUserInfo(null)
           }
         }
       }
