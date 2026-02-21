@@ -1,7 +1,7 @@
 import { View, Text, Button, Image, Input, ScrollView } from '@tarojs/components'
-import { useCallback, useState, useEffect } from 'react'
-import { request, getLocation, showModal, navigateTo, showToast, useRouter } from '@tarojs/taro'
-import { hotelApi, locationApi } from '../../services/api'
+import { useCallback, useState, useEffect, useRef } from 'react'
+import Taro, { getLocation, showModal, navigateTo, showToast, useRouter } from '@tarojs/taro'
+import { hotelApi, cityApi, bannerApi } from '../../services/api'
 import './index.less'
 
 export default function Index () {
@@ -25,6 +25,17 @@ export default function Index () {
   const [filterOptions, setFilterOptions] = useState({})
   const [selectedFilterValue, setSelectedFilterValue] = useState('')
   const [selectedFacilities, setSelectedFacilities] = useState([])
+  // 搜索历史和推荐状态
+  const [searchHistory, setSearchHistory] = useState([])
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false)
+  const [searchSuggestions, setSearchSuggestions] = useState([])
+  
+  // 从后端API获取的数据
+  const [hotels, setHotels] = useState([])
+  const [banners, setBanners] = useState([])
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
+  const [bannerTimer, setBannerTimer] = useState(null)
+  const scrollViewRef = useRef(null)
   
   // 返回到搜索页面
   const handleBackToSearch = useCallback(() => {
@@ -60,7 +71,221 @@ export default function Index () {
     } else {
       getCurrentLocation()
     }
+
+    // 加载搜索历史
+    loadSearchHistory()
   }, [])
+
+  // 加载搜索历史
+  const loadSearchHistory = useCallback(() => {
+    try {
+      const history = Taro.getStorageSync('searchHistory') || []
+      setSearchHistory(history)
+    } catch (error) {
+      console.error('加载搜索历史失败:', error)
+      setSearchHistory([])
+    }
+  }, [])
+
+  // 保存搜索历史
+  const saveSearchHistory = useCallback((keyword) => {
+    if (!keyword.trim()) return
+
+    try {
+      let history = Taro.getStorageSync('searchHistory') || []
+      // 移除重复项
+      history = history.filter(item => item !== keyword)
+      // 添加到开头
+      history.unshift(keyword)
+      // 限制历史记录数量
+      if (history.length > 10) {
+        history = history.slice(0, 10)
+      }
+      Taro.setStorageSync('searchHistory', history)
+      setSearchHistory(history)
+    } catch (error) {
+      console.error('保存搜索历史失败:', error)
+    }
+  }, [])
+
+  // 清除搜索历史
+  const clearSearchHistory = useCallback(() => {
+    try {
+      Taro.removeStorageSync('searchHistory')
+      setSearchHistory([])
+    } catch (error) {
+      console.error('清除搜索历史失败:', error)
+    }
+  }, [])
+
+  // 获取搜索建议
+  const getSearchSuggestions = useCallback((input) => {
+    if (!input.trim()) {
+      setSearchSuggestions([])
+      return
+    }
+
+    // 模拟搜索建议
+    const suggestions = [
+      `${input}酒店`,
+      `${input}民宿`,
+      `${input}度假村`,
+      `靠近${input}的酒店`,
+      `在${input}附近的住宿`
+    ]
+    setSearchSuggestions(suggestions)
+  }, [])
+
+  // 处理搜索输入变化
+  const handleKeywordChange = useCallback((e) => {
+    const value = e.detail.value
+    setKeyword(value)
+    if (value.trim()) {
+      getSearchSuggestions(value)
+      setShowSearchSuggestions(true)
+    } else {
+      setShowSearchSuggestions(false)
+    }
+  }, [getSearchSuggestions])
+
+  // 选择搜索建议
+  const handleSelectSuggestion = useCallback((suggestion) => {
+    setKeyword(suggestion)
+    setShowSearchSuggestions(false)
+  }, [])
+
+  // 选择搜索历史
+  const handleSelectHistory = useCallback((historyItem) => {
+    setKeyword(historyItem)
+    setShowSearchSuggestions(false)
+  }, [])
+
+  // 从后端API获取数据
+  useEffect(() => {
+    console.log('触发数据获取，当前城市:', currentCity)
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        console.log('开始获取数据...')
+        
+        // 直接测试API请求
+        // console.log('测试API请求...')
+        // const testResponse = await Taro.request({
+        //   url: 'http://localhost:3001/api/test',
+        //   method: 'GET'
+        // })
+        // console.log('测试API响应:', testResponse)
+        
+        // 先获取广告列表
+        console.log('开始获取广告列表...')
+        try {
+          const bannerResult = await bannerApi.getBanners()
+          console.log('广告列表API返回结果:', bannerResult)
+          if (bannerResult.code === 0 && bannerResult.data) {
+            setBanners(bannerResult.data)
+            console.log('设置广告列表成功:', bannerResult.data)
+          }
+        } catch (error) {
+          console.error('获取广告列表失败:', error)
+          // 如果获取广告列表失败，使用默认数据
+          setBanners([
+            {
+              id: 1,
+              image_url: 'http://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount%20chinese%20new%20year&image_size=landscape_16_9',
+              title: '春节特惠',
+              description: '低至 8 折',
+              target_type: 'hotel',
+              target_id: '',
+              url: ''
+            },
+            {
+              id: 2,
+              image_url: 'http://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20for%20new%20users%20exclusive%20offer&image_size=landscape_16_9',
+              title: '新用户专享',
+              description: '首单立减',
+              target_type: 'hotel',
+              target_id: '',
+              url: ''
+            }
+          ])
+        }
+        
+        // 等待 1 秒后，再获取酒店列表
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // 获取酒店列表
+        console.log('开始获取酒店列表...')
+        try {
+          const cityName = currentCity === '定位中...' ? '北京' : currentCity
+          const hotelResult = await hotelApi.getHotelList({
+            city: cityName,
+            cityName: cityName,
+            location: cityName,
+            page: 1,
+            pageSize: 10
+          })
+          console.log('酒店列表API返回结果:', hotelResult)
+          if (hotelResult.code === 0 && hotelResult.data) {
+            // 处理后端返回的数据结构，将 data.list 转换为前端期望的格式
+            const rawHotels = hotelResult.data.list || hotelResult.data.hotels || []
+            console.log('原始酒店数据:', rawHotels)
+            
+            // 转换酒店数据格式，确保字段名称与前端匹配
+            const formattedHotels = rawHotels.map(hotel => ({
+              id: hotel.hotel_id || hotel.id,
+              name: hotel.hotel_name_cn || hotel.name,
+              rating: hotel.rating || hotel.score,
+              address: hotel.nearby_info || hotel.address || hotel.location,
+              price: hotel.min_price || hotel.price || hotel.rate,
+              image: hotel.hotel_image || hotel.image || hotel.main_image_url?.[0] || hotel.images?.[0],
+              starLevel: hotel.star_rating || hotel.starLevel,
+              amenities: hotel.facilities || hotel.amenities || [],
+              tags: hotel.tags || []
+            }))
+            console.log('格式化后的酒店数据:', formattedHotels)
+            
+            setHotels(formattedHotels)
+            console.log('设置酒店列表成功:', formattedHotels)
+          }
+        } catch (error) {
+          console.error('获取酒店列表失败:', error)
+          // 如果获取酒店列表失败，使用默认数据
+          setHotels([
+            {
+              id: 1,
+              name: '北京王府井希尔顿酒店',
+              rating: 4.8,
+              address: '北京市东城区王府井东街8号',
+              price: 1288,
+              image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3',
+              starLevel: 5,
+              amenities: ['免费WiFi', '免费停车场', '健身房', '游泳池'],
+              tags: ['豪华型', '商务出行']
+            },
+            {
+              id: 2,
+              name: '北京国贸大酒店',
+              rating: 4.9,
+              address: '北京市朝阳区建国门外大街1号',
+              price: 1588,
+              image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=luxury%20hotel%20facade%20with%20modern%20design&image_size=landscape_4_3',
+              starLevel: 5,
+              amenities: ['免费WiFi', '免费停车场', '健身房', '游泳池', '餐厅'],
+              tags: ['豪华型', '商务出行']
+            }
+          ])
+        }
+      } catch (error) {
+        console.error('获取数据失败:', error)
+        console.error('错误详情:', error.message, error.stack)
+      } finally {
+        setLoading(false)
+        console.log('数据获取完成')
+      }
+    }
+    
+    fetchData()
+  }, [router]) // 添加 router 依赖，确保当用户从其他页面返回时重新获取数据
 
   // 生成日历数据
   useEffect(() => {
@@ -152,27 +377,9 @@ export default function Index () {
         type: 'wgs84',
         success: async (res) => {
           console.log('获取位置成功', res)
-          try {
-            // 调用后端API根据坐标获取位置信息
-            const locationData = await locationApi.getLocationByCoords(
-              res.latitude, 
-              res.longitude
-            )
-            
-            if (locationData.success && locationData.data) {
-              setCurrentCity(locationData.data.city || '未知城市')
-              setLocationPermission(true)
-            } else {
-              // 模拟返回北京
-              setCurrentCity('北京')
-              setLocationPermission(true)
-            }
-          } catch (apiError) {
-            console.log('获取位置信息失败', apiError)
-            // 模拟返回北京
-            setCurrentCity('北京')
-            setLocationPermission(true)
-          }
+          // 简化处理，直接使用默认城市北京
+          setCurrentCity('北京')
+          setLocationPermission(true)
         },
         fail: (err) => {
           console.log('获取位置失败', err)
@@ -209,13 +416,22 @@ export default function Index () {
     console.log('点击了查询按钮')
     
     try {
+      // 保存搜索历史
+      if (keyword.trim()) {
+        saveSearchHistory(keyword)
+      }
+      
       // 构建查询参数
       const params = {
         city: currentCity === '定位中...' ? '北京' : currentCity,
         keyword: keyword,
         checkInDate: checkInDate || new Date().toISOString().split('T')[0],
         checkOutDate: checkOutDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        nights: calculateNights(checkInDate, checkOutDate) || 1
+        nights: calculateNights(checkInDate, checkOutDate) || 1,
+        selectedTags: selectedTags,
+        selectedFilterValue: selectedFilterValue,
+        selectedFacilities: selectedFacilities,
+        currentFilterType: currentFilterType
       }
       
       console.log('搜索参数:', params)
@@ -232,7 +448,7 @@ export default function Index () {
         icon: 'none'
       })
     }
-  }, [currentCity, keyword, checkInDate, checkOutDate, calculateNights])
+  }, [currentCity, keyword, checkInDate, checkOutDate, calculateNights, selectedTags, selectedFilterValue, selectedFacilities, currentFilterType, saveSearchHistory])
 
   // 全国城市数据
   const citiesData = {
@@ -452,17 +668,63 @@ export default function Index () {
   // 处理Banner点击
   const handleBannerClick = useCallback(() => {
     navigateTo({
-      url: '/pages/hotel-detail/hotel-detail?id=1'
+      url: '/pages/coupons/coupons'
     })
   }, [])
 
-  // 处理收藏按钮点击
-  const handleCollectClick = useCallback(() => {
-    // 模拟未登录状态，跳转到注册页
-    navigateTo({
-      url: '/pages/register/register'
-    })
-  }, [])
+  // 自动轮播函数
+  const startAutoCarousel = useCallback(() => {
+    // 清除之前的定时器
+    if (bannerTimer) {
+      clearInterval(bannerTimer)
+    }
+
+    // 启动新的定时器，每3秒切换一次
+    const timer = setInterval(() => {
+      setCurrentBannerIndex(prevIndex => {
+        return (prevIndex + 1) % banners.length
+      })
+    }, 3000)
+
+    setBannerTimer(timer)
+  }, [banners.length])
+
+  // 监听banners变化，启动自动轮播
+  useEffect(() => {
+    if (banners.length > 1) {
+      startAutoCarousel()
+    }
+
+    // 组件卸载时清除定时器
+    return () => {
+      if (bannerTimer) {
+        clearInterval(bannerTimer)
+      }
+    }
+  }, [banners.length, startAutoCarousel])
+
+  // 监听currentBannerIndex变化，自动滚动
+  useEffect(() => {
+    if (banners.length > 1) {
+      setTimeout(() => {
+        const screenWidth = Taro.getSystemInfoSync().windowWidth
+        if (scrollViewRef.current) {
+          // 使用Taro的createSelectorQuery来获取ScrollView并滚动
+          Taro.createSelectorQuery()
+            .select('.banner-scroll')
+            .node()
+            .exec((res) => {
+              if (res[0] && res[0].node) {
+                res[0].node.scrollTo({
+                  left: currentBannerIndex * screenWidth,
+                  animated: true
+                })
+              }
+            })
+        }
+      }, 100)
+    }
+  }, [currentBannerIndex, banners.length])
 
   // 处理快捷标签点击
   const handleTagClick = useCallback((tag) => {
@@ -484,13 +746,7 @@ export default function Index () {
     console.log('点击筛选', filterType)
     setCurrentFilterType(filterType)
     
-    // 重置选中值
-    setSelectedFilterValue('')
-    
-    // 如果是设施筛选，重置设施选中状态
-    if (filterType === 'facility') {
-      setSelectedFacilities([])
-    }
+    // 不需要重置选中值，保持之前的选择状态
     
     setShowFilter(true)
   }, [])
@@ -569,7 +825,7 @@ export default function Index () {
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京王府井希尔顿酒店</Text>
-                  <Button className='collect-btn' onClick={handleCollectClick}>收藏</Button>
+                  <Button className='collect-btn'>收藏</Button>
                 </View>
                 <Text className='hotel-address'>北京市东城区王府井东街8号</Text>
                 <View className='hotel-footer'>
@@ -592,7 +848,7 @@ export default function Index () {
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京国贸大酒店</Text>
-                  <Button className='collect-btn' onClick={handleCollectClick}>收藏</Button>
+                  <Button className='collect-btn'>收藏</Button>
                 </View>
                 <Text className='hotel-address'>北京市朝阳区建国门外大街1号</Text>
                 <View className='hotel-footer'>
@@ -615,7 +871,7 @@ export default function Index () {
               <View className='hotel-info'>
                 <View className='hotel-header'>
                   <Text className='hotel-name'>北京三里屯洲际酒店</Text>
-                  <Button className='collect-btn' onClick={handleCollectClick}>收藏</Button>
+                  <Button className='collect-btn'>收藏</Button>
                 </View>
                 <Text className='hotel-address'>北京市朝阳区三里屯北路1号</Text>
                 <View className='hotel-footer'>
@@ -636,36 +892,135 @@ export default function Index () {
       ) : (
         /* 首页搜索区域 */
         <>
-          {/* 顶部Banner */}
-          <View className='banner' onClick={handleBannerClick}>
-            <Image 
-              src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount&image_size=landscape_16_9" 
-              className='banner-image'
-              mode="aspectFill"
-              onClick={handleBannerClick}
-            />
-            <View className='banner-text' onClick={handleBannerClick}>春节特惠，低至 8 折</View>
+          {/* 顶部导航栏 */}
+          <View className='top-nav'>
+            <View className='nav-left'>
+              <Text className='nav-title'>易宿酒店</Text>
+            </View>
+            <View className='nav-right'>
+              {Taro.getStorageSync('isLoggedIn') ? (
+                <Text className='user-button' onClick={() => Taro.navigateTo({ url: '/pages/my/my' })}>我的</Text>
+              ) : (
+                <>
+                  <Text className='login-button' onClick={() => Taro.navigateTo({ url: '/pages/login/login' })}>登录</Text>
+                  <Text className='register-button' onClick={() => Taro.navigateTo({ url: '/pages/register/register' })}>注册</Text>
+                </>
+              )}
+            </View>
+          </View>
+
+          {/* 顶部Banner轮播 */}
+          <View className='banner-carousel'>
+            <ScrollView 
+              ref={scrollViewRef}
+              className='banner-scroll'
+              scrollX 
+              pagingEnabled 
+              showsHorizontalScrollIndicator={false}
+              onScroll={(e) => {
+                const offsetX = e.detail.scrollLeft
+                const screenWidth = Taro.getSystemInfoSync().windowWidth
+                const index = Math.round(offsetX / screenWidth)
+                setCurrentBannerIndex(index)
+              }}
+              scrollEventThrottle={16}
+            >
+              {banners.length > 0 ? (
+                banners.map((banner, index) => (
+                  <View key={banner.id || index} className='banner-item' onClick={handleBannerClick}>
+                    <Image 
+                      src={index === 0 ? "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount%20chinese%20new%20year&image_size=landscape_16_9" : "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20for%20new%20users%20exclusive%20offer&image_size=landscape_16_9"} 
+                      className='banner-image'
+                      mode="aspectFill"
+                      onClick={handleBannerClick}
+                    />
+                    <View className='banner-text' onClick={handleBannerClick}>
+                      {index === 0 ? '春节特惠' : '新用户专享'}
+                      {index === 0 ? <Text className='banner-description'>低至 8 折</Text> : <Text className='banner-description'>首单立减</Text>}
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <>
+                  <View className='banner-item' onClick={handleBannerClick}>
+                    <Image 
+                      src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount%20chinese%20new%20year&image_size=landscape_16_9" 
+                      className='banner-image'
+                      mode="aspectFill"
+                      onClick={handleBannerClick}
+                    />
+                    <View className='banner-text' onClick={handleBannerClick}>
+                      春节特惠
+                      <Text className='banner-description'>低至 8 折</Text>
+                    </View>
+                  </View>
+                  <View className='banner-item' onClick={handleBannerClick}>
+                    <Image 
+                      src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20for%20new%20users%20exclusive%20offer&image_size=landscape_16_9" 
+                      className='banner-image'
+                      mode="aspectFill"
+                      onClick={handleBannerClick}
+                    />
+                    <View className='banner-text' onClick={handleBannerClick}>
+                      新用户专享
+                      <Text className='banner-description'>首单立减</Text>
+                    </View>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+            {/* 轮播指示器 */}
+            {banners.length > 1 && (
+              <View className='banner-indicators'>
+                {banners.map((_, index) => (
+                  <View 
+                    key={index} 
+                    className={`indicator ${currentBannerIndex === index ? 'active' : ''}`}
+                  />
+                ))}
+              </View>
+            )}
           </View>
 
           {/* 核心查询区域 */}
           <View className='search-container'>
             {/* 当前地点 */}
             <View className='location-bar' onClick={handleCityClick}>
+              <Text className='location-icon'>📍</Text>
               <Text className='location-text'>{currentCity}</Text>
               <Text className='location-icon'>▾</Text>
+            </View>
+
+            {/* 日期选择框 */}
+            <View className='date-container' onClick={handleDateClick}>
+              <View className='date-item'>
+                <Text className='date-label'>入住日期</Text>
+                <Text className='date-value'>{checkInDate}</Text>
+                <Text className='date-week'>周五</Text>
+              </View>
+              <View className='date-separator'>
+                <Text className='date-night'>{calculateNights(checkInDate, checkOutDate)}晚</Text>
+              </View>
+              <View className='date-item'>
+                <Text className='date-label'>离店日期</Text>
+                <Text className='date-value'>{checkOutDate}</Text>
+                <Text className='date-week'>周六</Text>
+              </View>
             </View>
 
             {/* 关键字搜索框 */}
             <View className='search-input-container' style={{ position: 'relative', zIndex: 100 }}>
               <Text className='search-icon'>🔍</Text>
-              <input 
+              <Input 
                 className='search-input' 
                 placeholder="输入酒店名称 / 品牌 / 位置" 
                 value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                onSubmit={handleSearch}
-                type="text"
-                autoComplete="off"
+                onInput={handleKeywordChange}
+                onFocus={() => {
+                  if (!keyword.trim() && searchHistory.length > 0) {
+                    setShowSearchSuggestions(true)
+                  }
+                }}
                 style={{ 
                   flex: 1, 
                   fontSize: '14px', 
@@ -679,27 +1034,122 @@ export default function Index () {
               />
             </View>
 
-            {/* 日期选择框 */}
-            <View className='date-container' onClick={handleDateClick}>
-              <Text className='date-icon'>📅</Text>
-              <Text className='date-text'>
-                {checkInDate} - {checkOutDate} 共 {calculateNights(checkInDate, checkOutDate)} 晚
-              </Text>
-            </View>
+            {/* 搜索历史和建议 */}
+            {showSearchSuggestions && (
+              <View className='search-suggestions animate-fadeInUp' style={{ 
+                position: 'absolute', 
+                top: '100%', 
+                left: '0', 
+                right: '0', 
+                marginTop: '8px', 
+                backgroundColor: 'white', 
+                borderRadius: '16px', 
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)', 
+                zIndex: 1000, 
+                maxHeight: '400px', 
+                overflow: 'auto',
+                border: '2px solid #f1f5f9'
+              }}>
+                {/* 搜索历史 */}
+                {!keyword.trim() && searchHistory.length > 0 && (
+                  <View style={{ padding: '16px' }}>
+                    <View style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      marginBottom: '12px'
+                    }}>
+                      <Text style={{ 
+                        fontSize: '15px', 
+                        fontWeight: '600', 
+                        color: '#333'
+                      }}>搜索历史</Text>
+                      <Text 
+                        style={{ 
+                          fontSize: '13px', 
+                          color: '#1890ff', 
+                          fontWeight: '500'
+                        }}
+                        onClick={clearSearchHistory}
+                      >
+                        清除
+                      </Text>
+                    </View>
+                    <View style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '8px'
+                    }}>
+                      {searchHistory.map((item, index) => (
+                        <View 
+                          key={index} 
+                          className={`animate-fadeInUp delay-${(index % 5) * 100}`}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#f8fafc',
+                            borderRadius: '20px',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '14px',
+                            color: '#666',
+                            cursor: 'pointer',
+                            opacity: 0
+                          }}
+                          onClick={() => handleSelectHistory(item)}
+                        >
+                          {item}
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+                
+                {/* 搜索建议 */}
+                {keyword.trim() && searchSuggestions.length > 0 && (
+                  <View style={{ padding: '8px 0' }}>
+                    {searchSuggestions.map((suggestion, index) => (
+                      <View 
+                        key={index} 
+                        className={`animate-fadeInUp delay-${(index % 5) * 100}`}
+                        style={{
+                          padding: '16px 20px',
+                          borderBottom: '1px solid #f1f5f9',
+                          cursor: 'pointer',
+                          opacity: 0
+                        }}
+                        onClick={() => handleSelectSuggestion(suggestion)}
+                      >
+                        <Text style={{ 
+                          fontSize: '14px', 
+                          color: '#333',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px'
+                        }}>
+                          <Text>🔍</Text>
+                          {suggestion}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
 
             {/* 筛选条件栏 */}
             <View className='filter-bar'>
               <View className='filter-item' onClick={() => handleFilterClick('star')}>
                 <Text>星级</Text>
-                <Text className='filter-arrow'>▾</Text>
+                <Text className='filter-value'>{currentFilterType === 'star' && selectedFilterValue ? selectedFilterValue : '不限'}</Text>
               </View>
+              <View className='filter-divider'></View>
               <View className='filter-item' onClick={() => handleFilterClick('price')}>
                 <Text>价格</Text>
-                <Text className='filter-arrow'>▾</Text>
+                <Text className='filter-value'>{currentFilterType === 'price' && selectedFilterValue ? selectedFilterValue : '不限'}</Text>
               </View>
+              <View className='filter-divider'></View>
               <View className='filter-item' onClick={() => handleFilterClick('facility')}>
                 <Text>设施</Text>
-                <Text className='filter-arrow'>▾</Text>
+                <Text className='filter-value'>{selectedFacilities.length > 0 ? `${selectedFacilities.length}项` : '不限'}</Text>
               </View>
             </View>
 
@@ -714,9 +1164,72 @@ export default function Index () {
             </ScrollView>
 
             {/* 查询按钮 */}
-              <Button className='search-button' onClick={handleSearch}>
-                查询
-              </Button>
+            <Button className='search-button' onClick={handleSearch}>
+              开始查询
+            </Button>
+          </View>
+
+          {/* 精选推荐酒店列表 */}
+          <View className='recommended-hotels'>
+            <View className='recommended-header'>
+              <Text className='recommended-title'>精选推荐</Text>
+              <Text className='recommended-more' onClick={() => navigateTo({ url: '/pages/hotel-list/hotel-list' })}>查看更多</Text>
+            </View>
+            
+            {loading ? (
+              <View className='loading-container'>
+                <Text className='loading-text'>加载中...</Text>
+              </View>
+            ) : hotels.length > 0 ? (
+              <ScrollView scrollY className='hotel-list'>
+                {hotels.map((hotel, index) => (
+                  <View 
+                    key={hotel.id} 
+                    className={`hotel-item animate-fadeInUp delay-${(index % 5) * 100}`} 
+                    onClick={() => navigateTo({ url: `/pages/hotel-detail/index?id=${hotel.id}` })}
+                  >
+                    <Image 
+                      className='hotel-image' 
+                      src={hotel.image && !hotel.image.includes('example.com') ? hotel.image : 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3'} 
+                      mode='aspectFill' 
+                      onError={(e) => {
+                        e.target.src = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3'
+                      }}
+                    />
+                    <View className='hotel-info'>
+                      <View className='hotel-header'>
+                        <Text className='hotel-name'>{hotel.name}</Text>
+                        <View className='hotel-rating'>
+                          <Text className='rating-value'>{hotel.rating || hotel.score}</Text>
+                        </View>
+                      </View>
+                      <Text className='hotel-address'>{hotel.address || hotel.location}</Text>
+                      <View className='hotel-footer'>
+                        <View className='hotel-price'>
+                          <Text className='price-symbol'>¥</Text>
+                          <Text className='price-value'>{hotel.price || hotel.min_price || hotel.rate}</Text>
+                          <Text className='price-unit'>/晚</Text>
+                        </View>
+                        <View className='hotel-tags'>
+                          {hotel.tags && hotel.tags.slice(0, 2).map((tag, tagIndex) => (
+                            <Text 
+                              key={tagIndex} 
+                              className={`hotel-tag animate-fadeInUp delay-${(index % 5) * 100 + 100}`}
+                            >
+                              {tag}
+                            </Text>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <View className='empty-container'>
+                <Text className='empty-text'>暂无推荐酒店</Text>
+              </View>
+            )}
           </View>
 
           {/* 日历组件 */}

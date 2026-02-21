@@ -1,48 +1,101 @@
 import { View, Text, Button, Image } from '@tarojs/components'
-import Taro from '@tarojs/taro'
 import { useCallback, useState, useEffect } from 'react'
+import Taro from '@tarojs/taro'
+import { userApi, orderApi } from '../../services/api'
 import './my.less'
 
 export default function MyPage () {
-  // 登录状态管理
+  // 状态管理
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [userInfo, setUserInfo] = useState({
-    name: '用户',
-    avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
-  })
+  const [userInfo, setUserInfo] = useState(null)
+  const [pendingPayCount, setPendingPayCount] = useState(0)
 
-  // 检查登录状态
-  const checkLoginStatus = () => {
-    // 从本地存储中获取登录状态
-    const loggedIn = Taro.getStorageSync('isLoggedIn') || false
-    setIsLoggedIn(loggedIn)
-    
-    // 从本地存储中获取用户信息
-    const userInfoFromStorage = Taro.getStorageSync('userInfo')
-    if (userInfoFromStorage) {
-      setUserInfo(userInfoFromStorage)
+  // 获取待支付订单数量
+  const fetchPendingPayCount = async () => {
+    try {
+      const token = Taro.getStorageSync('token')
+      if (!token) {
+        setPendingPayCount(0)
+        return
+      }
+      
+      const response = await orderApi.getOrders({ status: 'pending' })
+      if (response.code === 0 && response.data) {
+        const pendingOrders = response.data.list || []
+        setPendingPayCount(pendingOrders.length)
+      } else {
+        setPendingPayCount(0)
+      }
+    } catch (error) {
+      console.error('获取待支付订单数量失败:', error)
+      setPendingPayCount(0)
     }
   }
 
+  // 初始化时检查登录状态并获取用户信息
   useEffect(() => {
-    // 初始检查登录状态
+    const checkLoginStatus = async () => {
+      const loggedIn = Taro.getStorageSync('isLoggedIn')
+      const token = Taro.getStorageSync('token')
+      const userInfo = Taro.getStorageSync('userInfo')
+      
+      console.log('检查登录状态:', {
+        loggedIn,
+        token: token ? '存在' : '不存在',
+        userInfo: userInfo ? '存在' : '不存在'
+      })
+      
+      if (loggedIn || token || userInfo) {
+        setIsLoggedIn(true)
+        setUserInfo(userInfo)
+        // 获取待支付订单数量
+        fetchPendingPayCount()
+      } else {
+        setIsLoggedIn(false)
+        setUserInfo(null)
+        setPendingPayCount(0)
+      }
+    }
     checkLoginStatus()
-    
-    // 定期检查登录状态，确保状态能够及时更新
-    const interval = setInterval(checkLoginStatus, 1000)
-    
-    // 清理定时器
-    return () => clearInterval(interval)
   }, [])
 
   // 处理菜单点击
   const handleMenuClick = useCallback((menu) => {
     console.log('点击菜单:', menu)
+    if (menu === 'favorites') {
+      // 跳转到收藏页面
+      Taro.navigateTo({
+        url: '/pages/favorites/favorites'
+      })
+    } else if (menu === 'coupons') {
+      // 跳转到优惠券页面
+      Taro.navigateTo({
+        url: '/pages/coupons/coupons'
+      })
+    } else if (menu === 'settings') {
+      // 跳转到设置页面
+      Taro.navigateTo({
+        url: '/pages/settings/settings'
+      })
+    } else if (menu === 'history') {
+      // 跳转到历史页面
+      Taro.navigateTo({
+        url: '/pages/history/history'
+      })
+    } else if (menu === 'ai_assistant') {
+      // 跳转到AI助手页面
+      Taro.navigateTo({
+        url: '/pages/ai-assistant/ai-assistant'
+      })
+    }
   }, [])
 
   // 处理订单状态点击
   const handleOrderStatusClick = useCallback((status) => {
     console.log('点击订单状态:', status)
+    Taro.switchTab({
+      url: `/pages/order/order?status=${status}`
+    })
   }, [])
 
   // 处理登录/注册点击
@@ -51,26 +104,23 @@ export default function MyPage () {
       url: '/pages/register/register'
     })
   }, [])
-
   return (
     <View className='my-page'>
       {/* 个人信息区域 */}
-      {isLoggedIn ? (
-        // 已登录状态
-        <View className='user-info-section'>
+      {isLoggedIn && userInfo ? (
+        <View className='user-info-section' onClick={() => Taro.navigateTo({ url: '/pages/login/login' })}>
           <Image 
             className='user-avatar' 
-            src={userInfo.avatar} 
+            src={userInfo.avatar || userInfo.profile?.avatar || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'} 
           />
           <View className='user-info'>
-            <Text className='user-name'>{userInfo.name}</Text>
-            <Text className='user-id'>登录成功，享受会员权益</Text>
+            <Text className='user-name'>{userInfo.nickname || userInfo.profile?.nickname || userInfo.phone || '用户'}</Text>
+            <Text className='user-id'>已登录</Text>
           </View>
           <View className='user-arrow'>›</View>
         </View>
       ) : (
-        // 未登录状态
-        <View className='user-info-section' onClick={handleLoginRegisterClick}>
+        <View className='user-info-section' onClick={() => Taro.navigateTo({ url: '/pages/login/login' })}>
           <Image 
             className='user-avatar' 
             src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square' 
@@ -87,7 +137,7 @@ export default function MyPage () {
       <View className='order-section'>
         <View className='section-header'>
           <Text className='section-title'>我的订单</Text>
-          <View className='section-more' onClick={() => handleMenuClick('all_orders')}>
+          <View className='section-more' onClick={() => Taro.switchTab({ url: '/pages/order/order' })}>
             <Text className='more-text'>查看全部订单</Text>
             <Text className='more-arrow'>›</Text>
           </View>
@@ -97,7 +147,9 @@ export default function MyPage () {
           <View className='order-status-item' onClick={() => handleOrderStatusClick('pending_pay')}>
             <View className='order-status-icon'>💳</View>
             <Text className='order-status-text'>待支付</Text>
-            <View className='order-status-badge'>2</View>
+            {pendingPayCount > 0 && (
+              <View className='order-status-badge'>{pendingPayCount}</View>
+            )}
           </View>
           <View className='order-status-item' onClick={() => handleOrderStatusClick('pending_confirm')}>
             <View className='order-status-icon'>⏳</View>
@@ -145,6 +197,9 @@ export default function MyPage () {
         </View>
         <View className='help-item' onClick={() => handleMenuClick('help_center')}>
           <Text className='help-text'>帮助中心</Text>
+        </View>
+        <View className='help-item' onClick={() => handleMenuClick('ai_assistant')}>
+          <Text className='help-text'>AI助手</Text>
         </View>
       </View>
 

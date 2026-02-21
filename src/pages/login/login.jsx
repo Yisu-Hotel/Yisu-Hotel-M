@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import Taro from '@tarojs/taro';
 import { View, Text, Input, Button, Checkbox } from '@tarojs/components';
+import { authApi } from '../../services/api';
 import './login.less';
 
 export default function Login() {
   // 状态管理
-  const [activeTab, setActiveTab] = useState('phone'); // 'phone' 或 'third-party'
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,49 +32,61 @@ export default function Login() {
   };
 
   // 登录
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validateForm()) {
       return;
     }
     
     setIsLoading(true);
     
-    // 模拟登录请求
-    setTimeout(() => {
+    try {
+      // 调用真实API登录
+      const response = await authApi.login({
+        phone,
+        password
+      });
+      
+      console.log('登录响应:', response);
+      
+      if (response.code === 0 && response.data) {
+        // 登录成功，保存token和用户信息
+        console.log('保存登录状态:', {
+          token: response.data.token,
+          isLoggedIn: true,
+          userInfo: response.data.user
+        });
+        
+        Taro.setStorageSync('token', response.data.token);
+        Taro.setStorageSync('isLoggedIn', true);
+        Taro.setStorageSync('userInfo', response.data.user);
+        
+        // 验证保存是否成功
+        console.log('验证登录状态保存:', {
+          token: Taro.getStorageSync('token'),
+          isLoggedIn: Taro.getStorageSync('isLoggedIn'),
+          userInfo: Taro.getStorageSync('userInfo')
+        });
+        
+        // 跳转到个人中心页面，验证登录状态
+        Taro.switchTab({
+          url: '/pages/my/my'
+        });
+      } else {
+        // 登录失败
+        Taro.showToast({
+          title: response.msg || '登录失败',
+          icon: 'none'
+        });
+      }
+    } catch (error) {
+      console.error('登录失败:', error);
+      Taro.showToast({
+        title: error.message || '登录失败，请检查网络连接',
+        icon: 'none'
+      });
+    } finally {
       setIsLoading(false);
-      // 登录成功，保存登录状态到本地存储
-      Taro.setStorageSync('isLoggedIn', true);
-      Taro.setStorageSync('userInfo', {
-        name: '用户',
-        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
-      });
-      // 跳转到首页
-      Taro.switchTab({
-        url: '/pages/index/index'
-      });
-    }, 1500);
-  };
-
-  // 第三方快捷登录
-  const handleThirdPartyLogin = (platform) => {
-    // 模拟第三方授权
-    Taro.showToast({
-      title: `${platform}授权中...`,
-      icon: 'loading'
-    });
-    
-    setTimeout(() => {
-      // 授权成功，保存登录状态到本地存储
-      Taro.setStorageSync('isLoggedIn', true);
-      Taro.setStorageSync('userInfo', {
-        name: '用户',
-        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'
-      });
-      // 跳转到首页
-      Taro.switchTab({
-        url: '/pages/index/index'
-      });
-    }, 1500);
+    }
   };
 
   // 跳转到注册页
@@ -100,25 +112,8 @@ export default function Login() {
         <Text className="login-title">登录账号</Text>
       </View>
 
-      {/* 登录方式选择 */}
-      <View className="login-tabs">
-        <View 
-          className={`login-tab ${activeTab === 'phone' ? 'active' : ''}`}
-          onClick={() => setActiveTab('phone')}
-        >
-          <Text className="login-tab-text">手机号登录</Text>
-        </View>
-        <View 
-          className={`login-tab ${activeTab === 'third-party' ? 'active' : ''}`}
-          onClick={() => setActiveTab('third-party')}
-        >
-          <Text className="login-tab-text">第三方快捷登录</Text>
-        </View>
-      </View>
-
       {/* 手机号登录表单 */}
-      {activeTab === 'phone' && (
-        <View className="login-form">
+      <View className="login-form">
           {/* 手机号输入 */}
           <View className="form-item">
             <View className="phone-input-container">
@@ -190,34 +185,6 @@ export default function Login() {
             登录
           </Button>
         </View>
-      )}
-
-      {/* 第三方快捷登录 */}
-      {activeTab === 'third-party' && (
-        <View className="third-party-login">
-          <View className="third-party-title">选择登录方式</View>
-          <View className="third-party-options">
-            <View 
-              className="third-party-option"
-              onClick={() => handleThirdPartyLogin('微信')}
-            >
-              <View className="third-party-icon wechat">
-                <Text className="icon-text">微信</Text>
-              </View>
-              <Text className="third-party-text">微信登录</Text>
-            </View>
-            <View 
-              className="third-party-option"
-              onClick={() => handleThirdPartyLogin('支付宝')}
-            >
-              <View className="third-party-icon alipay">
-                <Text className="icon-text">支付宝</Text>
-              </View>
-              <Text className="third-party-text">支付宝登录</Text>
-            </View>
-          </View>
-        </View>
-      )}
 
       {/* 底部快捷入口 */}
       <View className="login-footer">

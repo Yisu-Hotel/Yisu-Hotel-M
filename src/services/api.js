@@ -1,270 +1,482 @@
 // API服务层
+import Taro from '@tarojs/taro';
 
 // API基础配置
-const API_BASE_URL = 'http://localhost:3000/api'; // 后端服务地址
+const API_BASE_URL = 'http://localhost:3001'; // 后端服务地址
+console.log('API_BASE_URL:', API_BASE_URL);
+
+const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+// 高德地图配置
+export const AMAP_CONFIG = {
+  key: metaEnv.VITE_AMAP_KEY || metaEnv.TARO_APP_AMAP_KEY || process.env.VITE_AMAP_KEY || process.env.TARO_APP_AMAP_KEY || '您的高德地图API密钥',
+  securityKey: metaEnv.VITE_AMAP_SECURITY_CODE || metaEnv.TARO_APP_AMAP_SECURITY_KEY || process.env.VITE_AMAP_SECURITY_CODE || process.env.TARO_APP_AMAP_SECURITY_KEY || '您的高德地图安全密钥'
+};
+console.log('AMAP_CONFIG:', AMAP_CONFIG);
+
+// API缓存配置
+const CACHE_CONFIG = {
+  enabled: true,
+  defaultExpiry: 5 * 60 * 1000, // 默认缓存5分钟
+  cacheKeyPrefix: 'api_cache_'
+};
+
+// 缓存存储
+const cacheStorage = {
+  set: (key, value, expiry = CACHE_CONFIG.defaultExpiry) => {
+    if (!CACHE_CONFIG.enabled) return;
+    try {
+      const item = {
+        value,
+        expiry: Date.now() + expiry
+      };
+      Taro.setStorageSync(`${CACHE_CONFIG.cacheKeyPrefix}${key}`, item);
+    } catch (error) {
+      console.error('缓存设置失败:', error);
+    }
+  },
+  get: (key) => {
+    if (!CACHE_CONFIG.enabled) return null;
+    try {
+      const item = Taro.getStorageSync(`${CACHE_CONFIG.cacheKeyPrefix}${key}`);
+      if (!item) return null;
+      if (Date.now() > item.expiry) {
+        // 缓存过期，删除
+        Taro.removeStorageSync(`${CACHE_CONFIG.cacheKeyPrefix}${key}`);
+        return null;
+      }
+      return item.value;
+    } catch (error) {
+      console.error('缓存获取失败:', error);
+      return null;
+    }
+  },
+  remove: (key) => {
+    if (!CACHE_CONFIG.enabled) return;
+    try {
+      Taro.removeStorageSync(`${CACHE_CONFIG.cacheKeyPrefix}${key}`);
+    } catch (error) {
+      console.error('缓存删除失败:', error);
+    }
+  },
+  clear: () => {
+    if (!CACHE_CONFIG.enabled) return;
+    try {
+      const keys = Taro.getStorageInfoSync().keys;
+      keys.forEach(key => {
+        if (key.startsWith(CACHE_CONFIG.cacheKeyPrefix)) {
+          Taro.removeStorageSync(key);
+        }
+      });
+    } catch (error) {
+      console.error('缓存清空失败:', error);
+    }
+  }
+};
 
 // 通用请求函数
 async function request(url, options = {}) {
   try {
-    // 直接返回模拟数据，确保页面能够正常加载
-    return getMockData(url, options);
-  } catch (error) {
-    console.error('API request error:', error);
-    // 模拟数据返回，当后端API未实现时使用
-    return getMockData(url, options);
-  }
-}
-
-// 模拟数据
-function getMockData(url, options) {
-  // 酒店搜索模拟数据
-  if (url.includes('/hotels/search')) {
-    // 解析请求体，获取排序信息
-    let sortType = 'default';
-    if (options && options.body) {
+    // 构建完整的请求URL
+    const fullUrl = `${API_BASE_URL}${url}`;
+    
+    // 生成缓存键
+    const cacheKey = `${options.method || 'GET'}_${url}_${options.body || ''}`;
+    
+    // 检查是否启用缓存且为GET请求
+    if ((options.method || 'GET') === 'GET') {
+      const cachedData = cacheStorage.get(cacheKey);
+      if (cachedData) {
+        console.log('使用缓存数据:', cacheKey);
+        return cachedData;
+      }
+    }
+    
+    // 设置默认请求头
+    const defaultHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    // 添加认证token（如果有）
+    const token = Taro.getStorageSync('token');
+    if (token) {
+      defaultHeaders['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // 准备请求选项
+    const requestOptions = {
+      url: fullUrl,
+      method: options.method || 'GET',
+      header: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+    };
+    
+    // 准备请求数据
+    if (options.method && options.method !== 'GET' && options.body) {
       try {
-        const params = JSON.parse(options.body);
-        sortType = params.sort || 'default';
+        // 尝试解析 JSON 字符串
+        requestOptions.data = JSON.parse(options.body);
       } catch (error) {
-        console.error('解析请求体失败:', error);
+        // 如果解析失败，直接使用原始数据
+        requestOptions.data = options.body;
       }
     }
     
-    // 模拟酒店数据
-    const hotels = [
-      {
-        id: 1,
-        name: '北京王府井希尔顿酒店',
-        address: '北京市东城区王府井东街8号',
-        price: 1280,
-        rating: 4.8,
-        image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=luxury%20hotel%20exterior%20modern%20building&image_size=landscape_4_3',
-        amenities: ['免费WiFi', '停车场', '健身房', '游泳池', '餐厅'],
-        distance: '0.5km',
-        available: true,
-        freeCancellation: true,
-        collectionCount: 128
-      },
-      {
-        id: 2,
-        name: '北京国贸大酒店',
-        address: '北京市朝阳区建国门外大街1号',
-        price: 1680,
-        rating: 4.9,
-        image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=5%20star%20hotel%20with%20city%20view&image_size=landscape_4_3',
-        amenities: ['免费WiFi', '停车场', '健身房', '游泳池', ' spa'],
-        distance: '1.2km',
-        available: true,
-        freeCancellation: true,
-        collectionCount: 256
-      },
-      {
-        id: 3,
-        name: '北京三里屯通盈中心洲际酒店',
-        address: '北京市朝阳区南三里屯路1号',
-        price: 1480,
-        rating: 4.7,
-        image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20near%20shopping%20district&image_size=landscape_4_3',
-        amenities: ['免费WiFi', '停车场', '健身房', '餐厅', '酒吧'],
-        distance: '1.8km',
-        available: true,
-        freeCancellation: false,
-        collectionCount: 89
-      }
-    ];
+    // 发送请求
+    console.log('API请求开始:', {
+      url: fullUrl,
+      method: requestOptions.method,
+      header: requestOptions.header,
+      data: requestOptions.data,
+    });
     
-    // 根据排序类型对酒店数据进行排序
-    let sortedHotels = [...hotels];
-    if (sortType === 'price_asc') {
-      // 价格升序
-      sortedHotels.sort((a, b) => a.price - b.price);
-    } else if (sortType === 'price_desc') {
-      // 价格降序
-      sortedHotels.sort((a, b) => b.price - a.price);
-    } else if (sortType === 'distance') {
-      // 距离由近及远
-      sortedHotels.sort((a, b) => {
-        const distanceA = parseFloat(a.distance.replace('km', ''));
-        const distanceB = parseFloat(b.distance.replace('km', ''));
-        return distanceA - distanceB;
-      });
-    }
-    
-    return {
-      success: true,
-      data: {
-        hotels: sortedHotels,
-        total: sortedHotels.length,
-        page: 1,
-        pageSize: 10
-      }
-    };
-  }
-
-  // 城市列表模拟数据
-  if (url.includes('/cities')) {
-    return {
-      success: true,
-      data: {
-        cities: [
-          { id: 1, name: '北京' },
-          { id: 2, name: '上海' },
-          { id: 3, name: '广州' },
-          { id: 4, name: '深圳' },
-          { id: 5, name: '杭州' },
-          { id: 6, name: '成都' },
-          { id: 7, name: '重庆' },
-          { id: 8, name: '西安' }
-        ]
-      }
-    };
-  }
-
-  // 位置信息模拟数据
-  if (url.includes('/location')) {
-    return {
-      success: true,
-      data: {
-        city: '北京',
-        district: '东城区',
-        address: '北京市东城区王府井附近'
-      }
-    };
-  }
-
-  // 默认返回
-  return {
-    success: false,
-    message: 'API not implemented yet'
-  };
-}
-
-// 酒店相关API
-export const hotelApi = {
-  // 搜索酒店
-  searchHotels: async (params) => {
-    console.log('搜索酒店参数:', params);
     try {
-      return await request('/hotels/search', {
-        method: 'POST',
-        body: JSON.stringify(params),
-      });
-    } catch (error) {
-      console.error('搜索酒店API错误:', error);
-      // 直接返回模拟数据，确保即使API调用失败也能正常工作
+      const response = await Taro.request(requestOptions);
       
-      // 模拟酒店数据
-      const hotels = [
-        {
-          id: 1,
-          name: '北京王府井希尔顿酒店',
-          address: '北京市东城区王府井东街8号',
-          price: 1280,
-          rating: 4.8,
-          image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=luxury%20hotel%20exterior%20modern%20building&image_size=landscape_4_3',
-          amenities: ['免费WiFi', '停车场', '健身房', '游泳池', '餐厅'],
-          distance: '0.5km',
-          available: true,
-          freeCancellation: true,
-          collectionCount: 128
-        },
-        {
-          id: 2,
-          name: '北京国贸大酒店',
-          address: '北京市朝阳区建国门外大街1号',
-          price: 1680,
-          rating: 4.9,
-          image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=5%20star%20hotel%20with%20city%20view&image_size=landscape_4_3',
-          amenities: ['免费WiFi', '停车场', '健身房', '游泳池', ' spa'],
-          distance: '1.2km',
-          available: true,
-          freeCancellation: true,
-          collectionCount: 256
-        },
-        {
-          id: 3,
-          name: '北京三里屯通盈中心洲际酒店',
-          address: '北京市朝阳区南三里屯路1号',
-          price: 1480,
-          rating: 4.7,
-          image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20near%20shopping%20district&image_size=landscape_4_3',
-          amenities: ['免费WiFi', '停车场', '健身房', '餐厅', '酒吧'],
-          distance: '1.8km',
-          available: true,
-          freeCancellation: false,
-          collectionCount: 89
+      console.log('API请求响应状态:', response.statusCode);
+      console.log('API请求响应数据:', response.data);
+      
+      // 解析响应数据
+      const responseData = response.data;
+      
+      // 检查响应状态
+      if (response.statusCode === 200) {
+        // 检查后端返回的错误码
+        if (responseData.code === 0) {
+          // 缓存成功的GET请求结果
+          if ((options.method || 'GET') === 'GET') {
+            cacheStorage.set(cacheKey, responseData);
+          }
+          return responseData;
+        } else if (responseData.code === 4008) {
+          // Token 无效或已过期，跳转到登录页
+          Taro.showToast({
+            title: responseData.msg || '登录已过期，请重新登录',
+            icon: 'none'
+          });
+          // 清除本地存储的token
+          Taro.removeStorageSync('token');
+          Taro.removeStorageSync('isLoggedIn');
+          Taro.removeStorageSync('userInfo');
+          // 清除缓存
+          cacheStorage.clear();
+          // 跳转到登录页
+          setTimeout(() => {
+            Taro.navigateTo({ url: '/pages/login/login' });
+          }, 1500);
+          // 不抛出错误，避免后端服务器崩溃
+          return {
+            code: responseData.code,
+            msg: responseData.msg,
+            data: null
+          };
+        } else {
+          // 其他后端错误
+          // 不抛出错误，避免后端服务器崩溃
+          return {
+            code: responseData.code,
+            msg: responseData.msg,
+            data: null
+          };
         }
-      ];
-      
-      // 根据排序类型对酒店数据进行排序
-      let sortedHotels = [...hotels];
-      if (params.sort === 'price_asc') {
-        // 价格升序
-        sortedHotels.sort((a, b) => a.price - b.price);
-      } else if (params.sort === 'price_desc') {
-        // 价格降序
-        sortedHotels.sort((a, b) => b.price - a.price);
-      } else if (params.sort === 'distance') {
-        // 距离由近及远
-        sortedHotels.sort((a, b) => {
-          const distanceA = parseFloat(a.distance.replace('km', ''));
-          const distanceB = parseFloat(b.distance.replace('km', ''));
-          return distanceA - distanceB;
-        });
+      } else {
+        // 检查responseData是否存在
+        const errorMessage = responseData && responseData.msg ? responseData.msg : '未知错误';
+        // 不抛出错误，避免后端服务器崩溃
+        return {
+          code: response.statusCode,
+          msg: errorMessage,
+          data: null
+        };
       }
-      
+    } catch (error) {
+      console.error('API请求错误:', error);
+      // 不抛出错误，避免后端服务器崩溃
       return {
-        success: true,
-        data: {
-          hotels: sortedHotels,
-          total: sortedHotels.length,
-          page: 1,
-          pageSize: 10
-        }
+        code: 500,
+        msg: error.message || '网络请求失败',
+        data: null
       };
     }
-  },
+  } catch (error) {
+    console.error('API请求错误:', error);
+    // 不抛出错误，避免后端服务器崩溃
+    return {
+      code: 500,
+      msg: error.message || '网络请求失败',
+      data: null
+    };
+  }
+}
 
-  // 获取酒店详情
-  getHotelDetail: async (hotelId) => {
-    return request(`/hotels/${hotelId}`);
-  },
-
-  // 获取酒店评论
-  getHotelReviews: async (hotelId, params) => {
-    const queryString = new URLSearchParams(params).toString();
-    return request(`/hotels/${hotelId}/reviews?${queryString}`);
+// 城市相关API
+export const cityApi = {
+  // 获取所有城市列表
+  getCities: async () => {
+    return request('/mobile/city/list');
   }
 };
 
-// 位置相关API
-export const locationApi = {
-  // 获取城市列表
-  getCities: async () => {
-    return request('/cities');
+// 认证相关API
+export const authApi = {
+  // 登录
+  login: async (credentials) => {
+    return request('/mobile/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
   },
-
-  // 根据坐标获取位置信息
-  getLocationByCoords: async (latitude, longitude) => {
-    return request(`/location?lat=${latitude}&lng=${longitude}`);
+  
+  // 注册
+  register: async (data) => {
+    return request('/mobile/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  
+  // 发送验证码
+  sendCode: async (phone, type) => {
+    return request('/mobile/auth/send-code', {
+      method: 'POST',
+      body: JSON.stringify({ phone, type }),
+    });
   }
 };
 
 // 用户相关API
 export const userApi = {
-  // 登录
-  login: async (credentials) => {
-    return request('/user/login', {
+  // 获取个人信息
+  getProfile: async () => {
+    return request('/mobile/user/profile');
+  }
+};
+
+// 广告相关API
+export const bannerApi = {
+  // 获取广告列表
+  getBanners: async () => {
+    return request('/mobile/banner/list');
+  }
+};
+
+// 酒店相关API
+export const hotelApi = {
+  // 获取酒店列表
+  getHotelList: async (params) => {
+    // 处理数组类型的参数
+    const processedParams = { ...params };
+    if (Array.isArray(processedParams.starLevels)) {
+      processedParams.starLevels = processedParams.starLevels.join(',');
+    }
+    if (Array.isArray(processedParams.amenities)) {
+      processedParams.amenities = processedParams.amenities.join(',');
+    }
+    // 处理新增的筛选维度
+    if (Array.isArray(processedParams.hotelTypes)) {
+      processedParams.hotelTypes = processedParams.hotelTypes.join(',');
+    }
+    if (Array.isArray(processedParams.brands)) {
+      processedParams.brands = processedParams.brands.join(',');
+    }
+    if (Array.isArray(processedParams.roomFacilities)) {
+      processedParams.roomFacilities = processedParams.roomFacilities.join(',');
+    }
+    if (Array.isArray(processedParams.hotelFeatures)) {
+      processedParams.hotelFeatures = processedParams.hotelFeatures.join(',');
+    }
+    // 处理价格范围
+    if (Array.isArray(processedParams.priceRange)) {
+      processedParams.minPrice = processedParams.priceRange[0];
+      processedParams.maxPrice = processedParams.priceRange[1];
+      delete processedParams.priceRange;
+    }
+    // 移除空参数
+    const filteredParams = {};
+    for (const [key, value] of Object.entries(processedParams)) {
+      if (value !== undefined && value !== null && value !== '') {
+        filteredParams[key] = value;
+      }
+    }
+    // 为不同的筛选条件生成不同的缓存键
+    const queryString = new URLSearchParams(filteredParams).toString();
+    return request(`/mobile/hotel/list?${queryString}`);
+  },
+
+  // 获取酒店详情
+  getHotelDetail: async (hotelId) => {
+    return request(`/mobile/hotel/${hotelId}`);
+  },
+
+  // 收藏酒店
+  collectHotel: async (hotelId) => {
+    return request('/mobile/favorite/add', {
       method: 'POST',
-      body: JSON.stringify(credentials),
+      body: JSON.stringify({ hotel_id: hotelId }),
     });
   },
 
-  // 注册
-  register: async (userData) => {
-    return request('/user/register', {
+  // 取消收藏酒店
+  uncollectHotel: async (hotelId) => {
+    return request('/mobile/favorite/remove', {
       method: 'POST',
-      body: JSON.stringify(userData),
+      body: JSON.stringify({ hotel_id: hotelId }),
     });
+  },
+
+  // 获取用户收藏的酒店列表
+  getCollectedHotels: async () => {
+    return request('/mobile/favorite/list');
+  }
+};
+
+// 收藏相关API
+export const favoriteApi = {
+  // 获取收藏列表
+  getFavorites: async (params) => {
+    if (params) {
+      const queryString = new URLSearchParams(params).toString();
+      return request(`/mobile/favorite/list?${queryString}`);
+    } else {
+      return request('/mobile/favorite/list');
+    }
+  },
+
+  // 添加收藏
+  addFavorite: async (hotelId) => {
+    return request('/mobile/favorite/add', {
+      method: 'POST',
+      body: JSON.stringify({ hotel_id: hotelId }),
+    });
+  },
+
+  // 取消收藏
+  removeFavorite: async (hotelId) => {
+    return request('/mobile/favorite/remove', {
+      method: 'POST',
+      body: JSON.stringify({ hotel_id: hotelId }),
+    });
+  }
+};
+
+// 预订相关API
+export const bookingApi = {
+  // 创建预订
+  createBooking: async (bookingData) => {
+    return request('/mobile/booking', {
+      method: 'POST',
+      body: JSON.stringify(bookingData),
+    });
+  },
+
+  // 获取预订列表
+  getBookingList: async (params) => {
+    const timestamp = new Date().getTime();
+    if (params) {
+      const queryString = new URLSearchParams({ ...params, _t: timestamp }).toString();
+      return request(`/mobile/booking/list?${queryString}`);
+    } else {
+      return request(`/mobile/booking/list?_t=${timestamp}`);
+    }
+  },
+
+  // 获取预订详情
+  getBookingDetail: async (bookingId) => {
+    const timestamp = new Date().getTime();
+    return request(`/mobile/booking/detail/${bookingId}?_t=${timestamp}`);
+  },
+
+  // 取消预订
+  cancelBooking: async (orderId) => {
+    return request('/mobile/booking/cancel', {
+      method: 'POST',
+      body: JSON.stringify({ order_id: orderId }),
+    });
+  },
+
+  // 支付预订
+  payBooking: async (paymentData) => {
+    return request('/mobile/booking/pay', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+  }
+};
+
+// 订单相关API
+export const orderApi = {
+  // 获取订单列表
+  getOrders: async (params) => {
+    const timestamp = new Date().getTime();
+    if (params) {
+      const queryString = new URLSearchParams({ ...params, _t: timestamp }).toString();
+      return request(`/mobile/booking/list?${queryString}`);
+    } else {
+      return request(`/mobile/booking/list?_t=${timestamp}`);
+    }
+  },
+  // 获取订单详情
+  getOrderDetail: async (orderId) => {
+    return request(`/mobile/booking/detail/${orderId}`);
+  },
+  // 取消订单
+  cancelOrder: async (orderId) => {
+    return request('/mobile/booking/cancel', {
+      method: 'POST',
+      body: JSON.stringify({ order_id: orderId }),
+    });
+  },
+  // 支付订单
+  payOrder: async (orderId) => {
+    return request('/mobile/booking/pay', {
+      method: 'POST',
+      body: JSON.stringify({ order_id: orderId }),
+    });
+  }
+};
+
+// 优惠券相关API
+export const couponApi = {
+  // 获取优惠券列表
+  getCoupons: async (params) => {
+    if (params) {
+      const queryString = new URLSearchParams(params).toString();
+      return request(`/mobile/coupon/list?${queryString}`);
+    } else {
+      return request('/mobile/coupon/list');
+    }
+  }
+};
+
+// 浏览历史相关API
+export const historyApi = {
+  // 获取浏览历史
+  getHistory: async () => {
+    return request('/mobile/history/list');
+  }
+};
+
+// AI助手相关API
+export const aiApi = {
+  // AI聊天
+  chat: async (messages) => {
+    // 提取历史消息（除了最后一条）
+    const history = messages.slice(0, messages.length - 1);
+    return request('/mobile/chat/completion', {
+      method: 'POST',
+      body: JSON.stringify({ messages, history }),
+    });
+  },
+  
+  // 获取AI助手信息
+  getInfo: async () => {
+    return request('/mobile/chat/info');
+  },
+  
+  // 健康检查
+  healthCheck: async () => {
+    return request('/mobile/chat/health');
   }
 };

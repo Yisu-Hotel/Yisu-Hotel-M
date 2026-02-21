@@ -2,22 +2,105 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   line-height: 1.4;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #f8fafc, #e0f2fe);
   min-height: 100vh;
+  padding-bottom: 20px;
 }
 
-/* 顶部Banner */
-.banner {
+/* 顶部导航栏 */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  .nav-left {
+    .nav-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1890ff;
+    }
+  }
+
+  .nav-right {
+    display: flex;
+    gap: 16px;
+
+    .login-button {
+      padding: 8px 16px;
+      background-color: transparent;
+      color: #1890ff;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &:active {
+        background-color: rgba(24, 144, 255, 0.1);
+        transform: scale(0.95);
+      }
+    }
+
+    .register-button {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #1890ff, #38bdf8);
+      color: white;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+      transition: all 0.3s ease;
+
+      &:active {
+        background: linear-gradient(135deg, #38bdf8, #60a5fa);
+        transform: scale(0.95);
+        box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+      }
+    }
+  }
+}
+
+/* 顶部Banner轮播 */
+.banner-carousel {
   position: relative;
   width: 100%;
   height: 180px;
   overflow: hidden;
-  border-radius: 0 0 12px 12px;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.banner-scroll {
+  width: 100%;
+  height: 100%;
+}
+
+.banner-item {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  float: left;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.banner-item:active {
+  transform: scale(0.98);
 }
 
 .banner-image {
   width: 100%;
   height: 100%;
+  transition: transform 0.3s ease;
+}
+
+.banner-item:active .banner-image {
+  transform: scale(1.05);
 }
 
 .banner-text {
@@ -28,17 +111,189 @@
   font-size: 18px;
   font-weight: bold;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  animation: slideInUp 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.banner-description {
+  font-size: 14px;
+  font-weight: normal;
+  opacity: 0.9;
+}
+
+/* 轮播指示器 */
+.banner-indicators {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.indicator.active {
+  width: 24px;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* 核心查询区域 */
 .search-container {
   margin: 16px;
-  padding: 20px;
+  padding: 24px;
   background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 28px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   position: relative;
   z-index: 1;
+  animation: fadeInUp 0.5s ease;
+  margin-top: -30px;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border: 2px solid #f1f5f9;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #1890ff, #38bdf8, #60a5fa);
+    border-radius: 28px 28px 0 0;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* 动画类 */
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.5s ease-out forwards;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* 延迟动画 */
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+}
+
+.delay-400 {
+  animation-delay: 0.4s;
+}
+
+.delay-500 {
+  animation-delay: 0.5s;
+}
+
+/* 微交互效果 */
+.interactive-hover {
+  transition: all 0.3s ease;
+}
+
+.interactive-hover:active {
+  transform: scale(0.96);
+}
+
+/* 平滑滚动 */
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 当前地点 */
@@ -46,149 +301,743 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  border-radius: 16px;
   cursor: pointer;
   user-select: none;
   z-index: 1000;
   position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
 .location-bar:active {
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .location-text {
+  flex: 1;
   font-size: 16px;
   font-weight: 500;
   color: #333;
+  margin: 0 12px;
 }
 
 .location-icon {
-  font-size: 12px;
-  color: #999;
+  font-size: 16px;
+  color: #666;
+  transition: transform 0.2s ease;
+}
+
+.location-bar:active .location-icon:last-child {
+  transform: rotate(180deg);
 }
 
 /* 关键字搜索框 */
 .search-input-container {
   display: flex;
   align-items: center;
-  padding: 12px;
-  margin-bottom: 16px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.search-input-container:focus-within {
+  background: linear-gradient(135deg, #ffffff, #e6f7ff);
+  border-color: #1890ff;
+  box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.15), 0 8px 24px rgba(24, 144, 255, 0.1);
 }
 
 .search-icon {
-  margin-right: 8px;
+  margin-right: 12px;
   color: #999;
+  font-size: 16px;
 }
 
 .search-input {
   flex: 1;
-  font-size: 14px;
+  font-size: 15px;
   color: #333;
   background: transparent;
   padding: 4px 0;
   outline: none;
   border: none;
-  min-height: 20px;
+  min-height: 24px;
 }
 
 .search-input::placeholder {
   color: #999;
+  font-size: 14px;
 }
 
 /* 日期选择框 */
 .date-container {
   display: flex;
   align-items: center;
-  padding: 12px;
-  margin-bottom: 16px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
+  justify-content: space-between;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
-.date-icon {
-  margin-right: 8px;
-  color: #999;
+.date-container:active {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-.date-text {
+.date-item {
   flex: 1;
-  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.date-label {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+.date-value {
+  font-size: 16px;
+  font-weight: 600;
   color: #333;
+  margin-bottom: 4px;
+}
+
+.date-week {
+  font-size: 12px;
+  color: #666;
+}
+
+.date-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.date-night {
+  font-size: 12px;
+  color: #666;
+  padding: 4px 8px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* 筛选条件栏 */
 .filter-bar {
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-  border-top: 1px solid #f0f0f0;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
 .filter-item {
+  flex: 1;
   display: flex;
-  align-items: center;
   flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: all 0.2s ease;
 }
 
-.filter-item Text {
+.filter-item:active {
+  transform: scale(0.95);
+}
+
+.filter-item Text:first-child {
   font-size: 14px;
-  color: #333;
+  color: #666;
+  margin-bottom: 4px;
 }
 
-.filter-arrow {
-  font-size: 10px;
+.filter-value {
+  font-size: 12px;
   color: #999;
-  margin-top: 2px;
+}
+
+.filter-divider {
+  width: 1px;
+  height: 32px;
+  background-color: #e0e0e0;
+  margin: 0 16px;
 }
 
 /* 快捷标签区 */
 .tags-container {
   margin-bottom: 20px;
-  padding-bottom: 8px;
+  padding-bottom: 12px;
+  padding-right: 20px;
 }
 
 .tag {
   display: inline-block;
-  padding: 8px 16px;
-  margin-right: 12px;
-  background-color: #f5f5f5;
-  border-radius: 16px;
-  font-size: 13px;
-  color: #666;
+  padding: 14px 24px;
+  margin-right: 14px;
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  border-radius: 28px;
+  font-size: 14px;
+  color: #475569;
   white-space: nowrap;
+  transition: all 0.3s ease;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+  font-weight: 500;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(24, 144, 255, 0.15), transparent);
+    transition: left 0.6s ease;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
 }
 
 .tag:active {
-  background-color: #e0e0e0;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  transform: scale(0.96);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
 
 /* 选中标签 */
 .tag-active {
-  background-color: #1890ff;
+  background: linear-gradient(135deg, #1890ff, #38bdf8);
   color: white;
+  border-color: #1890ff;
+  box-shadow: 0 8px 28px rgba(24, 144, 255, 0.45);
+  transform: translateY(-4px);
+  font-weight: 600;
+  
+  &::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  }
 }
 
 /* 查询按钮 */
 .search-button {
   width: 100%;
-  height: 48px;
-  background-color: #1890ff;
+  height: 60px;
+  background: linear-gradient(135deg, #1890ff, #38bdf8, #60a5fa);
   color: white;
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 20px;
   border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(24, 144, 255, 0.4);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  overflow: hidden;
+  margin-top: 12px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.search-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.search-button:hover::before {
+  left: 100%;
 }
 
 .search-button:active {
-  background-color: #40a9ff;
+  background: linear-gradient(135deg, #38bdf8, #60a5fa, #93c5fd);
+  transform: translateY(4px);
+  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.4);
+}
+
+.search-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.search-button:active::after {
+  width: 400px;
+  height: 400px;
+}
+
+/* 精选推荐酒店列表 */
+.recommended-hotels {
+  margin: 16px;
+  margin-top: 0;
+}
+
+.recommended-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.recommended-title {
+  font-size: 19px;
+  font-weight: 600;
+  color: #333;
+}
+
+.recommended-more {
+  font-size: 14px;
+  color: #1890ff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.recommended-more:active {
+  transform: translateX(4px);
+  color: #40a9ff;
+}
+
+/* 酒店列表 */
+.hotel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 酒店项 */
+.hotel-item {
+  background-color: white;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s ease;
+  cursor: pointer;
+  position: relative;
+  margin-bottom: 28px;
+  border: 2px solid #f1f5f9;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #1890ff, #38bdf8, #60a5fa);
+    border-radius: 28px 28px 0 0;
+    z-index: 3;
+  }
+}
+
+.hotel-item:active {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.25);
+}
+
+/* 酒店图片 */
+.hotel-image {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+  border-radius: 28px 28px 0 0;
+}
+
+.hotel-item:active .hotel-image {
+  transform: scale(1.1);
+}
+
+/* 酒店图片遮罩效果 */
+.hotel-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 260px;
+  background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
+  border-radius: 28px 28px 0 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: background 0.3s ease;
+}
+
+.hotel-item:active::before {
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* 酒店信息 */
+.hotel-info {
+  padding: 28px;
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+}
+
+/* 酒店头部 */
+.hotel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.hotel-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  flex: 1;
+  margin-right: 24px;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: color 0.3s ease;
+  
+  .hotel-item:active & {
+    color: #1890ff;
+  }
+}
+
+/* 酒店评分 */
+.hotel-rating {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #fff3e0, #fef3c7);
+  padding: 10px 20px;
+  border-radius: 24px;
+  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.2);
+  transition: all 0.3s ease;
+  
+  .hotel-item:active & {
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(255, 107, 0, 0.25);
+  }
+}
+
+.rating-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff6b00;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  
+  &::after {
+    content: '分';
+    font-size: 14px;
+    font-weight: 500;
+    color: #ff9800;
+  }
+}
+
+/* 酒店地址 */
+.hotel-address {
+  font-size: 16px;
+  color: #64748b;
+  margin-bottom: 24px;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  border-radius: 16px;
+  border-left: 4px solid #1890ff;
+  transition: all 0.3s ease;
+  
+  &::before {
+    content: '📍';
+    font-size: 16px;
+  }
+  
+  .hotel-item:active & {
+    background: linear-gradient(135deg, #e6f7ff, #bae6fd);
+    border-left-color: #38bdf8;
+  }
+}
+
+/* 酒店底部 */
+.hotel-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* 酒店价格 */
+.hotel-price {
+  display: flex;
+  align-items: baseline;
+  background: linear-gradient(135deg, #fff1f0, #fee2e2);
+  padding: 12px 24px;
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.15);
+  transition: all 0.3s ease;
+  
+  .hotel-item:active & {
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(255, 77, 79, 0.2);
+  }
+}
+
+.price-symbol {
+  font-size: 20px;
+  font-weight: 700;
+  color: #dc2626;
+  margin-right: 6px;
+  text-shadow: 0 1px 2px rgba(220, 38, 38, 0.3);
+}
+
+.price-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #dc2626;
+  margin-right: 6px;
+  text-shadow: 0 1px 3px rgba(220, 38, 38, 0.3);
+  transition: transform 0.3s ease;
+  
+  .hotel-item:active & {
+    transform: scale(1.1);
+  }
+}
+
+.price-unit {
+  font-size: 14px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* 酒店标签 */
+.hotel-tags {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hotel-tag {
+  font-size: 13px;
+  color: #1890ff;
+  background: linear-gradient(135deg, #e6f7ff, #bae6fd);
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: 2px solid #93c5fd;
+  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.15);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  font-weight: 500;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(24, 144, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
+  
+  .hotel-item:active & {
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(24, 144, 255, 0.3);
+    background: linear-gradient(135deg, #bae6fd, #7dd3fc);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .hotel-item {
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+  
+  .hotel-item::after {
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .hotel-image {
+    height: 180px;
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .hotel-item::before {
+    height: 180px;
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .hotel-info {
+    padding: 16px;
+  }
+  
+  .hotel-header {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+  
+  .hotel-name {
+    font-size: 18px;
+    margin-right: 12px;
+  }
+  
+  .hotel-rating {
+    padding: 6px 12px;
+    border-radius: 16px;
+  }
+  
+  .rating-value {
+    font-size: 16px;
+  }
+  
+  .hotel-address {
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+  }
+  
+  .hotel-footer {
+    padding-top: 12px;
+  }
+  
+  .hotel-price {
+    padding: 8px 16px;
+    border-radius: 12px;
+  }
+  
+  .price-symbol {
+    font-size: 16px;
+  }
+  
+  .price-value {
+    font-size: 24px;
+  }
+  
+  .hotel-tag {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 14px;
+  }
+}
+
+@media (min-width: 414px) {
+  .hotel-item {
+    border-radius: 24px;
+    margin-bottom: 24px;
+  }
+  
+  .hotel-item::after {
+    border-radius: 24px 24px 0 0;
+  }
+  
+  .hotel-image {
+    height: 240px;
+    border-radius: 24px 24px 0 0;
+  }
+  
+  .hotel-item::before {
+    height: 240px;
+    border-radius: 24px 24px 0 0;
+  }
+  
+  .hotel-info {
+    padding: 24px;
+  }
+  
+  .hotel-header {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+  }
+  
+  .hotel-name {
+    font-size: 22px;
+    margin-right: 20px;
+  }
+  
+  .hotel-rating {
+    padding: 8px 16px;
+    border-radius: 20px;
+  }
+  
+  .rating-value {
+    font-size: 18px;
+  }
+  
+  .hotel-address {
+    font-size: 16px;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+  }
+  
+  .hotel-footer {
+    padding-top: 16px;
+  }
+  
+  .hotel-price {
+    padding: 10px 20px;
+    border-radius: 16px;
+  }
+  
+  .price-symbol {
+    font-size: 18px;
+  }
+  
+  .price-value {
+    font-size: 28px;
+  }
+  
+  .hotel-tag {
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 16px;
+  }
 }
 
 
@@ -205,26 +1054,38 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .calendar-content {
   width: 100%;
   max-height: 85vh;
   background-color: white;
-  border-radius: 20px;
+  border-radius: 24px;
   padding-bottom: env(safe-area-inset-bottom, 16px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
+  animation: slideInUp 0.4s ease;
 }
 
 .calendar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid #f0f0f0;
   background-color: #f9f9f9;
+  border-radius: 24px 24px 0 0;
 }
 
 .calendar-title {
@@ -238,6 +1099,13 @@
   color: #666;
   padding: 4px;
   line-height: 1;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.calendar-close:active {
+  transform: scale(1.2);
+  color: #333;
 }
 
 .calendar-body {
@@ -259,15 +1127,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 16px 24px;
   border-bottom: 1px solid #f0f0f0;
   background-color: #fafafa;
 }
 
 .month-nav-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   border: 1px solid #e0e0e0;
   background: #fff;
   display: flex;
@@ -276,12 +1144,15 @@
   font-size: 18px;
   color: #1890ff;
   padding: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
 }
 
 .month-nav-btn:active {
-  background-color: #f5f5f5;
+  background-color: #1890ff;
+  color: white;
   transform: scale(0.95);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
 }
 
 .current-month {
@@ -326,11 +1197,13 @@
   justify-content: center;
   aspect-ratio: 1;
   position: relative;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .date-cell:active {
   background-color: #f5f5f5;
+  transform: scale(0.95);
 }
 
 .date-text {
@@ -338,6 +1211,8 @@
   color: #333;
   font-weight: 400;
   padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
 }
 
 /* 今天 */
@@ -348,34 +1223,42 @@
 .today .date-text {
   color: #1890ff;
   font-weight: 600;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
 }
 
 /* 入住日期 */
 .check-in {
-  background: #1890ff;
-  border-radius: 8px 0 0 8px;
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  border-radius: 12px 0 0 12px;
 }
 
 .check-in .date-text {
-  color: #000;
+  color: white;
   font-weight: 700;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 /* 离店日期 */
 .check-out {
-  background: #1890ff;
-  border-radius: 0 8px 8px 0;
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  border-radius: 0 12px 12px 0;
 }
 
 .check-out .date-text {
-  color: #000;
+  color: white;
   font-weight: 700;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 /* 日期范围内 */
 .in-range {
   background: #e6f7ff;
   border-radius: 0;
+}
+
+.in-range .date-text {
+  background-color: rgba(24, 144, 255, 0.1);
 }
 
 /* 禁用日期 */
@@ -399,12 +1282,12 @@
 .calendar-range-info {
   display: flex;
   justify-content: space-between;
-  padding: 14px 20px;
-  background: #f9f9f9;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #f9f9f9, #f0f0f0);
   border-top: 1px solid #e8e8e8;
   border-bottom: 1px solid #e8e8e8;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
 }
 
 .range-info-item {
@@ -414,6 +1297,10 @@
   min-width: 110px;
   text-align: center;
   line-height: 1.4;
+  padding: 8px 12px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .range-info-item Text {
@@ -424,38 +1311,75 @@
 .calendar-footer {
   display: flex;
   justify-content: center;
-  padding: 16px 20px;
+  padding: 20px 24px;
   border-top: 1px solid #f0f0f0;
   background-color: #f9f9f9;
   margin-top: auto;
   position: sticky;
   bottom: 0;
   z-index: 10;
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+  border-radius: 0 0 24px 24px;
 }
 
 .calendar-confirm-btn {
   width: 100%;
   max-width: 300px;
   padding: 16px;
-  background-color: #1890ff;
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
   border: none;
-  border-radius: 12px;
+  border-radius: 16px;
   font-size: 16px;
   font-weight: 600;
   color: white;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
-  height: 52px;
+  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.4);
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-confirm-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.calendar-confirm-btn:hover::before {
+  left: 100%;
 }
 
 .calendar-confirm-btn:active {
-  background-color: #40a9ff;
+  background: linear-gradient(135deg, #40a9ff, #69c0ff);
   transform: scale(0.98);
-  box-shadow: 0 1px 4px rgba(24, 144, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.4);
+}
+
+.calendar-confirm-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.calendar-confirm-btn:active::after {
+  width: 300px;
+  height: 300px;
 }
 
 /* 城市选择器样式 */
@@ -470,86 +1394,101 @@
   align-items: center;
   justify-content: center;
   z-index: 2000;
+  animation: fadeIn 0.3s ease;
 }
 
 .city-selector-content {
   width: 100%;
   max-width: 600px;
-  height: 70%;
+  height: 75%;
   background-color: white;
-  border-radius: 20px;
+  border-radius: 24px;
   padding-bottom: env(safe-area-inset-bottom, 20px);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: slideInUp 0.4s ease;
 }
 
 .city-selector-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid #f0f0f0;
-  background-color: white;
+  background-color: #f9f9f9;
+  border-radius: 24px 24px 0 0;
 }
 
 .city-selector-title {
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 19px;
+  font-weight: 600;
   color: #333;
 }
 
 .city-selector-close {
-  font-size: 20px;
-  color: #999;
+  font-size: 24px;
+  color: #666;
   padding: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.city-selector-close:active {
+  transform: scale(1.2);
+  color: #333;
 }
 
 .city-search-box {
   display: flex;
   align-items: center;
-  padding: 12px 20px;
+  padding: 16px 24px;
   border-bottom: 1px solid #f0f0f0;
   background-color: white;
 }
 
 .city-search-icon {
-  margin-right: 8px;
+  margin-right: 12px;
   color: #999;
+  font-size: 16px;
 }
 
 .city-search-input {
   flex: 1;
-  font-size: 14px;
+  font-size: 15px;
   color: #333;
   background: transparent;
-  padding: 4px 0;
+  padding: 8px 0;
   outline: none;
   border: none;
-  min-height: 20px;
+  min-height: 24px;
 }
 
 .city-search-input::placeholder {
   color: #999;
+  font-size: 14px;
 }
 
 .city-list-container {
   flex: 1;
   overflow-y: auto;
-  max-height: calc(100% - 100px);
+  max-height: calc(100% - 120px);
+  padding: 0 24px;
 }
 
 .city-section {
-  padding: 16px 20px;
+  padding: 16px 0;
   border-bottom: 1px solid #f0f0f0;
 }
 
 .section-title {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: #999;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   display: block;
+  padding-left: 8px;
+  border-left: 3px solid #1890ff;
 }
 
 .hot-cities {
@@ -559,16 +1498,21 @@
 }
 
 .hot-city-item {
-  padding: 8px 16px;
-  background-color: #f5f5f5;
-  border-radius: 4px;
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  border-radius: 20px;
   font-size: 14px;
   color: #333;
   white-space: nowrap;
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .hot-city-item:active {
-  background-color: #e0e0e0;
+  background-color: #e9ecef;
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .city-list {
@@ -578,20 +1522,23 @@
 }
 
 .city-item {
-  padding: 12px 0;
-  font-size: 14px;
+  padding: 14px 0;
+  font-size: 15px;
   color: #333;
   border-bottom: 1px solid #f5f5f5;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .city-item:active {
-  background-color: #f5f5f5;
+  background-color: #f8f9fa;
+  transform: translateX(8px);
 }
 
 .no-result {
-  padding: 20px 0;
+  padding: 40px 0;
   text-align: center;
-  font-size: 14px;
+  font-size: 15px;
   color: #999;
 }
 
@@ -608,6 +1555,7 @@
   justify-content: center;
   padding-top: 10vh;
   z-index: 1000;
+  animation: fadeIn 0.3s ease;
 }
 
 .filter-content {
@@ -615,37 +1563,46 @@
   max-width: 600px;
   max-height: 80vh;
   background-color: white;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
+  animation: slideInUp 0.4s ease;
 }
 
 .filter-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid #f0f0f0;
-  background-color: white;
+  background-color: #f9f9f9;
+  border-radius: 24px 24px 0 0;
 }
 
 .filter-title {
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 19px;
+  font-weight: 600;
   color: #333;
 }
 
 .filter-close {
-  font-size: 20px;
-  color: #999;
+  font-size: 24px;
+  color: #666;
   padding: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.filter-close:active {
+  transform: scale(1.2);
+  color: #333;
 }
 
 .filter-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px;
   max-height: 400px;
 }
 
@@ -656,49 +1613,108 @@
 }
 
 .filter-option-item {
-  font-size: 15px;
+  font-size: 16px;
   color: #333;
-  padding: 12px 0;
+  padding: 16px 0;
   border-bottom: 1px solid #f0f0f0;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  padding-left: 16px;
 }
 
 .filter-option-item:active {
-  background-color: #f5f5f5;
+  background-color: #f8f9fa;
+  transform: translateX(8px);
 }
 
 /* 选中的筛选选项 */
 .filter-option-active {
   color: #1890ff;
-  font-weight: 500;
+  font-weight: 600;
   background-color: #e6f7ff;
+  border-radius: 8px;
+  padding-left: 16px;
 }
 
 .filter-option-active::after {
   content: '✓';
   float: right;
-  font-size: 16px;
+  font-size: 18px;
   color: #1890ff;
+  background-color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
 }
 
 .filter-footer {
-  padding: 20px;
+  padding: 24px;
   border-top: 1px solid #f0f0f0;
-  background-color: white;
+  background-color: #f9f9f9;
   display: flex;
   justify-content: center;
+  border-radius: 0 0 24px 24px;
 }
 
 .filter-confirm-btn {
-  width: 200px;
-  height: 48px;
-  background-color: #1890ff;
+  width: 100%;
+  max-width: 300px;
+  height: 52px;
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
   color: white;
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 8px;
+  font-size: 17px;
+  font-weight: 600;
+  border-radius: 12px;
   border: none;
   outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-confirm-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.filter-confirm-btn:hover::before {
+  left: 100%;
+}
+
+.filter-confirm-btn:active {
+  background: linear-gradient(135deg, #40a9ff, #69c0ff);
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.3);
+}
+
+.filter-confirm-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.filter-confirm-btn:active::after {
+  width: 300px;
+  height: 300px;
 }
 
 /* 响应式设计 */
@@ -709,6 +1725,8 @@
   
   .banner-text {
     font-size: 16px;
+    bottom: 16px;
+    left: 16px;
   }
   
   .search-container {
@@ -716,12 +1734,118 @@
     padding: 16px;
   }
   
+  .location-bar {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+  
+  .location-text {
+    font-size: 15px;
+  }
+  
+  .search-input-container {
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  
+  .date-container {
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  
+  .filter-bar {
+    padding: 12px 0;
+    margin-bottom: 12px;
+  }
+  
+  .filter-item {
+    padding: 6px 12px;
+  }
+  
+  .tags-container {
+    margin-bottom: 16px;
+  }
+  
+  .tag {
+    padding: 8px 16px;
+    margin-right: 10px;
+    font-size: 12px;
+  }
+  
+  .search-button {
+    height: 48px;
+    font-size: 16px;
+  }
+  
   .calendar-container {
     padding-bottom: 0;
   }
   
+  .calendar-content {
+    border-radius: 20px;
+  }
+  
+  .calendar-header {
+    padding: 16px 20px;
+  }
+  
+  .calendar-header-section {
+    padding: 14px 20px;
+  }
+  
+  .month-nav-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .calendar-range-info {
+    padding: 12px 20px;
+    gap: 8px;
+  }
+  
+  .range-info-item {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+  
+  .calendar-footer {
+    padding: 16px 20px;
+  }
+  
+  .calendar-confirm-btn {
+    height: 52px;
+  }
+  
   .city-selector-content {
     height: 70%;
+  }
+  
+  .city-selector-header {
+    padding: 16px 20px;
+  }
+  
+  .city-search-box {
+    padding: 12px 20px;
+  }
+  
+  .city-list-container {
+    padding: 0 20px;
+  }
+  
+  .filter-content {
+    border-radius: 20px;
+  }
+  
+  .filter-header {
+    padding: 16px 20px;
+  }
+  
+  .filter-body {
+    padding: 20px;
+  }
+  
+  .filter-footer {
+    padding: 20px;
   }
 }
 
@@ -734,11 +1858,78 @@
     font-size: 20px;
   }
   
+  .search-container {
+    margin: 20px;
+    padding: 24px;
+  }
+  
+  .location-bar {
+    margin-bottom: 20px;
+  }
+  
+  .location-text {
+    font-size: 17px;
+  }
+  
+  .search-input-container {
+    margin-bottom: 20px;
+  }
+  
+  .date-container {
+    margin-bottom: 20px;
+  }
+  
+  .filter-bar {
+    margin-bottom: 20px;
+  }
+  
+  .tags-container {
+    margin-bottom: 24px;
+  }
+  
+  .tag {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+  
+  .search-button {
+    height: 56px;
+    font-size: 18px;
+  }
+  
   .calendar-container {
     padding-bottom: 20px;
   }
   
   .city-selector-content {
     height: 85%;
+  }
+  
+  .filter-body {
+    max-height: 450px;
+  }
+}
+
+/* 横屏模式适配 */
+@media (orientation: landscape) {
+  .banner {
+    height: 120px;
+  }
+  
+  .search-container {
+    margin: 12px;
+    padding: 16px;
+  }
+  
+  .city-selector-content {
+    height: 80%;
+  }
+  
+  .calendar-content {
+    max-height: 90vh;
+  }
+  
+  .filter-content {
+    max-height: 90vh;
   }
 }
