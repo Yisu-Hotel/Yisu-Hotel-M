@@ -7,7 +7,7 @@ import './index.less'
 export default function Index () {
   const router = useRouter()
   // 状态管理
-  const [currentCity, setCurrentCity] = useState('定位中...')
+  const [currentCity, setCurrentCity] = useState('北京')
   const [keyword, setKeyword] = useState('')
   const [checkInDate, setCheckInDate] = useState('')
   const [checkOutDate, setCheckOutDate] = useState('')
@@ -25,6 +25,27 @@ export default function Index () {
   const [filterOptions, setFilterOptions] = useState({})
   const [selectedFilterValue, setSelectedFilterValue] = useState('')
   const [selectedFacilities, setSelectedFacilities] = useState([])
+  const [selectedServices, setSelectedServices] = useState([])
+  const [maxMinPrice, setMaxMinPrice] = useState('')
+  const [minRating, setMinRating] = useState('')
+
+  // 设施和服务列表
+  const availableFacilities = [
+    { id: 'wifi', name: '免费WiFi' },
+    { id: 'parking', name: '免费停车场' },
+    { id: 'gym', name: '健身房' },
+    { id: 'pool', name: '游泳池' },
+    { id: 'restaurant', name: '餐厅' },
+    { id: 'meeting', name: '会议室' }
+  ]
+
+  const availableServices = [
+    { id: 'reception', name: '24小时前台' },
+    { id: 'luggage', name: '行李寄存' },
+    { id: 'wakeup', name: '叫醒服务' },
+    { id: 'room_service', name: '送餐服务' },
+    { id: 'car_rental', name: '租车服务' }
+  ]
   // 搜索历史和推荐状态
   const [searchHistory, setSearchHistory] = useState([])
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false)
@@ -68,10 +89,8 @@ export default function Index () {
     if (params && params.city) {
       console.log('从城市选择页返回，选择的城市:', params.city)
       setCurrentCity(params.city)
-    } else {
-      getCurrentLocation()
     }
-
+    
     // 加载搜索历史
     loadSearchHistory()
   }, [])
@@ -168,22 +187,11 @@ export default function Index () {
         setLoading(true)
         console.log('开始获取数据...')
         
-        // 直接测试API请求
-        // console.log('测试API请求...')
-        // const testResponse = await Taro.request({
-        //   url: 'http://localhost:3001/api/test',
-        //   method: 'GET'
-        // })
-        // console.log('测试API响应:', testResponse)
-        
         // 先获取广告列表
-        console.log('开始获取广告列表...')
         try {
           const bannerResult = await bannerApi.getBanners()
-          console.log('广告列表API返回结果:', bannerResult)
           if (bannerResult.code === 0 && bannerResult.data) {
             setBanners(bannerResult.data)
-            console.log('设置广告列表成功:', bannerResult.data)
           }
         } catch (error) {
           console.error('获取广告列表失败:', error)
@@ -210,82 +218,53 @@ export default function Index () {
           ])
         }
         
-        // 等待 1 秒后，再获取酒店列表
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
         // 获取酒店列表
         console.log('开始获取酒店列表...')
         try {
+          // 使用当前城市作为参数，如果还在定位中则使用北京
           const cityName = currentCity === '定位中...' ? '北京' : currentCity
           const hotelResult = await hotelApi.getHotelList({
-            city: cityName,
-            cityName: cityName,
             location: cityName,
             page: 1,
             pageSize: 10
           })
           console.log('酒店列表API返回结果:', hotelResult)
           if (hotelResult.code === 0 && hotelResult.data) {
-            // 处理后端返回的数据结构，将 data.list 转换为前端期望的格式
-            const rawHotels = hotelResult.data.list || hotelResult.data.hotels || []
-            console.log('原始酒店数据:', rawHotels)
+            // 处理后端返回的数据结构
+            const rawHotels = hotelResult.data.list || []
             
-            // 转换酒店数据格式，确保字段名称与前端匹配
+            // 转换酒店数据格式，包含用户要求的所有字段
             const formattedHotels = rawHotels.map(hotel => ({
-              id: hotel.hotel_id || hotel.id,
-              name: hotel.hotel_name_cn || hotel.name,
-              rating: hotel.rating || hotel.score,
-              address: hotel.nearby_info || hotel.address || hotel.location,
-              price: hotel.min_price || hotel.price || hotel.rate,
-              image: hotel.hotel_image || hotel.image || hotel.main_image_url?.[0] || hotel.images?.[0],
-              starLevel: hotel.star_rating || hotel.starLevel,
-              amenities: hotel.facilities || hotel.amenities || [],
-              tags: hotel.tags || []
+              id: hotel.hotel_id,
+              hotel_name_cn: hotel.hotel_name_cn,
+              hotel_name_en: hotel.hotel_name_en,
+              star_rating: hotel.star_rating,
+              rating: hotel.rating,
+              nearby_info: hotel.nearby_info,
+              main_image_url: hotel.main_image_url,
+              tags: hotel.tags || [],
+              formatted_address: hotel.location_info ? hotel.location_info.formatted_address : '',
+              favorite_count: hotel.favorite_count,
+              booking_count: hotel.booking_count,
+              review_count: hotel.review_count,
+              min_price: hotel.min_price
             }))
-            console.log('格式化后的酒店数据:', formattedHotels)
             
             setHotels(formattedHotels)
-            console.log('设置酒店列表成功:', formattedHotels)
           }
         } catch (error) {
           console.error('获取酒店列表失败:', error)
-          // 如果获取酒店列表失败，使用默认数据
-          setHotels([
-            {
-              id: 1,
-              name: '北京王府井希尔顿酒店',
-              rating: 4.8,
-              address: '北京市东城区王府井东街8号',
-              price: 1288,
-              image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3',
-              starLevel: 5,
-              amenities: ['免费WiFi', '免费停车场', '健身房', '游泳池'],
-              tags: ['豪华型', '商务出行']
-            },
-            {
-              id: 2,
-              name: '北京国贸大酒店',
-              rating: 4.9,
-              address: '北京市朝阳区建国门外大街1号',
-              price: 1588,
-              image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=luxury%20hotel%20facade%20with%20modern%20design&image_size=landscape_4_3',
-              starLevel: 5,
-              amenities: ['免费WiFi', '免费停车场', '健身房', '游泳池', '餐厅'],
-              tags: ['豪华型', '商务出行']
-            }
-          ])
+          setHotels([])
         }
       } catch (error) {
         console.error('获取数据失败:', error)
-        console.error('错误详情:', error.message, error.stack)
       } finally {
         setLoading(false)
-        console.log('数据获取完成')
       }
     }
     
     fetchData()
-  }, [router]) // 添加 router 依赖，确保当用户从其他页面返回时重新获取数据
+  }, [currentCity]) // 依赖于 currentCity，当城市变化时重新获取
 
   // 生成日历数据
   useEffect(() => {
@@ -369,47 +348,7 @@ export default function Index () {
     return nightCount
   }, [])
 
-  // 获取当前位置
-  const getCurrentLocation = useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await getLocation({
-        type: 'wgs84',
-        success: async (res) => {
-          console.log('获取位置成功', res)
-          // 简化处理，直接使用默认城市北京
-          setCurrentCity('北京')
-          setLocationPermission(true)
-        },
-        fail: (err) => {
-          console.log('获取位置失败', err)
-          showModal({
-            title: '定位失败',
-            content: '定位失败，请手动选择城市',
-            showCancel: false
-          })
-          setCurrentCity('请选择城市')
-        }
-      })
-    } catch (error) {
-      console.log('位置权限错误', error)
-      showModal({
-        title: '需要位置权限',
-        content: '为精准推荐酒店，需获取您的位置信息',
-        confirmText: '允许',
-        cancelText: '拒绝',
-        success: (res) => {
-          if (res.confirm) {
-            getCurrentLocation()
-          } else {
-            setCurrentCity('请选择城市')
-          }
-        }
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const [starRating, setStarRating] = useState('')
 
   // 处理查询按钮点击
   const handleSearch = useCallback(() => {
@@ -425,20 +364,24 @@ export default function Index () {
       const params = {
         city: currentCity === '定位中...' ? '北京' : currentCity,
         keyword: keyword,
-        checkInDate: checkInDate || new Date().toISOString().split('T')[0],
-        checkOutDate: checkOutDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        check_in_date: checkInDate || new Date().toISOString().split('T')[0],
+        check_out_date: checkOutDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
         nights: calculateNights(checkInDate, checkOutDate) || 1,
-        selectedTags: selectedTags,
-        selectedFilterValue: selectedFilterValue,
-        selectedFacilities: selectedFacilities,
-        currentFilterType: currentFilterType
+        star_rating: starRating,
+        max_min_price: maxMinPrice,
+        rating: minRating,
+        facilities: selectedFacilities,
+        services: selectedServices
       }
       
       console.log('搜索参数:', params)
       
+      // 使用本地缓存传递参数，避免URL编码问题
+      Taro.setStorageSync('global_search_params', params)
+
       // 跳转到酒店列表页
       navigateTo({
-        url: `/pages/hotel-list/hotel-list?params=${encodeURIComponent(JSON.stringify(params))}`
+        url: `/pages/hotel-list-new/hotel-list-new`
       })
       
     } catch (error) {
@@ -448,7 +391,7 @@ export default function Index () {
         icon: 'none'
       })
     }
-  }, [currentCity, keyword, checkInDate, checkOutDate, calculateNights, selectedTags, selectedFilterValue, selectedFacilities, currentFilterType, saveSearchHistory])
+  }, [currentCity, keyword, checkInDate, checkOutDate, calculateNights, starRating, maxMinPrice, minRating, selectedFacilities, selectedServices, saveSearchHistory])
 
   // 全国城市数据
   const citiesData = {
@@ -727,18 +670,25 @@ export default function Index () {
   }, [currentBannerIndex, banners.length])
 
   // 处理快捷标签点击
-  const handleTagClick = useCallback((tag) => {
-    console.log('点击标签', tag)
-    // 实现标签的选择和取消选择
-    setSelectedTags(prev => {
-      if (prev.includes(tag)) {
-        // 如果标签已选中，则取消选择
-        return prev.filter(t => t !== tag)
-      } else {
-        // 如果标签未选中，则选择
-        return [...prev, tag]
-      }
-    })
+  const handleTagClick = useCallback((item, type) => {
+    console.log('点击标签', item, type)
+    if (type === 'facility') {
+      setSelectedFacilities(prev => {
+        if (prev.includes(item.id)) {
+          return prev.filter(t => t !== item.id)
+        } else {
+          return [...prev, item.id]
+        }
+      })
+    } else if (type === 'service') {
+      setSelectedServices(prev => {
+        if (prev.includes(item.id)) {
+          return prev.filter(t => t !== item.id)
+        } else {
+          return [...prev, item.id]
+        }
+      })
+    }
   }, [])
 
   // 处理筛选条件点击
@@ -759,16 +709,26 @@ export default function Index () {
       // 设施类型支持多选
       setSelectedFacilities(prev => {
         if (prev.includes(value)) {
-          // 如果已选中，则取消选中
           return prev.filter(item => item !== value)
         } else {
-          // 如果未选中，则添加选中
           return [...prev, value]
         }
       })
-    } else {
-      // 其他类型保持单选
-      setSelectedFilterValue(value)
+    } else if (currentFilterType === 'service') {
+      // 服务类型支持多选
+      setSelectedServices(prev => {
+        if (prev.includes(value)) {
+          return prev.filter(item => item !== value)
+        } else {
+          return [...prev, value]
+        }
+      })
+    } else if (currentFilterType === 'star') {
+      setStarRating(prev => prev === value ? '' : value)
+    } else if (currentFilterType === 'rating') {
+      setMinRating(prev => prev === value ? '' : value)
+    } else if (currentFilterType === 'price') {
+      setMaxMinPrice(prev => prev === value ? '' : value)
     }
   }, [currentFilterType])
 
@@ -1139,28 +1099,50 @@ export default function Index () {
             <View className='filter-bar'>
               <View className='filter-item' onClick={() => handleFilterClick('star')}>
                 <Text>星级</Text>
-                <Text className='filter-value'>{currentFilterType === 'star' && selectedFilterValue ? selectedFilterValue : '不限'}</Text>
+                <Text className='filter-value'>{starRating ? `${starRating}星` : '不限'}</Text>
               </View>
               <View className='filter-divider'></View>
               <View className='filter-item' onClick={() => handleFilterClick('price')}>
                 <Text>价格</Text>
-                <Text className='filter-value'>{currentFilterType === 'price' && selectedFilterValue ? selectedFilterValue : '不限'}</Text>
+                <Text className='filter-value'>{maxMinPrice ? `¥${maxMinPrice}以下` : '不限'}</Text>
+              </View>
+              <View className='filter-divider'></View>
+              <View className='filter-item' onClick={() => handleFilterClick('rating')}>
+                <Text>评分</Text>
+                <Text className='filter-value'>{minRating ? `${minRating}分+` : '不限'}</Text>
               </View>
               <View className='filter-divider'></View>
               <View className='filter-item' onClick={() => handleFilterClick('facility')}>
                 <Text>设施</Text>
                 <Text className='filter-value'>{selectedFacilities.length > 0 ? `${selectedFacilities.length}项` : '不限'}</Text>
               </View>
+              <View className='filter-divider'></View>
+              <View className='filter-item' onClick={() => handleFilterClick('service')}>
+                <Text>服务</Text>
+                <Text className='filter-value'>{selectedServices.length > 0 ? `${selectedServices.length}项` : '不限'}</Text>
+              </View>
             </View>
 
             {/* 快捷标签区 */}
             <ScrollView scrollX className='tags-container'>
-              <View className={`tag ${selectedTags.includes('亲子友好') ? 'tag-active' : ''}`} onClick={() => handleTagClick('亲子友好')}>亲子友好</View>
-              <View className={`tag ${selectedTags.includes('免费停车场') ? 'tag-active' : ''}`} onClick={() => handleTagClick('免费停车场')}>免费停车场</View>
-              <View className={`tag ${selectedTags.includes('含早餐') ? 'tag-active' : ''}`} onClick={() => handleTagClick('含早餐')}>含早餐</View>
-              <View className={`tag ${selectedTags.includes('豪华型') ? 'tag-active' : ''}`} onClick={() => handleTagClick('豪华型')}>豪华型</View>
-              <View className={`tag ${selectedTags.includes('商务出行') ? 'tag-active' : ''}`} onClick={() => handleTagClick('商务出行')}>商务出行</View>
-              <View className={`tag ${selectedTags.includes('近地铁') ? 'tag-active' : ''}`} onClick={() => handleTagClick('近地铁')}>近地铁</View>
+              {availableFacilities.map(f => (
+                <View 
+                  key={f.id} 
+                  className={`tag ${selectedFacilities.includes(f.id) ? 'tag-active' : ''}`} 
+                  onClick={() => handleTagClick(f, 'facility')}
+                >
+                  {f.name}
+                </View>
+              ))}
+              {availableServices.map(s => (
+                <View 
+                  key={s.id} 
+                  className={`tag ${selectedServices.includes(s.id) ? 'tag-active' : ''}`} 
+                  onClick={() => handleTagClick(s, 'service')}
+                >
+                  {s.name}
+                </View>
+              ))}
             </ScrollView>
 
             {/* 查询按钮 */}
@@ -1190,7 +1172,7 @@ export default function Index () {
                   >
                     <Image 
                       className='hotel-image' 
-                      src={hotel.image && !hotel.image.includes('example.com') ? hotel.image : 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3'} 
+                      src={hotel.main_image_url && hotel.main_image_url.length > 0 ? hotel.main_image_url[0] : 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3'} 
                       mode='aspectFill' 
                       onError={(e) => {
                         e.target.src = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3'
@@ -1198,27 +1180,50 @@ export default function Index () {
                     />
                     <View className='hotel-info'>
                       <View className='hotel-header'>
-                        <Text className='hotel-name'>{hotel.name}</Text>
-                        <View className='hotel-rating'>
-                          <Text className='rating-value'>{hotel.rating || hotel.score}</Text>
+                        <View style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '4px' }}>
+                            <Text className='hotel-name' style={{ flex: '0 1 auto', marginRight: '8px', marginBottom: 0 }}>{hotel.hotel_name_cn}</Text>
+                            {hotel.tags && hotel.tags.slice(0, 2).map((tag, tagIndex) => (
+                              <View key={tagIndex} style={{ 
+                                backgroundColor: '#E6F7FF', 
+                                borderRadius: '4px', 
+                                padding: '2px 6px', 
+                                marginRight: '6px',
+                                border: '1px solid #91D5FF',
+                                flexShrink: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}>
+                                <Text style={{ fontSize: '10px', color: '#1890FF', lineHeight: 1 }}>{tag}</Text>
+                              </View>
+                            ))}
+                          </View>
+                          {hotel.hotel_name_en && <Text style={{ fontSize: '11px', color: '#666', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{hotel.hotel_name_en}</Text>}
+                        </View>
+                        <View className='hotel-rating' style={{ marginLeft: '8px', flexShrink: 0 }}>
+                          <Text className='rating-value'>{hotel.rating || 0}</Text>
                         </View>
                       </View>
-                      <Text className='hotel-address'>{hotel.address || hotel.location}</Text>
-                      <View className='hotel-footer'>
+                      
+                      <View style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', marginTop: '4px', fontSize: '11px', color: '#666' }}>
+                        <Text>{hotel.star_rating}星级</Text>
+                        <Text style={{ margin: '0 4px' }}>·</Text>
+                        <Text>{hotel.review_count}点评</Text>
+                        <Text style={{ margin: '0 4px' }}>·</Text>
+                        <Text>{hotel.booking_count}预订</Text>
+                        <Text style={{ margin: '0 4px' }}>·</Text>
+                        <Text>{hotel.favorite_count}收藏</Text>
+                      </View>
+
+                      <Text className='hotel-address' style={{ marginTop: '4px' }}>{hotel.formatted_address}</Text>
+                      {hotel.nearby_info && <Text style={{ fontSize: '11px', color: '#999', marginTop: '2px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{hotel.nearby_info}</Text>}
+                      
+                      <View className='hotel-footer' style={{ marginTop: '8px' }}>
                         <View className='hotel-price'>
                           <Text className='price-symbol'>¥</Text>
-                          <Text className='price-value'>{hotel.price || hotel.min_price || hotel.rate}</Text>
+                          <Text className='price-value'>{hotel.min_price}</Text>
                           <Text className='price-unit'>/晚</Text>
-                        </View>
-                        <View className='hotel-tags'>
-                          {hotel.tags && hotel.tags.slice(0, 2).map((tag, tagIndex) => (
-                            <Text 
-                              key={tagIndex} 
-                              className={`hotel-tag animate-fadeInUp delay-${(index % 5) * 100 + 100}`}
-                            >
-                              {tag}
-                            </Text>
-                          ))}
                         </View>
                       </View>
                     </View>
@@ -1411,7 +1416,10 @@ export default function Index () {
               <View className='filter-content'>
                 <View className='filter-header'>
                   <Text className='filter-title'>
-                    {currentFilterType === 'star' ? '选择星级' : currentFilterType === 'price' ? '选择价格' : '选择设施'}
+                    {currentFilterType === 'star' ? '选择星级' : 
+                     currentFilterType === 'price' ? '价格范围' : 
+                     currentFilterType === 'rating' ? '最低评分' :
+                     currentFilterType === 'facility' ? '酒店设施' : '酒店服务'}
                   </Text>
                   <Text className='filter-close' onClick={() => setShowFilter(false)}>✕</Text>
                 </View>
@@ -1419,13 +1427,18 @@ export default function Index () {
                 <ScrollView className='filter-body' scrollY>
                   {currentFilterType === 'star' && (
                     <View className='filter-options'>
-                      {['不限', '5星', '4星', '3星', '2星及以下'].map(star => (
+                      {[
+                        { value: 5, label: '5星' },
+                        { value: 4, label: '4星' },
+                        { value: 3, label: '3星' },
+                        { value: 2, label: '2星' }
+                      ].map(item => (
                         <View 
-                          key={star} 
-                          className={`filter-option-item ${selectedFilterValue === star ? 'filter-option-active' : ''}`}
-                          onClick={() => handleFilterOptionClick(star)}
+                          key={item.value} 
+                          className={`filter-option-item ${starRating === item.value ? 'filter-option-active' : ''}`}
+                          onClick={() => handleFilterOptionClick(item.value)}
                         >
-                          <Text>{star}</Text>
+                          <Text>{item.label}</Text>
                         </View>
                       ))}
                     </View>
@@ -1433,13 +1446,38 @@ export default function Index () {
                   
                   {currentFilterType === 'price' && (
                     <View className='filter-options'>
-                      {['不限', '¥500以下', '¥500-800', '¥800-1200', '¥1200-2000', '¥2000以上'].map(price => (
+                      {[
+                        { value: 150, label: '¥150以下' },
+                        { value: 300, label: '¥300以下' },
+                        { value: 500, label: '¥500以下' },
+                        { value: 800, label: '¥800以下' },
+                        { value: 1000, label: '¥1000以下' }
+                      ].map(item => (
                         <View 
-                          key={price} 
-                          className={`filter-option-item ${selectedFilterValue === price ? 'filter-option-active' : ''}`}
-                          onClick={() => handleFilterOptionClick(price)}
+                          key={item.value} 
+                          className={`filter-option-item ${maxMinPrice === item.value ? 'filter-option-active' : ''}`}
+                          onClick={() => handleFilterOptionClick(item.value)}
                         >
-                          <Text>{price}</Text>
+                          <Text>{item.label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {currentFilterType === 'rating' && (
+                    <View className='filter-options'>
+                      {[
+                        { value: 4.8, label: '4.8分+' },
+                        { value: 4.5, label: '4.5分+' },
+                        { value: 4.0, label: '4.0分+' },
+                        { value: 3.5, label: '3.5分+' }
+                      ].map(item => (
+                        <View 
+                          key={item.value} 
+                          className={`filter-option-item ${minRating === item.value ? 'filter-option-active' : ''}`}
+                          onClick={() => handleFilterOptionClick(item.value)}
+                        >
+                          <Text>{item.label}</Text>
                         </View>
                       ))}
                     </View>
@@ -1447,13 +1485,27 @@ export default function Index () {
                   
                   {currentFilterType === 'facility' && (
                     <View className='filter-options'>
-                      {['免费WiFi', '免费停车场', '健身房', '游泳池', '餐厅', '会议室', '商务中心', 'SPA'].map(facility => (
+                      {availableFacilities.map(f => (
                         <View 
-                          key={facility} 
-                          className={`filter-option-item ${selectedFacilities.includes(facility) ? 'filter-option-active' : ''}`}
-                          onClick={() => handleFilterOptionClick(facility)}
+                          key={f.id} 
+                          className={`filter-option-item ${selectedFacilities.includes(f.id) ? 'filter-option-active' : ''}`}
+                          onClick={() => handleFilterOptionClick(f.id)}
                         >
-                          <Text>{facility}</Text>
+                          <Text>{f.name}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {currentFilterType === 'service' && (
+                    <View className='filter-options'>
+                      {availableServices.map(s => (
+                        <View 
+                          key={s.id} 
+                          className={`filter-option-item ${selectedServices.includes(s.id) ? 'filter-option-active' : ''}`}
+                          onClick={() => handleFilterOptionClick(s.id)}
+                        >
+                          <Text>{s.name}</Text>
                         </View>
                       ))}
                     </View>

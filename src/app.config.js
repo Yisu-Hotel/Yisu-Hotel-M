@@ -8,7 +8,7 @@ export default defineAppConfig({
     'pages/coupons/coupons', // 优惠券页面
     'pages/settings/settings', // 设置页面
     'pages/history/history', // 历史页面
-    'pages/hotel-list/hotel-list',
+    'pages/hotel-list-new/hotel-list-new',
     'pages/city-select/city-select',
     'pages/test-page/test-page',
     'pages/hotel-detail/index', // 酒店详情页

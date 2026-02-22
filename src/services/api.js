@@ -287,6 +287,13 @@ export const hotelApi = {
     if (Array.isArray(processedParams.hotelFeatures)) {
       processedParams.hotelFeatures = processedParams.hotelFeatures.join(',');
     }
+    // 处理新增的设施和服务筛选
+    if (Array.isArray(processedParams.facilities)) {
+      processedParams.facilities = processedParams.facilities.join(',');
+    }
+    if (Array.isArray(processedParams.services)) {
+      processedParams.services = processedParams.services.join(',');
+    }
     // 处理价格范围
     if (Array.isArray(processedParams.priceRange)) {
       processedParams.minPrice = processedParams.priceRange[0];
