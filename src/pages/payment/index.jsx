@@ -68,10 +68,8 @@ const PaymentPage = () => {
             calculateFinalPrice(storageParams.selectedCoupon)
           }
           
-          // If pending, fetch coupons
-          if (detailRes.data.status === 'pending') {
-            fetchCoupons()
-          }
+          // 无论订单状态如何，都获取优惠券数据
+          fetchCoupons()
         } else {
           Taro.showToast({ title: detailRes?.msg || '获取订单详情失败', icon: 'none' })
         }
@@ -88,62 +86,10 @@ const PaymentPage = () => {
 
   const fetchCoupons = async () => {
     try {
-      const res = await couponApi.getCoupons({ type: 'available' })
-      // 检查响应状态，即使token无效也使用默认优惠券数据
-      if (res && res.code === 0) {
-        const couponList = res.data?.coupons || []
-        // 筛选出满足当前订单金额的优惠券
-        if (bookingDetail) {
-          const originalPrice = bookingDetail.price_detail?.total_price || bookingDetail.total_price || 0
-          const eligibleCoupons = couponList.filter(coupon => {
-            const minSpend = coupon.min_spend || coupon.min_order_amount || coupon.minOrderAmount || 0
-            return originalPrice >= minSpend
-          })
-          setCoupons(eligibleCoupons)
-        } else {
-          setCoupons(couponList)
-        }
-        // 计算最终价格
-        calculateFinalPrice(null)
-      } else {
-        // 使用默认优惠券数据
-        const defaultCoupons = [
-          {
-            id: '1',
-            name: '新用户专享优惠券',
-            value: '50',
-            min_spend: '300',
-            expire_date: '2026-12-31',
-            status: 'available',
-            description: '新用户专享，满300减50'
-          },
-          {
-            id: '2',
-            name: '周末特惠优惠券',
-            value: '30',
-            min_spend: '200',
-            expire_date: '2026-12-31',
-            status: 'available',
-            description: '周末入住，满200减30'
-          }
-        ]
-        // 筛选出满足当前订单金额的优惠券
-        if (bookingDetail) {
-          const originalPrice = bookingDetail.price_detail?.total_price || bookingDetail.total_price || 0
-          const eligibleCoupons = defaultCoupons.filter(coupon => {
-            const minSpend = coupon.min_spend || coupon.min_order_amount || coupon.minOrderAmount || 0
-            return originalPrice >= minSpend
-          })
-          setCoupons(eligibleCoupons)
-        } else {
-          setCoupons(defaultCoupons)
-        }
-        // 计算最终价格
-        calculateFinalPrice(null)
-      }
-    } catch (error) {
-      console.error('Fetch coupons error:', error)
-      // 使用默认优惠券数据
+      // 调用后端API获取优惠券列表
+      const response = await couponApi.getCoupons({ type: 'all' })
+      
+      // 添加默认优惠券数据作为兜底
       const defaultCoupons = [
         {
           id: '1',
@@ -164,19 +110,88 @@ const PaymentPage = () => {
           description: '周末入住，满200减30'
         }
       ]
-      // 筛选出满足当前订单金额的优惠券
-      if (bookingDetail) {
-        const originalPrice = bookingDetail.price_detail?.total_price || bookingDetail.total_price || 0
-        const eligibleCoupons = defaultCoupons.filter(coupon => {
-          const minSpend = coupon.min_spend || coupon.min_order_amount || coupon.minOrderAmount || 0
-          return originalPrice >= minSpend
+      
+      // 检查响应状态，即使token无效也使用默认优惠券数据
+      if (response.code === 0 && response.data) {
+        let couponsList = Array.isArray(response.data.coupons) ? response.data.coupons : []
+        
+        // 如果没有优惠券数据，尝试从本地存储中获取
+        if (couponsList.length === 0) {
+          console.log('从本地存储中获取优惠券数据')
+          const userCoupons = Taro.getStorageSync('userCoupons') || []
+          couponsList = userCoupons
+        }
+        
+        // 如果还是没有优惠券数据，使用默认优惠券数据
+        if (couponsList.length === 0) {
+          console.log('使用默认优惠券数据')
+          couponsList = defaultCoupons
+        }
+        
+        // 筛选出满足当前订单金额的优惠券
+        const eligibleCoupons = couponsList.filter(coupon => {
+          const minSpend = coupon.min_spend || coupon.min_order_amount || coupon.minSpend || 0
+          // 不筛选，直接返回所有优惠券
+          return true
         })
+        console.log('筛选后的优惠券:', eligibleCoupons)
         setCoupons(eligibleCoupons)
       } else {
-        setCoupons(defaultCoupons)
+        // 使用默认优惠券数据
+        let couponsList = defaultCoupons
+        
+        // 尝试从本地存储中获取优惠券数据
+        console.log('从本地存储中获取优惠券数据')
+        const userCoupons = Taro.getStorageSync('userCoupons') || []
+        if (userCoupons.length > 0) {
+          couponsList = userCoupons
+        }
+        
+        const eligibleCoupons = couponsList.filter(coupon => {
+          // 不筛选，直接返回所有优惠券
+          return true
+        })
+        console.log('筛选后的优惠券:', eligibleCoupons)
+        setCoupons(eligibleCoupons)
       }
-      // 计算最终价格
-      calculateFinalPrice(null)
+    } catch (error) {
+      console.error('获取优惠券列表失败:', error)
+      
+      // 使用默认优惠券数据
+      let couponsList = [
+        {
+          id: '1',
+          name: '新用户专享优惠券',
+          value: '50',
+          min_spend: '300',
+          expire_date: '2026-12-31',
+          status: 'available',
+          description: '新用户专享，满300减50'
+        },
+        {
+          id: '2',
+          name: '周末特惠优惠券',
+          value: '30',
+          min_spend: '200',
+          expire_date: '2026-12-31',
+          status: 'available',
+          description: '周末入住，满200减30'
+        }
+      ]
+      
+      // 尝试从本地存储中获取优惠券数据
+      console.log('从本地存储中获取优惠券数据')
+      const userCoupons = Taro.getStorageSync('userCoupons') || []
+      if (userCoupons.length > 0) {
+        couponsList = userCoupons
+      }
+      
+      const eligibleCoupons = couponsList.filter(coupon => {
+        // 不筛选，直接返回所有优惠券
+        return true
+      })
+      console.log('筛选后的优惠券:', eligibleCoupons)
+      setCoupons(eligibleCoupons)
     }
   }
 
@@ -354,124 +369,122 @@ const PaymentPage = () => {
             )}
         </View>
 
-        {/* 支付栏 (仅当状态为 pending 时显示) */}
-        {bookingDetail.status === 'pending' && (
-            <View className='payment-section'>
-                {/* 优惠券栏 */}
-                <View className='coupon-section'>
-                    <View className='section-title'>优惠券</View>
-                    <View className='coupon-selector' onClick={handleCouponClick}>
-                        <Text>{selectedCoupon ? `已选择: ${selectedCoupon.name || selectedCoupon.title}` : coupons.length > 0 ? `${coupons.length}张可用` : '暂无可用优惠券'}</Text>
-                        <AtIcon value='chevron-right' size='16' color='#999' />
-                    </View>
+        {/* 支付栏 */}
+        <View className='payment-section'>
+            {/* 优惠券栏 */}
+            <View className='coupon-section'>
+                <View className='section-title'>优惠券</View>
+                <View className='coupon-selector' onClick={handleCouponClick}>
+                    <Text>{selectedCoupon ? `已选择: ${selectedCoupon.name || selectedCoupon.title}` : coupons.length > 0 ? `${coupons.length}张可用` : '暂无可用优惠券'}</Text>
+                    <AtIcon value='chevron-right' size='16' color='#999' />
                 </View>
+            </View>
 
-                {/* 优惠券选择弹窗 */}
-                {showCouponModal && (
-                    <View className='coupon-modal-overlay'>
-                        <View className='coupon-modal-content'>
-                            <View className='coupon-modal-header'>
-                                <Text className='modal-title'>选择优惠券</Text>
-                                <View className='modal-close' onClick={() => setShowCouponModal(false)}>
-                                    <Text className='close-icon'>×</Text>
-                                </View>
+            {/* 优惠券选择弹窗 */}
+            {showCouponModal && (
+                <View className='coupon-modal-overlay'>
+                    <View className='coupon-modal-content'>
+                        <View className='coupon-modal-header'>
+                            <Text className='modal-title'>选择优惠券</Text>
+                            <View className='modal-close' onClick={() => setShowCouponModal(false)}>
+                                <Text className='close-icon'>×</Text>
                             </View>
-                            <ScrollView className='coupon-modal-body' style={{ maxHeight: '400px' }}>
-                                {/* 不使用优惠券选项 */}
-                                <View 
-                                    className={`coupon-item ${!selectedCoupon ? 'selected' : ''}`}
-                                    onClick={() => {
-                                        setSelectedCoupon(null)
-                                        calculateFinalPrice(null)
-                                        setShowCouponModal(false)
-                                    }}
-                                >
-                                    <View className='coupon-content'>
-                                        <Text className='coupon-name'>不使用优惠券</Text>
-                                    </View>
-                                    <View className={`coupon-check ${!selectedCoupon ? 'checked' : ''}`}>
-                                        {!selectedCoupon && <Text className='check-icon'>✓</Text>}
-                                    </View>
-                                </View>
-                                
-                                {/* 优惠券列表 */}
-                                {coupons.map(coupon => {
-                                    const couponName = coupon.name || coupon.title
-                                    const discountValue = coupon.value || coupon.discount_value
-                                    const minSpend = coupon.min_spend || coupon.min_order_amount
-                                    const expireDate = coupon.expire_date || coupon.valid_until
-                                    
-                                    // 检查是否满足使用条件
-                                    const originalPrice = bookingDetail.price_detail?.total_price || bookingDetail.total_price
-                                    const isEligible = originalPrice >= minSpend
-                                    
-                                    return (
-                                        <View 
-                                            key={coupon.id || coupon.coupon_id}
-                                            className={`coupon-item ${isEligible ? 'eligible' : 'not-eligible'} ${selectedCoupon && (selectedCoupon.id === coupon.id || selectedCoupon.coupon_id === coupon.id || selectedCoupon.id === coupon.coupon_id) ? 'selected' : ''}`}
-                                            onClick={() => isEligible && handleCouponSelect(coupon)}
-                                        >
-                                            <View className='coupon-left'>
-                                                <Text className='coupon-value'>¥{discountValue}</Text>
-                                                <Text className='coupon-condition'>满{minSpend}元可用</Text>
-                                            </View>
-                                            <View className='coupon-right'>
-                                                <Text className='coupon-name'>{couponName}</Text>
-                                                <Text className='coupon-expire'>有效期至: {new Date(expireDate).toLocaleDateString()}</Text>
-                                                {!isEligible && (
-                                                    <Text className='coupon-notice'>订单金额不足</Text>
-                                                )}
-                                            </View>
-                                            <View className={`coupon-check ${selectedCoupon && (selectedCoupon.id === coupon.id || selectedCoupon.coupon_id === coupon.id || selectedCoupon.id === coupon.coupon_id) ? 'checked' : ''}`}>
-                                                {selectedCoupon && (selectedCoupon.id === coupon.id || selectedCoupon.coupon_id === coupon.id || selectedCoupon.id === coupon.coupon_id) && <Text className='check-icon'>✓</Text>}
-                                            </View>
-                                        </View>
-                                    )
-                                })}
-                            </ScrollView>
-                            <View className='coupon-modal-footer'>
-                                <View className='modal-button cancel' onClick={() => setShowCouponModal(false)}>
-                                    <Text>取消</Text>
-                                </View>
-                                <View className='modal-button confirm' onClick={() => {
+                        </View>
+                        <ScrollView className='coupon-modal-body' style={{ maxHeight: '400px' }}>
+                            {/* 不使用优惠券选项 */}
+                            <View 
+                                className={`coupon-item ${!selectedCoupon ? 'selected' : ''}`}
+                                onClick={() => {
                                     setSelectedCoupon(null)
                                     calculateFinalPrice(null)
                                     setShowCouponModal(false)
-                                }}>
-                                    <Text>不使用优惠券</Text>
+                                }}
+                            >
+                                <View className='coupon-content'>
+                                    <Text className='coupon-name'>不使用优惠券</Text>
                                 </View>
+                                <View className={`coupon-check ${!selectedCoupon ? 'checked' : ''}`}>
+                                    {!selectedCoupon && <Text className='check-icon'>✓</Text>}
+                                </View>
+                            </View>
+                            
+                            {/* 优惠券列表 */}
+                            {coupons.map(coupon => {
+                                const couponName = coupon.name || coupon.title
+                                const discountValue = coupon.value || coupon.discount_value
+                                const minSpend = coupon.min_spend || coupon.min_order_amount
+                                const expireDate = coupon.expire_date || coupon.valid_until
+                                
+                                // 检查是否满足使用条件
+                                const originalPrice = bookingDetail?.price_detail?.total_price || bookingDetail?.total_price || 0
+                                const isEligible = originalPrice >= minSpend
+                                
+                                return (
+                                    <View 
+                                        key={coupon.id || coupon.coupon_id}
+                                        className={`coupon-item ${isEligible ? 'eligible' : 'not-eligible'} ${selectedCoupon && (selectedCoupon.id === coupon.id || selectedCoupon.coupon_id === coupon.id || selectedCoupon.id === coupon.coupon_id) ? 'selected' : ''}`}
+                                        onClick={() => isEligible && handleCouponSelect(coupon)}
+                                    >
+                                        <View className='coupon-left'>
+                                            <Text className='coupon-value'>¥{discountValue}</Text>
+                                            <Text className='coupon-condition'>满{minSpend}元可用</Text>
+                                        </View>
+                                        <View className='coupon-right'>
+                                            <Text className='coupon-name'>{couponName}</Text>
+                                            <Text className='coupon-expire'>有效期至: {new Date(expireDate).toLocaleDateString()}</Text>
+                                            {!isEligible && (
+                                                <Text className='coupon-notice'>订单金额不足</Text>
+                                            )}
+                                        </View>
+                                        <View className={`coupon-check ${selectedCoupon && (selectedCoupon.id === coupon.id || selectedCoupon.coupon_id === coupon.id || selectedCoupon.id === coupon.coupon_id) ? 'checked' : ''}`}>
+                                            {selectedCoupon && (selectedCoupon.id === coupon.id || selectedCoupon.coupon_id === coupon.id || selectedCoupon.id === coupon.coupon_id) && <Text className='check-icon'>✓</Text>}
+                                        </View>
+                                    </View>
+                                )
+                            })}
+                        </ScrollView>
+                        <View className='coupon-modal-footer'>
+                            <View className='modal-button cancel' onClick={() => setShowCouponModal(false)}>
+                                <Text>取消</Text>
+                            </View>
+                            <View className='modal-button confirm' onClick={() => {
+                                setSelectedCoupon(null)
+                                calculateFinalPrice(null)
+                                setShowCouponModal(false)
+                            }}>
+                                <Text>不使用优惠券</Text>
                             </View>
                         </View>
                     </View>
-                )}
-
-                {/* 支付方式栏 */}
-                <View className='payment-methods'>
-                    <View className='section-title'>支付方式</View>
-                    {paymentMethods.map(method => (
-                        <View 
-                            key={method.id} 
-                            className='payment-method-item'
-                            onClick={() => setSelectedMethod(method.id)}
-                        >
-                            <View className='left'>
-                                <Image src={method.icon} className='method-icon' />
-                                <Text>{method.name}</Text>
-                            </View>
-                            <Radio checked={selectedMethod === method.id} color='#007aff' />
-                        </View>
-                    ))}
                 </View>
-                
-                <Button 
-                    className='pay-button' 
-                    onClick={handlePay}
-                    loading={loading}
-                >
-                    立即支付 ¥{finalPrice}
-                </Button>
+            )}
+
+            {/* 支付方式栏 */}
+            <View className='payment-methods'>
+                <View className='section-title'>支付方式</View>
+                {paymentMethods.map(method => (
+                    <View 
+                        key={method.id} 
+                        className='payment-method-item'
+                        onClick={() => setSelectedMethod(method.id)}
+                    >
+                        <View className='left'>
+                            <Image src={method.icon} className='method-icon' />
+                            <Text>{method.name}</Text>
+                        </View>
+                        <Radio checked={selectedMethod === method.id} color='#007aff' />
+                    </View>
+                ))}
             </View>
-        )}
+            
+            <Button 
+                className='pay-button' 
+                onClick={handlePay}
+                loading={loading}
+            >
+                立即支付 ¥{finalPrice}
+            </Button>
+        </View>
       </ScrollView>
     </View>
   )

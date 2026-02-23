@@ -143,8 +143,13 @@ export default function HistoryPage () {
         ) : history.length > 0 ? (
           history.map(item => {
             const hotel = item.hotel || item
+            const hotelId = item.hotel_id || hotel.id
             return (
-              <View key={item.id} className='history-item'>
+              <View 
+                key={item.id} 
+                className='history-item'
+                onClick={() => handleHotelClick(hotelId)}
+              >
                 <Image 
                   className='item-image' 
                   src={hotel.image && !hotel.image.includes('example.com') ? hotel.image : 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20exterior%20default%20placeholder&image_size=square'} 
@@ -154,7 +159,10 @@ export default function HistoryPage () {
                     <Text className='item-title'>{hotel.name || hotel.title}</Text>
                     <View 
                       className='delete-btn' 
-                      onClick={() => handleDeleteHistory(item.id)}
+                      onClick={(e) => {
+                        e.stopPropagation() // 阻止事件冒泡
+                        handleDeleteHistory(item.id)
+                      }}
                     >
                       <Text className='delete-icon'>×</Text>
                     </View>
