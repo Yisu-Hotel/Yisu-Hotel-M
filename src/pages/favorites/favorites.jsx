@@ -12,6 +12,18 @@ export default function FavoritesPage () {
   // 初始化时获取收藏列表
   useEffect(() => {
     fetchFavorites()
+    
+    // 监听收藏状态变化事件
+    const handleFavoritesChanged = () => {
+      fetchFavorites()
+    }
+    
+    Taro.eventCenter.on('favoritesChanged', handleFavoritesChanged)
+    
+    // 清理事件监听器
+    return () => {
+      Taro.eventCenter.off('favoritesChanged', handleFavoritesChanged)
+    }
   }, [])
 
   // 获取收藏列表
@@ -130,8 +142,8 @@ export default function FavoritesPage () {
             if (response.code === 0) {
               // 更新本地收藏列表，处理不同的数据结构
               setFavorites(prev => prev.filter(item => {
-                // 处理不同的数据结构
-                const currentHotelId = item.hotel?.id || item.id || item.hotel_id
+                // 处理不同的数据结构，与渲染时的逻辑一致
+                const currentHotelId = item.hotel_id || item.id || (item.hotel && (item.hotel.id || item.hotel.hotel_id))
                 return currentHotelId !== hotelId
               }))
               Taro.showToast({

@@ -191,7 +191,28 @@ export default function Index () {
         try {
           const bannerResult = await bannerApi.getBanners()
           if (bannerResult.code === 0 && bannerResult.data) {
-            setBanners(bannerResult.data)
+            // 只保留阳光酒店的广告
+            const yangguangBanner = bannerResult.data.find(banner => banner.title === '阳光酒店')
+            if (yangguangBanner) {
+              // 更新为阳光酒店的实际ID
+              setBanners([{
+                ...yangguangBanner,
+                target_id: '8fb6e499-8c4f-48d1-88b2-9a039a43cdac'
+              }])
+            } else {
+              // 如果没有阳光酒店的广告，使用默认的阳光酒店广告
+              setBanners([
+                {
+                  id: 1,
+                  image_url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8aG90ZWx8ZW58MHx8MHx8&auto=format&fit=crop&w=800&q=60',
+                  title: '阳光酒店',
+                  description: '豪华舒适',
+                  target_type: 'hotel',
+                  target_id: '8fb6e499-8c4f-48d1-88b2-9a039a43cdac',
+                  url: ''
+                }
+              ])
+            }
           }
         } catch (error) {
           console.error('获取广告列表失败:', error)
@@ -199,20 +220,11 @@ export default function Index () {
           setBanners([
             {
               id: 1,
-              image_url: 'http://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount%20chinese%20new%20year&image_size=landscape_16_9',
-              title: '春节特惠',
-              description: '低至 8 折',
+              image_url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8aG90ZWx8ZW58MHx8MHx8&auto=format&fit=crop&w=800&q=60',
+              title: '阳光酒店',
+              description: '豪华舒适',
               target_type: 'hotel',
-              target_id: '',
-              url: ''
-            },
-            {
-              id: 2,
-              image_url: 'http://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20for%20new%20users%20exclusive%20offer&image_size=landscape_16_9',
-              title: '新用户专享',
-              description: '首单立减',
-              target_type: 'hotel',
-              target_id: '',
+              target_id: '8fb6e499-8c4f-48d1-88b2-9a039a43cdac',
               url: ''
             }
           ])
@@ -609,10 +621,18 @@ export default function Index () {
   }
 
   // 处理Banner点击
-  const handleBannerClick = useCallback(() => {
-    navigateTo({
-      url: '/pages/coupons/coupons'
-    })
+  const handleBannerClick = useCallback((banner) => {
+    if (banner && banner.target_type === 'hotel' && banner.target_id) {
+      // 跳转到酒店详情页
+      Taro.navigateTo({
+        url: `/pages/hotel-detail/index?id=${banner.target_id}&name=${encodeURIComponent(banner.title)}`
+      })
+    } else {
+      // 默认跳转到酒店列表页
+      Taro.navigateTo({
+        url: '/pages/hotel-list-new/hotel-list-new'
+      })
+    }
   }, [])
 
   // 自动轮播函数
@@ -887,43 +907,27 @@ export default function Index () {
             >
               {banners.length > 0 ? (
                 banners.map((banner, index) => (
-                  <View key={banner.id || index} className='banner-item' onClick={handleBannerClick}>
+                  <View key={banner.id || index} className='banner-item' onClick={() => handleBannerClick(banner)}>
                     <Image 
-                      src={index === 0 ? "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount%20chinese%20new%20year&image_size=landscape_16_9" : "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20for%20new%20users%20exclusive%20offer&image_size=landscape_16_9"} 
+                      src={banner.image_url} 
                       className='banner-image'
                       mode="aspectFill"
-                      onClick={handleBannerClick}
                     />
-                    <View className='banner-text' onClick={handleBannerClick}>
-                      {index === 0 ? '春节特惠' : '新用户专享'}
-                      {index === 0 ? <Text className='banner-description'>低至 8 折</Text> : <Text className='banner-description'>首单立减</Text>}
+                    <View className='banner-text'>
+                      {banner.title}
                     </View>
                   </View>
                 ))
               ) : (
                 <>
-                  <View className='banner-item' onClick={handleBannerClick}>
+                  <View className='banner-item' onClick={() => handleBannerClick({id: 1, title: '阳光酒店', target_type: 'hotel', target_id: '8fb6e499-8c4f-48d1-88b2-9a039a43cdac'})}>
                     <Image 
-                      src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20with%20spring%20festival%20discount%20chinese%20new%20year&image_size=landscape_16_9" 
+                      src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8aG90ZWx8ZW58MHx8MHx8&auto=format&fit=crop&w=800&q=60" 
                       className='banner-image'
                       mode="aspectFill"
-                      onClick={handleBannerClick}
                     />
-                    <View className='banner-text' onClick={handleBannerClick}>
-                      春节特惠
-                      <Text className='banner-description'>低至 8 折</Text>
-                    </View>
-                  </View>
-                  <View className='banner-item' onClick={handleBannerClick}>
-                    <Image 
-                      src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20promotion%20banner%20for%20new%20users%20exclusive%20offer&image_size=landscape_16_9" 
-                      className='banner-image'
-                      mode="aspectFill"
-                      onClick={handleBannerClick}
-                    />
-                    <View className='banner-text' onClick={handleBannerClick}>
-                      新用户专享
-                      <Text className='banner-description'>首单立减</Text>
+                    <View className='banner-text'>
+                      阳光酒店
                     </View>
                   </View>
                 </>
@@ -1155,7 +1159,7 @@ export default function Index () {
           <View className='recommended-hotels'>
             <View className='recommended-header'>
               <Text className='recommended-title'>精选推荐</Text>
-              <Text className='recommended-more' onClick={() => navigateTo({ url: '/pages/hotel-list/hotel-list' })}>查看更多</Text>
+              <Text className='recommended-more' onClick={() => navigateTo({ url: '/pages/hotel-list-new/hotel-list-new' })}>查看更多</Text>
             </View>
             
             {loading ? (

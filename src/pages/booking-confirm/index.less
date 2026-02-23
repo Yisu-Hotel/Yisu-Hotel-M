@@ -154,6 +154,33 @@
         text-align: right;
         flex: 1;
       }
+      
+      &.discount {
+        .label {
+          color: #999;
+          font-size: 26rpx;
+        }
+        
+        .discount-value {
+          color: #52c41a;
+          font-size: 26rpx;
+          font-weight: 500;
+        }
+      }
+      
+      &.final {
+        .label {
+          color: #333;
+          font-size: 30rpx;
+          font-weight: 600;
+        }
+        
+        .final-value {
+          color: #ff4d4f;
+          font-size: 36rpx;
+          font-weight: 600;
+        }
+      }
     }
 
     .section-title {
@@ -358,6 +385,217 @@
       background: #f8f9fa;
       padding: 20rpx;
       border-radius: 12rpx;
+    }
+    
+    /* 优惠券选择部分样式 */
+    .coupon-section {
+      margin-top: 32rpx;
+      padding-top: 32rpx;
+      border-top: 1rpx solid #f0f0f0;
+      
+      .coupon-selector {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24rpx;
+        background: #f9f9f9;
+        border-radius: 8rpx;
+        font-size: 28rpx;
+        color: #666;
+        cursor: pointer;
+        
+        &:active {
+          background: #f0f0f0;
+        }
+      }
+    }
+    
+    /* 优惠券选择弹窗样式 */
+    .coupon-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24rpx;
+      margin-bottom: 16rpx;
+      background: #f9f9f9;
+      border-radius: 8rpx;
+      cursor: pointer;
+      
+      &:active {
+        background: #f0f0f0;
+      }
+      
+      &.selected {
+        background: #e6f7ff;
+        border-left: 8rpx solid #1890ff;
+      }
+      
+      &.not-eligible {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      
+      .coupon-content {
+        flex: 1;
+        
+        .coupon-name {
+          font-size: 28rpx;
+          font-weight: 500;
+          color: #333;
+        }
+      }
+      
+      .coupon-left {
+        flex: 1;
+        margin-right: 24rpx;
+        
+        .coupon-value {
+          font-size: 36rpx;
+          font-weight: bold;
+          color: #ff4d4f;
+          margin-bottom: 8rpx;
+        }
+        
+        .coupon-condition {
+          font-size: 24rpx;
+          color: #999;
+        }
+      }
+      
+      .coupon-right {
+        flex: 2;
+        
+        .coupon-name {
+          font-size: 28rpx;
+          font-weight: 500;
+          color: #333;
+          margin-bottom: 8rpx;
+        }
+        
+        .coupon-expire {
+          font-size: 24rpx;
+          color: #999;
+          margin-bottom: 4rpx;
+        }
+        
+        .coupon-notice {
+          font-size: 20rpx;
+          color: #ff4d4f;
+        }
+      }
+      
+      .coupon-check {
+        width: 32rpx;
+        height: 32rpx;
+        border-radius: 50%;
+        border: 2rpx solid #999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 16rpx;
+        
+        &.checked {
+          background: #1890ff;
+          border-color: #1890ff;
+        }
+        
+        .check-icon {
+          color: #fff;
+          font-size: 20rpx;
+          font-weight: bold;
+        }
+      }
+    }
+  }
+  
+  /* 优惠券选择弹窗样式 */
+  .coupon-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: none;
+    
+    &.show {
+      display: block;
+    }
+    
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-top-left-radius: 24rpx;
+      border-top-right-radius: 24rpx;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24rpx;
+        border-bottom: 1rpx solid #f0f0f0;
+        
+        .modal-title {
+          font-size: 32rpx;
+          font-weight: 600;
+          color: #333;
+        }
+        
+        .modal-close {
+          font-size: 40rpx;
+          color: #999;
+          cursor: pointer;
+          
+          &:active {
+            color: #666;
+          }
+        }
+      }
+      
+      .modal-footer {
+        display: flex;
+        padding: 24rpx;
+        border-top: 1rpx solid #f0f0f0;
+        gap: 16rpx;
+        
+        .modal-button {
+          flex: 1;
+          padding: 20rpx;
+          border-radius: 8rpx;
+          font-size: 28rpx;
+          text-align: center;
+          cursor: pointer;
+          
+          &:active {
+            opacity: 0.8;
+          }
+          
+          &.cancel {
+            background: #f0f0f0;
+            color: #333;
+          }
+          
+          &.confirm {
+            background: #1890ff;
+            color: #fff;
+          }
+        }
+      }
     }
   }
 

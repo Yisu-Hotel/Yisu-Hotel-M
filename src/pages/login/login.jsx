@@ -49,28 +49,37 @@ export default function Login() {
       console.log('登录响应:', response);
       
       if (response.code === 0 && response.data) {
-        // 登录成功，保存token和用户信息
-        console.log('保存登录状态:', {
-          token: response.data.token,
-          isLoggedIn: true,
-          userInfo: response.data.user
-        });
-        
-        Taro.setStorageSync('token', response.data.token);
-        Taro.setStorageSync('isLoggedIn', true);
-        Taro.setStorageSync('userInfo', response.data.user);
-        
-        // 验证保存是否成功
-        console.log('验证登录状态保存:', {
-          token: Taro.getStorageSync('token'),
-          isLoggedIn: Taro.getStorageSync('isLoggedIn'),
-          userInfo: Taro.getStorageSync('userInfo')
-        });
-        
-        // 跳转到个人中心页面，验证登录状态
-        Taro.switchTab({
-          url: '/pages/my/my'
-        });
+          // 登录成功，先清除之前的用户信息，然后保存新的用户信息
+          console.log('保存登录状态:', {
+            token: response.data.token,
+            isLoggedIn: true,
+            userInfo: response.data.user
+          });
+          
+          Taro.removeStorageSync('token');
+          Taro.removeStorageSync('isLoggedIn');
+          Taro.removeStorageSync('userInfo');
+          Taro.setStorageSync('token', response.data.token);
+          Taro.setStorageSync('isLoggedIn', true);
+          Taro.setStorageSync('userInfo', response.data.user);
+          
+          // 验证保存是否成功
+          console.log('验证登录状态保存:', {
+            token: Taro.getStorageSync('token'),
+            isLoggedIn: Taro.getStorageSync('isLoggedIn'),
+            userInfo: Taro.getStorageSync('userInfo')
+          });
+          
+          // 触发用户登录成功事件，通知其他页面更新用户信息
+          Taro.eventCenter.trigger('userLoggedIn', {
+            userInfo: response.data.user,
+            token: response.data.token
+          });
+          
+          // 跳转到个人中心页面，验证登录状态
+          Taro.switchTab({
+            url: '/pages/my/my'
+          });
       } else {
         // 登录失败
         Taro.showToast({

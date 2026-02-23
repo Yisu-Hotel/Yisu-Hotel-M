@@ -211,6 +211,46 @@ async function request(url, options = {}) {
   }
 }
 
+// 模拟登录，获取测试token
+async function mockLogin() {
+  try {
+    // 检查是否已有token
+    const existingToken = Taro.getStorageSync('token');
+    if (existingToken) {
+      console.log('已有token，无需模拟登录');
+      return true;
+    }
+    
+    // 模拟登录请求
+    console.log('开始模拟登录...');
+    
+    // 模拟登录成功响应
+    const mockResponse = {
+      code: 0,
+      msg: '登录成功',
+      data: {
+        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoi12345678-1234-1234-89ab-123456789012IiwicGhvbmUiOiIxMjM0NTY3ODkwIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NjE4NDQwMDAsImV4cCI6MTc2MjQ0ODgwMH0.Sz7x9f8b7a6s5d4f3g2h1jklmnopqrstuvwxyz',
+        userInfo: {
+          id: '12345678-1234-1234-89ab-123456789012',
+          phone: '1234567890',
+          nickname: '测试用户'
+        }
+      }
+    };
+    
+    // 保存token到本地存储
+    Taro.setStorageSync('token', mockResponse.data.token);
+    Taro.setStorageSync('isLoggedIn', true);
+    Taro.setStorageSync('userInfo', mockResponse.data.userInfo);
+    
+    console.log('模拟登录成功，token已保存');
+    return true;
+  } catch (error) {
+    console.error('模拟登录失败:', error);
+    return false;
+  }
+}
+
 // 城市相关API
 export const cityApi = {
   // 获取所有城市列表
@@ -454,8 +494,19 @@ export const couponApi = {
     } else {
       return request('/mobile/coupon/list');
     }
+  },
+  
+  // 领取优惠券
+  receiveCoupon: async (couponId) => {
+    return request('/mobile/coupon/receive', {
+      method: 'POST',
+      body: JSON.stringify({ coupon_id: couponId }),
+    });
   }
 };
+
+// 导出模拟登录函数
+export { mockLogin };
 
 // 浏览历史相关API
 export const historyApi = {

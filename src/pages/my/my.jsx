@@ -57,6 +57,22 @@ export default function MyPage () {
       }
     }
     checkLoginStatus()
+    
+    // 监听登录成功事件
+    const handleLoginSuccess = (data) => {
+      console.log('收到登录成功事件:', data)
+      setIsLoggedIn(true)
+      setUserInfo(data.userInfo)
+      // 获取待支付订单数量
+      fetchPendingPayCount()
+    }
+    
+    Taro.eventCenter.on('userLoggedIn', handleLoginSuccess)
+    
+    // 清理事件监听器
+    return () => {
+      Taro.eventCenter.off('userLoggedIn', handleLoginSuccess)
+    }
   }, [])
 
   // 处理菜单点击
@@ -118,7 +134,7 @@ export default function MyPage () {
     <View className='my-page'>
       {/* 个人信息区域 */}
       {isLoggedIn && userInfo ? (
-        <View className='user-info-section' onClick={() => Taro.navigateTo({ url: '/pages/login/login' })}>
+        <View className='user-info-section' onClick={() => Taro.navigateTo({ url: '/pages/settings/settings' })}>
           <Image 
             className='user-avatar' 
             src={userInfo.avatar || userInfo.profile?.avatar || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=user%20avatar%20portrait%20placeholder&image_size=square'} 

@@ -127,7 +127,7 @@ export default function AIAssistant() {
       <View className="ai-assistant-header">
         <View 
           className="back-button"
-          onClick={() => navigateTo({ url: '/pages/index/index' })}
+          onClick={() => navigateTo({ url: '/pages/my/my' })}
         >
           <Text className="back-icon">←</Text>
         </View>

@@ -19,46 +19,18 @@ export default function HistoryPage () {
     try {
       setLoading(true)
       
-      // 检查用户是否已登录
-      const isLoggedIn = Taro.getStorageSync('isLoggedIn')
-      if (!isLoggedIn) {
-        // 用户未登录，显示空的历史记录列表
-        console.log('用户未登录，显示空的历史记录列表')
-        setHistory([])
-        return
-      }
+      // 从本地缓存获取浏览历史
+      const browsingHistory = Taro.getStorageSync('browsingHistory') || []
+      console.log('从本地缓存获取的浏览历史:', browsingHistory)
       
-      // 调用后端API获取浏览历史
-      const response = await historyApi.getHistory()
-      
-      if (response.code === 0 && response.data) {
-        setHistory(response.data.history || [])
-      } else if (response.code === 4008) {
-        // Token 无效或已过期，已经在API服务层处理了跳转到登录页的逻辑
-        // 这里不需要重复处理
-      } else {
-        // 用户已登录但获取失败，显示错误提示
-        Taro.showToast({
-          title: response.message || '获取浏览历史失败',
-          icon: 'none'
-        })
-      }
+      setHistory(browsingHistory)
     } catch (error) {
       console.error('获取浏览历史失败:', error)
-      
-      // 检查用户是否已登录
-      const isLoggedIn = Taro.getStorageSync('isLoggedIn')
-      if (!isLoggedIn) {
-        // 用户未登录，显示空的历史记录列表
-        console.log('用户未登录，显示空的历史记录列表')
-        setHistory([])
-      } else {
-        // 用户已登录但获取失败，显示错误提示
-        Taro.showToast({
-          title: error.message || '获取浏览历史失败，请检查网络连接',
-          icon: 'none'
-        })
-      }
+      Taro.showToast({
+        title: error.message || '获取浏览历史失败，请检查网络连接',
+        icon: 'none'
+      })
+      setHistory([])
     } finally {
       setLoading(false)
     }
@@ -79,22 +51,21 @@ export default function HistoryPage () {
       success: async (res) => {
         if (res.confirm) {
           try {
-            // 调用后端API删除历史记录
-            const response = await historyApi.removeHistory(historyId)
+            // 从本地缓存获取当前历史记录
+            const currentHistory = Taro.getStorageSync('browsingHistory') || []
             
-            if (response.code === 0) {
-              // 更新本地历史记录
-              setHistory(prev => prev.filter(item => item.id !== historyId))
-              Taro.showToast({
-                title: '已删除',
-                icon: 'success'
-              })
-            } else {
-              Taro.showToast({
-                title: response.message || '删除失败',
-                icon: 'none'
-              })
-            }
+            // 过滤掉要删除的记录
+            const updatedHistory = currentHistory.filter(item => item.id !== historyId)
+            
+            // 保存回本地缓存
+            Taro.setStorageSync('browsingHistory', updatedHistory)
+            
+            // 更新本地状态
+            setHistory(updatedHistory)
+            Taro.showToast({
+              title: '已删除',
+              icon: 'success'
+            })
           } catch (error) {
             console.error('删除历史记录失败:', error)
             Taro.showToast({
@@ -123,21 +94,15 @@ export default function HistoryPage () {
       success: async (res) => {
         if (res.confirm) {
           try {
-            // 调用后端API清空历史记录
-            const response = await historyApi.clearHistory()
+            // 清空本地缓存中的历史记录
+            Taro.removeStorageSync('browsingHistory')
             
-            if (response.code === 0) {
-              setHistory([])
-              Taro.showToast({
-                title: '已清空',
-                icon: 'success'
-              })
-            } else {
-              Taro.showToast({
-                title: response.message || '清空失败',
-                icon: 'none'
-              })
-            }
+            // 更新本地状态
+            setHistory([])
+            Taro.showToast({
+              title: '已清空',
+              icon: 'success'
+            })
           } catch (error) {
             console.error('清空历史记录失败:', error)
             Taro.showToast({

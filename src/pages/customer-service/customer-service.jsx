@@ -129,11 +129,27 @@ export default function CustomerServicePage () {
     sendMessage()
   }
 
+  // 处理返回按钮点击
+  const handleBack = () => {
+    try {
+      // 跳转到"我的"页面
+      Taro.navigateTo({
+        url: '/pages/my/my'
+      })
+    } catch (error) {
+      console.error('返回操作失败:', error)
+      // 如果发生错误，跳转到"我的"页面
+      Taro.navigateTo({
+        url: '/pages/my/my'
+      })
+    }
+  }
+
   return (
     <View className='customer-service-page'>
       {/* 头部 */}
       <View className='cs-header'>
-        <View className='back-button' onClick={() => Taro.navigateBack()}>
+        <View className='back-button' onClick={handleBack}>
           <Text className='back-icon'>←</Text>
           <Text className='back-text'>返回</Text>
         </View>

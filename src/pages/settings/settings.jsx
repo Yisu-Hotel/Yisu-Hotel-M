@@ -61,8 +61,8 @@ export default function SettingsPage () {
           Taro.removeStorageSync('isLoggedIn')
           Taro.removeStorageSync('token')
           
-          // 跳转到登录页面
-          Taro.navigateTo({
+          // 跳转到登录页面，使用redirectTo替换当前页面栈
+          Taro.redirectTo({
             url: '/pages/login/login'
           })
         }
