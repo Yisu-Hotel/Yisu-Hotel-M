@@ -1,0 +1,250 @@
+.city-select {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 头部 */
+.city-select-header {
+  padding: 16px;
+  background-color: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* 搜索框 */
+.search-box {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.search-icon {
+  font-size: 16px;
+  color: #999;
+  margin-right: 8px;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+  background: transparent;
+  padding: 4px 0;
+  outline: none;
+  border: none;
+}
+
+/* 城市列表容器 */
+.city-list-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* 城市区块 */
+.city-section {
+  margin-bottom: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #f5f5f5;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+}
+
+.clear-history {
+  font-size: 12px;
+  color: #1890ff;
+  cursor: pointer;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* 热门城市 */
+.hot-cities {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background-color: #fff;
+}
+
+.hot-city-item {
+  padding: 8px 16px;
+  border-radius: 20px;
+  background-color: #f5f5f5;
+  color: #333;
+  font-size: 14px;
+  margin: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hot-city-item:hover {
+  background-color: #e6f7ff;
+  color: #1890ff;
+  transform: translateY(-1px);
+}
+
+/* 搜索历史城市 */
+.history-cities {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background-color: #fff;
+}
+
+.history-city-item {
+  padding: 6px 12px;
+  border-radius: 16px;
+  background-color: #f0f0f0;
+  color: #666;
+  font-size: 13px;
+  margin: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.history-city-item:hover {
+  background-color: #e6f7ff;
+  color: #1890ff;
+  transform: translateY(-1px);
+}
+
+/* 城市列表 */
+.city-list {
+  background-color: #fff;
+}
+
+.city-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 15px;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.city-item:hover {
+  background-color: #f9f9f9;
+  transform: translateX(4px);
+}
+
+.city-item:last-child {
+  border-bottom: none;
+}
+
+/* 搜索结果 */
+.search-results {
+  background-color: #fff;
+  margin-bottom: 16px;
+  animation: slideUp 0.4s ease;
+}
+
+/* 字母索引 */
+.letter-index {
+  position: fixed;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 8px 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.letter-item {
+  font-size: 12px;
+  color: #1890ff;
+  margin: 2px 0;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.letter-item:hover {
+  background-color: #e6f7ff;
+  color: #096dd9;
+  transform: scale(1.1);
+}
+
+/* 字母提示 */
+.letter-tip {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  z-index: 200;
+  animation: pulse 0.5s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+  50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .hot-city-item {
+    width: 33.333%;
+  }
+  
+  .letter-index {
+    right: 5px;
+  }
+  
+  .letter-item {
+    font-size: 11px;
+    margin: 1px 0;
+  }
+}
