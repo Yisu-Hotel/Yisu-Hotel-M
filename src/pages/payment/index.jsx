@@ -119,53 +119,9 @@ const PaymentPage = () => {
       // 调用后端API获取优惠券列表，只获取可用的优惠券
       const response = await couponApi.getCoupons({ type: 'available' })
       
-      // 添加默认优惠券数据作为兜底
-      const defaultCoupons = [
-        {
-          id: '1',
-          name: '新用户专享优惠券',
-          value: '50',
-          min_spend: '300',
-          expire_date: '2026-12-31',
-          status: 'available',
-          description: '新用户专享，满300减50'
-        },
-        {
-          id: '2',
-          name: '周末特惠优惠券',
-          value: '30',
-          min_spend: '200',
-          expire_date: '2026-12-31',
-          status: 'available',
-          description: '周末入住，满200减30'
-        },
-        {
-          id: '3',
-          name: '节日特惠优惠券',
-          value: '100',
-          min_spend: '500',
-          expire_date: '2026-12-31',
-          status: 'available',
-          description: '节日入住，满500减100'
-        }
-      ]
-      
-      // 检查响应状态，即使token无效也使用默认优惠券数据
+      // 检查响应状态
       if (response.code === 0 && response.data) {
         let couponsList = Array.isArray(response.data.coupons) ? response.data.coupons : []
-        
-        // 如果没有优惠券数据，尝试从本地存储中获取
-        if (couponsList.length === 0) {
-          console.log('从本地存储中获取优惠券数据')
-          const userCoupons = Taro.getStorageSync('userCoupons') || []
-          couponsList = userCoupons
-        }
-        
-        // 如果还是没有优惠券数据，使用默认优惠券数据
-        if (couponsList.length === 0) {
-          console.log('使用默认优惠券数据')
-          couponsList = defaultCoupons
-        }
         
         // 筛选出可用的优惠券（status=available 或 status=unused）
         const eligibleCoupons = couponsList.filter(coupon => {
@@ -174,70 +130,12 @@ const PaymentPage = () => {
         console.log('筛选后的优惠券:', eligibleCoupons)
         setCoupons(eligibleCoupons)
       } else {
-        // 使用默认优惠券数据
-        let couponsList = defaultCoupons
-        
-        // 尝试从本地存储中获取优惠券数据
-        console.log('从本地存储中获取优惠券数据')
-        const userCoupons = Taro.getStorageSync('userCoupons') || []
-        if (userCoupons.length > 0) {
-          couponsList = userCoupons
-        }
-        
-        // 筛选出可用的优惠券（status=available 或 status=unused）
-        const eligibleCoupons = couponsList.filter(coupon => {
-          return coupon.status === 'available' || coupon.status === 'unused'
-        })
-        console.log('筛选后的优惠券:', eligibleCoupons)
-        setCoupons(eligibleCoupons)
+        console.log('获取优惠券列表失败或无数据')
+        setCoupons([])
       }
     } catch (error) {
       console.error('获取优惠券列表失败:', error)
-      
-      // 使用默认优惠券数据
-      let couponsList = [
-        {
-          id: '1',
-          name: '新用户专享优惠券',
-          value: '50',
-          min_spend: '300',
-          expire_date: '2026-12-31',
-          status: 'available',
-          description: '新用户专享，满300减50'
-        },
-        {
-          id: '2',
-          name: '周末特惠优惠券',
-          value: '30',
-          min_spend: '200',
-          expire_date: '2026-12-31',
-          status: 'available',
-          description: '周末入住，满200减30'
-        },
-        {
-          id: '3',
-          name: '节日特惠优惠券',
-          value: '100',
-          min_spend: '500',
-          expire_date: '2026-12-31',
-          status: 'available',
-          description: '节日入住，满500减100'
-        }
-      ]
-      
-      // 尝试从本地存储中获取优惠券数据
-      console.log('从本地存储中获取优惠券数据')
-      const userCoupons = Taro.getStorageSync('userCoupons') || []
-      if (userCoupons.length > 0) {
-        couponsList = userCoupons
-      }
-      
-      // 筛选出可用的优惠券（status=available）
-      const eligibleCoupons = couponsList.filter(coupon => {
-        return coupon.status === 'available'
-      })
-      console.log('筛选后的优惠券:', eligibleCoupons)
-      setCoupons(eligibleCoupons)
+      setCoupons([])
     }
   }
 
@@ -414,7 +312,10 @@ const PaymentPage = () => {
 
   const getStatusColor = (status) => {
     switch(status) {
-      case 'pending': return '#ff9900'
+      case 'pending':
+      case 'pending_payment':
+      case 'pending_pay':
+        return '#ff9900'
       case 'paid': return '#07c160'
       case 'cancelled': return '#999999'
       case 'completed': return '#10aeff'
@@ -509,7 +410,7 @@ const PaymentPage = () => {
             )}
         </View>
 
-        {/* 支付栏 */}
+        {(bookingDetail.status === 'pending' || bookingDetail.status === 'pending_payment' || bookingDetail.status === 'pending_pay' || bookingDetail.status_text === '待支付') && (
         <View className='payment-section'>
             {/* 优惠券栏 */}
             <View className='coupon-section'>
@@ -724,6 +625,7 @@ const PaymentPage = () => {
                 立即支付 ¥{finalPrice}
             </Button>
         </View>
+        )}
       </ScrollView>
     </View>
   )

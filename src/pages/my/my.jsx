@@ -1,6 +1,6 @@
 import { View, Text, Button, Image } from '@tarojs/components'
 import { useCallback, useState, useEffect } from 'react'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { userApi, orderApi } from '../../services/api'
 import './my.less'
 
@@ -32,30 +32,37 @@ export default function MyPage () {
     }
   }
 
+  const resetLoginState = () => {
+    setIsLoggedIn(false)
+    setUserInfo(null)
+    setPendingPayCount(0)
+  }
+
+  const checkLoginStatus = async () => {
+    const token = Taro.getStorageSync('token')
+    if (!token) {
+      resetLoginState()
+      return
+    }
+
+    const response = await userApi.getProfile()
+    if (response.code === 0 && response.data) {
+      const profile = response.data.user || response.data
+      setIsLoggedIn(true)
+      setUserInfo(profile)
+      fetchPendingPayCount()
+      return
+    }
+
+    resetLoginState()
+  }
+
+  useDidShow(() => {
+    checkLoginStatus()
+  })
+
   // 初始化时检查登录状态并获取用户信息
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      const loggedIn = Taro.getStorageSync('isLoggedIn')
-      const token = Taro.getStorageSync('token')
-      const userInfo = Taro.getStorageSync('userInfo')
-      
-      console.log('检查登录状态:', {
-        loggedIn,
-        token: token ? '存在' : '不存在',
-        userInfo: userInfo ? '存在' : '不存在'
-      })
-      
-      if (loggedIn || token || userInfo) {
-        setIsLoggedIn(true)
-        setUserInfo(userInfo)
-        // 获取待支付订单数量
-        fetchPendingPayCount()
-      } else {
-        setIsLoggedIn(false)
-        setUserInfo(null)
-        setPendingPayCount(0)
-      }
-    }
     checkLoginStatus()
     
     // 监听登录成功事件

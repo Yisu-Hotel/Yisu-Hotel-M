@@ -262,13 +262,12 @@ export default function OrderPage () {
         ) : orders.length > 0 ? (
           <>
             {orders.map(order => {
-              const displayPrice = order.payAmount || order.total_price || 0;
               return (
                 <View key={order.id} className='order-item' onClick={(e) => handleOrderAction(order.id, 'view', e, order.status)}>
                   <View className='order-item-header'>
                     <Text className='hotel-name'>{order.hotel_name || order.hotel?.name || '未知酒店'}</Text>
-                    <Text className={`order-status ${order.status === 'pending' ? 'status-pending' : ''}`}>
-                      {order.status === 'pending' && '待支付'}
+                    <Text className={`order-status ${order.status === 'pending' || order.status === 'pending_payment' ? 'status-pending' : ''}`}>
+                      {(order.status === 'pending' || order.status === 'pending_payment') && '待支付'}
                       {order.status === 'paid' && '已付款'}
                       {order.status === 'completed' && '已完成'}
                       {order.status === 'cancelled' && '已取消'}
@@ -278,10 +277,9 @@ export default function OrderPage () {
                     <Text className='order-date'>
                       {order.check_in_date} - {order.check_out_date}
                     </Text>
-                    <Text className='order-price'>¥{displayPrice}</Text>
                   </View>
                   <View className='order-item-footer'>
-                    {order.status === 'pending' && (
+                    {(order.status === 'pending' || order.status === 'pending_payment') && (
                       <>
                         <View 
                           className='order-btn cancel-btn' 

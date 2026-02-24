@@ -1,6 +1,6 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import { useCallback, useState, useEffect } from 'react'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { couponApi, mockLogin } from '../../services/api'
 import './coupons.less'
 
@@ -18,8 +18,16 @@ export default function CouponsPage () {
   })
   const [activeTab, setActiveTab] = useState('available')
   const [loading, setLoading] = useState(false)
-  const [historyLoading, setHistoryLoading] = useState(false)
-  const [couponHistory, setCouponHistory] = useState([])
+  
+
+  const refreshOnShow = useCallback(async () => {
+    await mockLogin()
+    await fetchCoupons()
+  }, [activeTab])
+
+  useDidShow(() => {
+    refreshOnShow()
+  })
 
   // 初始化时获取优惠券数据
   useEffect(() => {
@@ -46,9 +54,6 @@ export default function CouponsPage () {
   // 处理标签切换
   const handleTabChange = useCallback((tab) => {
     setActiveTab(tab)
-    if (tab === 'history') {
-      fetchCouponHistory()
-    }
   }, [])
 
   // 过滤酒店相关的优惠券
@@ -126,34 +131,21 @@ export default function CouponsPage () {
         console.log('优惠券列表:', couponsList)
         console.log('优惠券数量:', couponsList.length)
         
-        // 过滤酒店相关的优惠券
-        const hotelCoupons = filterHotelCoupons(couponsList)
-        console.log('过滤后的酒店优惠券:', hotelCoupons)
-        console.log('酒店优惠券数量:', hotelCoupons.length)
+        const hotelCoupons = couponsList
+        console.log('优惠券数量(全部):', hotelCoupons.length)
         
         // 如果没有优惠券数据，尝试从response.data中获取
         if (hotelCoupons.length === 0 && response.data) {
           console.log('从response.data中获取优惠券数据')
-          // 检查response.data中是否有其他优惠券相关字段
           if (Array.isArray(response.data)) {
-            // 如果response.data是一个数组，直接使用
-            const dataCoupons = filterHotelCoupons(response.data)
+            const dataCoupons = response.data
             console.log('从response.data数组中获取的优惠券:', dataCoupons)
             hotelCoupons.push(...dataCoupons)
           } else if (response.data.available) {
-            // 如果response.data中有available字段，使用它
-            const availableCoupons = filterHotelCoupons(Array.isArray(response.data.available) ? response.data.available : [])
+            const availableCoupons = Array.isArray(response.data.available) ? response.data.available : []
             console.log('从response.data.available中获取的优惠券:', availableCoupons)
             hotelCoupons.push(...availableCoupons)
           }
-        }
-        
-        // 如果没有优惠券数据，尝试从本地存储中获取
-        if (hotelCoupons.length === 0) {
-          console.log('从本地存储中获取优惠券数据')
-          const userCoupons = Taro.getStorageSync('userCoupons') || []
-          console.log('从本地存储中获取的优惠券:', userCoupons)
-          hotelCoupons.push(...userCoupons)
         }
         
         hotelCoupons.forEach(coupon => {
@@ -335,33 +327,6 @@ export default function CouponsPage () {
     }
   }, [])
 
-  // 获取优惠券使用历史
-  const fetchCouponHistory = async () => {
-    try {
-      setHistoryLoading(true)
-      console.log('开始获取优惠券使用历史...')
-      
-      // 调用后端API获取优惠券使用历史
-      const response = await couponApi.getCouponHistory()
-      console.log('优惠券使用历史API响应:', response)
-      
-      if (response.code === 0 && response.data) {
-        // 确保返回的数据是一个数组
-        const historyData = Array.isArray(response.data) ? response.data : (response.data.history || [])
-        console.log('优惠券使用历史数据:', historyData)
-        setCouponHistory(historyData)
-      } else {
-        console.log('API返回错误或无数据:', response)
-        setCouponHistory([])
-      }
-    } catch (error) {
-      console.error('获取优惠券使用历史失败:', error)
-      setCouponHistory([])
-    } finally {
-      setHistoryLoading(false)
-    }
-  }
-
   // 获取当前标签的优惠券列表
   const getCurrentCoupons = () => {
     switch (activeTab) {
@@ -371,8 +336,6 @@ export default function CouponsPage () {
         return myCoupons.used
       case 'expired':
         return myCoupons.expired
-      case 'history':
-        return couponHistory
       default:
         return []
     }
@@ -427,80 +390,43 @@ export default function CouponsPage () {
               >
                 <Text>已过期 ({myCoupons.expired.length})</Text>
               </View>
-              <View 
-                className={`tab-item ${activeTab === 'history' ? 'active' : ''}`}
-                onClick={() => handleTabChange('history')}
-              >
-                <Text>使用历史</Text>
-              </View>
             </View>
             
             {/* 优惠券列表 */}
             <View className='coupon-list'>
-              {activeTab === 'history' ? (
-                // 显示优惠券使用历史
-                historyLoading ? (
-                  <View className='loading-container'>
-                    <Text>加载中...</Text>
-                  </View>
-                ) : couponHistory.length > 0 ? (
-                  couponHistory.map((historyItem, index) => (
-                    <View key={index || historyItem.id} className='coupon-history-item'>
-                      <View className='history-item-header'>
-                        <Text className='history-coupon-name'>{historyItem.coupon_name || historyItem.name}</Text>
-                        <Text className='history-value'>¥{historyItem.value || historyItem.discount}</Text>
-                      </View>
-                      <View className='history-item-body'>
-                        <Text className='history-time'>使用时间: {historyItem.used_at || historyItem.created_at}</Text>
-                        <Text className='history-scenario'>使用场景: {historyItem.scene || historyItem.usage_scenario || '酒店预订'}</Text>
-                        {historyItem.order_id && (
-                          <Text className='history-order'>订单编号: {historyItem.order_id}</Text>
-                        )}
-                      </View>
+              {getCurrentCoupons().length > 0 ? (
+                getCurrentCoupons().map((coupon) => (
+                  <View 
+                    key={coupon.id} 
+                    className={`coupon-item ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-disabled' : ''}`}
+                    style={{ pointerEvents: coupon.status === 'used' || coupon.status === 'expired' ? 'none' : 'auto' }}
+                  >
+                    <View className='coupon-left'>
+                      <Text className={`coupon-value ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-value-disabled' : ''}`}>¥{coupon.value}</Text>
+                      <Text className={`coupon-min-spend ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>满{coupon.min_spend}可用</Text>
                     </View>
-                  ))
-                ) : (
-                  <View className='empty-coupons'>
-                    <View className='empty-icon'>📋</View>
-                    <Text className='empty-text'>暂无使用历史记录</Text>
+                    <View className='coupon-right'>
+                      <Text className={`coupon-name ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>{coupon.name}</Text>
+                      <Text className={`coupon-desc ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>{coupon.description}</Text>
+                      <Text className={`coupon-expire ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>有效期至: {coupon.expire_date}</Text>
+                    </View>
+                    {coupon.status === 'used' && (
+                      <View className='coupon-status-tag used-tag'>
+                        <Text className='status-text'>已使用</Text>
+                      </View>
+                    )}
+                    {coupon.status === 'expired' && (
+                      <View className='coupon-status-tag expired-tag'>
+                        <Text className='status-text'>已过期</Text>
+                      </View>
+                    )}
                   </View>
-                )
+                ))
               ) : (
-                // 显示普通优惠券列表
-                getCurrentCoupons().length > 0 ? (
-                  getCurrentCoupons().map((coupon) => (
-                    <View 
-                      key={coupon.id} 
-                      className={`coupon-item ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-disabled' : ''}`}
-                      style={{ pointerEvents: coupon.status === 'used' || coupon.status === 'expired' ? 'none' : 'auto' }}
-                    >
-                      <View className='coupon-left'>
-                        <Text className={`coupon-value ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-value-disabled' : ''}`}>¥{coupon.value}</Text>
-                        <Text className={`coupon-min-spend ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>满{coupon.min_spend}可用</Text>
-                      </View>
-                      <View className='coupon-right'>
-                        <Text className={`coupon-name ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>{coupon.name}</Text>
-                        <Text className={`coupon-desc ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>{coupon.description}</Text>
-                        <Text className={`coupon-expire ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>有效期至: {coupon.expire_date}</Text>
-                      </View>
-                      {coupon.status === 'used' && (
-                        <View className='coupon-status-tag used-tag'>
-                          <Text className='status-text'>已使用</Text>
-                        </View>
-                      )}
-                      {coupon.status === 'expired' && (
-                        <View className='coupon-status-tag expired-tag'>
-                          <Text className='status-text'>已过期</Text>
-                        </View>
-                      )}
-                    </View>
-                  ))
-                ) : (
-                  <View className='empty-coupons'>
-                    <View className='empty-icon'>📮</View>
-                    <Text className='empty-text'>暂无优惠券记录</Text>
-                  </View>
-                )
+                <View className='empty-coupons'>
+                  <View className='empty-icon'>📮</View>
+                  <Text className='empty-text'>暂无优惠券记录</Text>
+                </View>
               )}
             </View>
           </View>

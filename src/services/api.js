@@ -467,7 +467,8 @@ export const orderApi = {
   },
   // 获取订单详情
   getOrderDetail: async (orderId) => {
-    return request(`/mobile/booking/detail/${orderId}`);
+    const timestamp = new Date().getTime();
+    return request(`/mobile/booking/detail/${orderId}?_t=${timestamp}`);
   },
   // 取消订单
   cancelOrder: async (orderId) => {
@@ -489,11 +490,12 @@ export const orderApi = {
 export const couponApi = {
   // 获取优惠券列表
   getCoupons: async (params) => {
+    const timestamp = new Date().getTime();
     if (params) {
-      const queryString = new URLSearchParams(params).toString();
+      const queryString = new URLSearchParams({ ...params, _t: timestamp }).toString();
       return request(`/mobile/coupon/list?${queryString}`);
     } else {
-      return request('/mobile/coupon/list');
+      return request(`/mobile/coupon/list?_t=${timestamp}`);
     }
   },
   
