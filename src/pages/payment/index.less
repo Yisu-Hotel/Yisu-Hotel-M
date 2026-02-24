@@ -275,6 +275,21 @@
             background: #e6f7ff;
             border-left: 8rpx solid #1890ff;
         }
+        
+        /* 已使用/已过期优惠券样式 */
+        &.coupon-disabled {
+            background-color: #f5f5f5;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        .coupon-value-disabled {
+            color: #999 !important;
+        }
+        
+        .coupon-text-disabled {
+            color: #999 !important;
+        }
     }
     
     .payment-methods {
@@ -304,6 +319,27 @@
                 text {
                     font-size: 30rpx;
                     color: #333;
+                }
+            }
+            
+            .method-check {
+                width: 32rpx;
+                height: 32rpx;
+                border-radius: 50%;
+                border: 2rpx solid #999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                
+                &.checked {
+                    background: #52c41a;
+                    border-color: #52c41a;
+                }
+                
+                .check-icon {
+                    color: #fff;
+                    font-size: 20rpx;
+                    font-weight: bold;
                 }
             }
         }
@@ -423,6 +459,306 @@
 
     &:active {
       background-color: #f8f9fa;
+    }
+  }
+}
+
+// 优惠券筛选样式
+.coupon-filter-section {
+  padding: 20rpx;
+  border-bottom: 1rpx solid #eee;
+
+  .filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16rpx;
+
+    .filter-title {
+      font-size: 30rpx;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .reset-filter {
+      font-size: 24rpx;
+      color: #1890ff;
+      cursor: pointer;
+    }
+  }
+
+  .filter-content {
+    margin-bottom: 20rpx;
+
+    .filter-item {
+      margin-bottom: 16rpx;
+
+      .filter-label {
+        font-size: 26rpx;
+        color: #666;
+        margin-bottom: 12rpx;
+      }
+
+      .filter-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12rpx;
+
+        .filter-option {
+          padding: 10rpx 20rpx;
+          border: 1rpx solid #ddd;
+          border-radius: 20rpx;
+          font-size: 24rpx;
+          color: #666;
+          cursor: pointer;
+          transition: all 0.3s ease;
+
+          &:active {
+            transform: scale(0.95);
+          }
+
+          &.active {
+            background-color: #1890ff;
+            border-color: #1890ff;
+            color: white;
+          }
+        }
+      }
+    }
+  }
+
+  .filter-buttons {
+    display: flex;
+    justify-content: flex-end;
+
+    .filter-button {
+      padding: 12rpx 32rpx;
+      border-radius: 24rpx;
+      font-size: 26rpx;
+      font-weight: 500;
+      cursor: pointer;
+
+      &.apply {
+        background-color: #1890ff;
+        color: white;
+
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+    }
+  }
+}
+
+// 空优惠券提示
+.empty-coupons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60rpx 0;
+  color: #999;
+  font-size: 26rpx;
+}
+
+// 推荐优惠券样式
+.coupon-item.recommended {
+  position: relative;
+  border: 1rpx solid #ff7a45;
+  box-shadow: 0 2rpx 8rpx rgba(255, 122, 69, 0.1);
+
+  .coupon-recommended-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #ff7a45;
+    color: white;
+    padding: 4rpx 12rpx;
+    border-bottom-left-radius: 16rpx;
+    font-size: 20rpx;
+    font-weight: 500;
+
+    .recommended-text {
+      color: white;
+    }
+  }
+
+  .coupon-value {
+    color: #ff7a45 !important;
+  }
+
+  .coupon-name {
+    font-weight: 500;
+  }
+}
+
+// 优惠券预览样式
+.coupon-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.coupon-preview-content {
+  background-color: white;
+  border-radius: 24rpx;
+  width: 80%;
+  max-width: 500rpx;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.coupon-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx 40rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+
+  .preview-title {
+    font-size: 34rpx;
+    font-weight: 700;
+    color: #333;
+  }
+
+  .preview-close {
+    width: 64rpx;
+    height: 64rpx;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+
+    .close-icon {
+      font-size: 48rpx;
+      color: #999;
+    }
+  }
+}
+
+.coupon-preview-body {
+  padding: 40rpx;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.coupon-preview-card {
+  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+  border-radius: 16rpx;
+  padding: 40rpx;
+  color: white;
+  position: relative;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.preview-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+
+  .preview-card-title {
+    font-size: 32rpx;
+    font-weight: 700;
+    flex: 1;
+  }
+
+  .preview-recommended-tag {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8rpx 16rpx;
+    border-radius: 16rpx;
+    font-size: 20rpx;
+    font-weight: 500;
+  }
+}
+
+.preview-price-section {
+  margin-bottom: 40rpx;
+  text-align: center;
+
+  .preview-price {
+    font-size: 64rpx;
+    font-weight: 700;
+    margin-bottom: 16rpx;
+  }
+
+  .preview-condition {
+    font-size: 26rpx;
+    opacity: 0.9;
+  }
+}
+
+.preview-info-section {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12rpx;
+  padding: 24rpx;
+
+  .preview-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16rpx;
+    font-size: 24rpx;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .preview-info-label {
+      opacity: 0.8;
+    }
+
+    .preview-info-value {
+      font-weight: 500;
+
+      &.status-used {
+        color: #ffd60a;
+      }
+
+      &.status-expired {
+        color: #ff5252;
+      }
+
+      &.status-available {
+        color: #b9f6ca;
+      }
+    }
+  }
+}
+
+.coupon-preview-footer {
+  padding: 32rpx 40rpx;
+  border-top: 1rpx solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+
+  .preview-button {
+    padding: 16rpx 48rpx;
+    border-radius: 28rpx;
+    font-size: 28rpx;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.select {
+      background-color: #1890ff;
+      color: white;
+
+      &:active {
+        background-color: #40a9ff;
+      }
     }
   }
 }

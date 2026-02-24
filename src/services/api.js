@@ -353,8 +353,9 @@ export const hotelApi = {
   },
 
   // 获取酒店详情
-  getHotelDetail: async (hotelId) => {
-    return request(`/mobile/hotel/${hotelId}`);
+  getHotelDetail: async (hotelId, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return request(`/mobile/hotel/${hotelId}${queryString ? `?${queryString}` : ''}`);
   },
 
   // 收藏酒店
@@ -502,6 +503,19 @@ export const couponApi = {
       method: 'POST',
       body: JSON.stringify({ coupon_id: couponId }),
     });
+  },
+  
+  // 使用优惠券
+  useCoupon: async (couponId, bookingId) => {
+    return request('/mobile/coupon/use', {
+      method: 'POST',
+      body: JSON.stringify({ coupon_id: couponId, booking_id: bookingId }),
+    });
+  },
+  
+  // 获取优惠券使用历史
+  getCouponHistory: async () => {
+    return request('/mobile/coupon/history');
   }
 };
 

@@ -18,6 +18,8 @@ export default function CouponsPage () {
   })
   const [activeTab, setActiveTab] = useState('available')
   const [loading, setLoading] = useState(false)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [couponHistory, setCouponHistory] = useState([])
 
   // 初始化时获取优惠券数据
   useEffect(() => {
@@ -28,13 +30,25 @@ export default function CouponsPage () {
       fetchCoupons()
     }
     init()
+    
+    // 监听支付成功后刷新优惠券的事件
+    const refreshCouponsListener = Taro.eventCenter.on('refreshCoupons', () => {
+      console.log('收到刷新优惠券事件，开始刷新优惠券列表...')
+      fetchCoupons()
+    })
+    
+    // 清理函数
+    return () => {
+      Taro.eventCenter.off('refreshCoupons', refreshCouponsListener)
+    }
   }, [])
 
   // 处理标签切换
   const handleTabChange = useCallback((tab) => {
     setActiveTab(tab)
-    // 切换标签时重新获取优惠券数据
-    fetchCoupons()
+    if (tab === 'history') {
+      fetchCouponHistory()
+    }
   }, [])
 
   // 过滤酒店相关的优惠券
@@ -99,8 +113,6 @@ export default function CouponsPage () {
         return
       }
       
-
-      
       // 处理我的优惠券
       if (response.code === 0 && response.data) {
         console.log('API返回成功，数据:', response.data)
@@ -151,9 +163,10 @@ export default function CouponsPage () {
           // 默认设置为可用状态
           const couponWithStatus = {
             ...mappedCoupon,
-            status: mappedCoupon.status || 'available'
+            status: mappedCoupon.status || 'unused'
           }
           switch (couponWithStatus.status) {
+            case 'unused':
             case 'available':
               available.push(couponWithStatus)
               break
@@ -169,17 +182,12 @@ export default function CouponsPage () {
           }
         })
         
-        console.log('分类后的优惠券:', { available, used, expired })
-        setMyCoupons({ available, used, expired })
-      } else {
-        // 后端返回错误或无数据，设置为空数组
-        console.log('API返回错误或无数据:', response)
-        setMyCoupons({ available: [], used: [], expired: [] })
-      }
-      
-      // 处理推送的优惠券
-      if (response.code === 0 && response.data) {
-        // 检查是否有pushCoupons字段
+        const myCouponsData = { available, used, expired }
+        console.log('分类后的优惠券:', myCouponsData)
+        setMyCoupons(myCouponsData)
+        
+        // 处理推送的优惠券
+        let pushCouponsData = { limited: [], bank: [], selected: [] }
         if (response.data.pushCoupons) {
           console.log('推送优惠券数据:', response.data.pushCoupons)
           // 过滤酒店相关的推送优惠券
@@ -187,8 +195,7 @@ export default function CouponsPage () {
           const bank = filterHotelCoupons(response.data.pushCoupons.bank || [])
           const selected = filterHotelCoupons(response.data.pushCoupons.selected || [])
           console.log('过滤后的推送优惠券:', { limited, bank, selected })
-          
-          setPushCoupons({ limited, bank, selected })
+          pushCouponsData = { limited, bank, selected }
         } else {
           // 如果没有pushCoupons字段，尝试从coupons字段中构造推送优惠券数据
           console.log('从coupons字段构造推送优惠券数据')
@@ -210,18 +217,18 @@ export default function CouponsPage () {
           const bank = []
           const selected = limited
           
-          console.log('构造的推送优惠券:', { limited, bank, selected })
-          setPushCoupons({ limited, bank, selected })
+          pushCouponsData = { limited, bank, selected }
         }
+        
+        setPushCoupons(pushCouponsData)
       } else {
         // 后端返回错误或无数据，设置为空数组
-        console.log('无推送优惠券数据')
+        setMyCoupons({ available: [], used: [], expired: [] })
         setPushCoupons({ limited: [], bank: [], selected: [] })
       }
     } catch (error) {
       console.error('获取优惠券列表失败:', error)
-      
-      // 发生错误，设置为空数组
+      // 网络错误处理，设置为空数组
       setMyCoupons({ available: [], used: [], expired: [] })
       setPushCoupons({ limited: [], bank: [], selected: [] })
     } finally {
@@ -270,22 +277,6 @@ export default function CouponsPage () {
           icon: 'success'
         })
         
-        // 清除优惠券列表的缓存
-        console.log('清除优惠券列表的缓存')
-        const cacheKeys = [
-          'GET_/mobile/coupon/list?type=available_',
-          'GET_/mobile/coupon/list?type=used_',
-          'GET_/mobile/coupon/list?type=expired_',
-          'GET_/mobile/coupon/list?type=all_'
-        ]
-        cacheKeys.forEach(key => {
-          try {
-            Taro.removeStorageSync(`api_cache_${key}`)
-          } catch (error) {
-            console.error('清除缓存失败:', error)
-          }
-        })
-        
         // 手动添加一张优惠券到 myCoupons.available 数组中
         console.log('手动添加优惠券到 myCoupons.available 数组中')
         const newCoupon = {
@@ -300,6 +291,18 @@ export default function CouponsPage () {
         setMyCoupons(prev => ({
           ...prev,
           available: [newCoupon, ...prev.available]
+        }))
+        
+        // 更新 pushCoupons 中对应优惠券的 userStatus 为 claimed
+        console.log('更新 pushCoupons 中对应优惠券的 userStatus')
+        setPushCoupons(prev => ({
+          ...prev,
+          limited: prev.limited.map(item => 
+            item.id === coupon.id ? { ...item, userStatus: 'claimed' } : item
+          ),
+          selected: prev.selected.map(item => 
+            item.id === coupon.id ? { ...item, userStatus: 'claimed' } : item
+          )
         }))
         
         // 将优惠券信息保存到本地存储中
@@ -330,7 +333,34 @@ export default function CouponsPage () {
       Taro.hideLoading()
       console.log('========== 领取优惠券流程结束 ==========')
     }
-  }, [fetchCoupons])
+  }, [])
+
+  // 获取优惠券使用历史
+  const fetchCouponHistory = async () => {
+    try {
+      setHistoryLoading(true)
+      console.log('开始获取优惠券使用历史...')
+      
+      // 调用后端API获取优惠券使用历史
+      const response = await couponApi.getCouponHistory()
+      console.log('优惠券使用历史API响应:', response)
+      
+      if (response.code === 0 && response.data) {
+        // 确保返回的数据是一个数组
+        const historyData = Array.isArray(response.data) ? response.data : (response.data.history || [])
+        console.log('优惠券使用历史数据:', historyData)
+        setCouponHistory(historyData)
+      } else {
+        console.log('API返回错误或无数据:', response)
+        setCouponHistory([])
+      }
+    } catch (error) {
+      console.error('获取优惠券使用历史失败:', error)
+      setCouponHistory([])
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
 
   // 获取当前标签的优惠券列表
   const getCurrentCoupons = () => {
@@ -341,6 +371,8 @@ export default function CouponsPage () {
         return myCoupons.used
       case 'expired':
         return myCoupons.expired
+      case 'history':
+        return couponHistory
       default:
         return []
     }
@@ -359,151 +391,241 @@ export default function CouponsPage () {
         <Text className='page-title'>优惠券</Text>
       </View>
       
-      {/* 我的优惠券部分 */}
-      <View className='my-coupons-section'>
-        <View className='section-title'>
-          <Text>我的优惠券</Text>
+      {/* 下拉刷新容器 */}
+      <ScrollView
+        style={{ flex: 1 }}
+        scrollY
+        refresherEnabled
+        refresherTriggered={loading}
+        onRefresherRefresh={fetchCoupons}
+        refresherBackgroundColor='#f5f5f5'
+        refresherThreshold={45}
+      >
+        {/* 我的优惠券部分 */}
+        <View className='my-coupons-section'>
+          <View className='section-title'>
+            <Text>我的优惠券</Text>
+          </View>
+          <View className='my-coupons-content'>
+            {/* 标签切换 */}
+            <View className='coupon-tabs'>
+              <View 
+                className={`tab-item ${activeTab === 'available' ? 'active' : ''}`}
+                onClick={() => handleTabChange('available')}
+              >
+                <Text>可用 ({myCoupons.available.length})</Text>
+              </View>
+              <View 
+                className={`tab-item ${activeTab === 'used' ? 'active' : ''}`}
+                onClick={() => handleTabChange('used')}
+              >
+                <Text>已使用 ({myCoupons.used.length})</Text>
+              </View>
+              <View 
+                className={`tab-item ${activeTab === 'expired' ? 'active' : ''}`}
+                onClick={() => handleTabChange('expired')}
+              >
+                <Text>已过期 ({myCoupons.expired.length})</Text>
+              </View>
+              <View 
+                className={`tab-item ${activeTab === 'history' ? 'active' : ''}`}
+                onClick={() => handleTabChange('history')}
+              >
+                <Text>使用历史</Text>
+              </View>
+            </View>
+            
+            {/* 优惠券列表 */}
+            <View className='coupon-list'>
+              {activeTab === 'history' ? (
+                // 显示优惠券使用历史
+                historyLoading ? (
+                  <View className='loading-container'>
+                    <Text>加载中...</Text>
+                  </View>
+                ) : couponHistory.length > 0 ? (
+                  couponHistory.map((historyItem, index) => (
+                    <View key={index || historyItem.id} className='coupon-history-item'>
+                      <View className='history-item-header'>
+                        <Text className='history-coupon-name'>{historyItem.coupon_name || historyItem.name}</Text>
+                        <Text className='history-value'>¥{historyItem.value || historyItem.discount}</Text>
+                      </View>
+                      <View className='history-item-body'>
+                        <Text className='history-time'>使用时间: {historyItem.used_at || historyItem.created_at}</Text>
+                        <Text className='history-scenario'>使用场景: {historyItem.scene || historyItem.usage_scenario || '酒店预订'}</Text>
+                        {historyItem.order_id && (
+                          <Text className='history-order'>订单编号: {historyItem.order_id}</Text>
+                        )}
+                      </View>
+                    </View>
+                  ))
+                ) : (
+                  <View className='empty-coupons'>
+                    <View className='empty-icon'>📋</View>
+                    <Text className='empty-text'>暂无使用历史记录</Text>
+                  </View>
+                )
+              ) : (
+                // 显示普通优惠券列表
+                getCurrentCoupons().length > 0 ? (
+                  getCurrentCoupons().map((coupon) => (
+                    <View 
+                      key={coupon.id} 
+                      className={`coupon-item ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-disabled' : ''}`}
+                      style={{ pointerEvents: coupon.status === 'used' || coupon.status === 'expired' ? 'none' : 'auto' }}
+                    >
+                      <View className='coupon-left'>
+                        <Text className={`coupon-value ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-value-disabled' : ''}`}>¥{coupon.value}</Text>
+                        <Text className={`coupon-min-spend ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>满{coupon.min_spend}可用</Text>
+                      </View>
+                      <View className='coupon-right'>
+                        <Text className={`coupon-name ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>{coupon.name}</Text>
+                        <Text className={`coupon-desc ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>{coupon.description}</Text>
+                        <Text className={`coupon-expire ${coupon.status === 'used' || coupon.status === 'expired' ? 'coupon-text-disabled' : ''}`}>有效期至: {coupon.expire_date}</Text>
+                      </View>
+                      {coupon.status === 'used' && (
+                        <View className='coupon-status-tag used-tag'>
+                          <Text className='status-text'>已使用</Text>
+                        </View>
+                      )}
+                      {coupon.status === 'expired' && (
+                        <View className='coupon-status-tag expired-tag'>
+                          <Text className='status-text'>已过期</Text>
+                        </View>
+                      )}
+                    </View>
+                  ))
+                ) : (
+                  <View className='empty-coupons'>
+                    <View className='empty-icon'>📮</View>
+                    <Text className='empty-text'>暂无优惠券记录</Text>
+                  </View>
+                )
+              )}
+            </View>
+          </View>
         </View>
-        <View className='my-coupons-content'>
-          {/* 标签切换 */}
-          <View className='coupon-tabs'>
-            <View 
-              className={`tab-item ${activeTab === 'available' ? 'active' : ''}`}
-              onClick={() => setActiveTab('available')}
-            >
-              <Text>可用 ({myCoupons.available.length})</Text>
-            </View>
-            <View 
-              className={`tab-item ${activeTab === 'used' ? 'active' : ''}`}
-              onClick={() => setActiveTab('used')}
-            >
-              <Text>已使用 ({myCoupons.used.length})</Text>
-            </View>
-            <View 
-              className={`tab-item ${activeTab === 'expired' ? 'active' : ''}`}
-              onClick={() => setActiveTab('expired')}
-            >
-              <Text>已过期 ({myCoupons.expired.length})</Text>
-            </View>
+        
+        {/* 限时抢部分 */}
+        <View className='limited-section'>
+          <View className='section-title'>
+            <Text>限时抢</Text>
           </View>
           
           {/* 优惠券列表 */}
-          <View className='coupon-list'>
-            {getCurrentCoupons().length > 0 ? (
-              getCurrentCoupons().map((coupon) => (
-                <View key={coupon.id} className='coupon-item'>
-                  <View className='coupon-left'>
-                    <Text className='coupon-value'>¥{coupon.value}</Text>
-                    <Text className='coupon-min-spend'>满{coupon.min_spend}可用</Text>
+          {pushCoupons.limited.map((coupon, index) => {
+            // 根据 userStatus 判断优惠券状态
+            const isClaimed = coupon.userStatus === 'claimed' || coupon.userStatus === 'used'
+            const isUnclaimed = coupon.userStatus === 'unclaimed'
+            
+            // 处理按钮点击事件
+            const handleButtonClick = () => {
+              if (isClaimed) {
+                // 已领取的优惠券，直接提示
+                Taro.showToast({
+                  title: '该优惠券已领取，不可重复领取',
+                  icon: 'none'
+                })
+              } else {
+                // 未领取的优惠券，执行领取逻辑
+                handleCouponClick(coupon)
+              }
+            }
+            
+            return (
+              <View key={coupon.id} className='selected-item'>
+                <View className='selected-left'>
+                  <View className='selected-value'>
+                    {coupon.value ? (
+                      <>
+                        <Text className='value-number'>{coupon.value}</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Text className='value-number'>{coupon.discount}</Text>
+                      </>
+                    )}
+                    {coupon.limit && <Text className='value-limit'>{coupon.limit}</Text>}
                   </View>
-                  <View className='coupon-right'>
-                    <Text className='coupon-name'>{coupon.name}</Text>
-                    <Text className='coupon-desc'>{coupon.description}</Text>
-                    <Text className='coupon-expire'>有效期至: {coupon.expire_date}</Text>
-                  </View>
+                  <Text className='selected-name'>{coupon.name}</Text>
+                  <Text className='selected-expire'>{coupon.expire_date}前</Text>
                 </View>
-              ))
-            ) : (
-              <View className='empty-coupons'>
-                <View className='empty-icon'>📮</View>
-                <Text className='empty-text'>暂无优惠券记录</Text>
+                <View className='selected-right'>
+                  <View className='selected-remain'>
+                    <Text className='remain-text'>剩余</Text>
+                    <Text className='remain-percent'>{coupon.remain}</Text>
+                  </View>
+                  {isClaimed ? (
+                    <View className='selected-btn disabled' onClick={handleButtonClick}>已领取</View>
+                  ) : (
+                    <View className='selected-btn' onClick={handleButtonClick}>马上抢</View>
+                  )}
+                </View>
               </View>
-            )}
+            )
+          })}
+        </View>
+        
+        {/* 领好券部分 */}
+        <View className='selected-section'>
+          <View className='section-title'>
+            <Text>领好券</Text>
           </View>
-        </View>
-      </View>
-      
-
-      
-      {/* 限时抢部分 */}
-      <View className='limited-section'>
-        <View className='section-title'>
-          <Text>限时抢</Text>
-        </View>
-        
-        {/* 优惠券列表 */}
-        {pushCoupons.limited.map((coupon, index) => {
-          // 检查用户是否已经领取过当前优惠券
-          const received = hasReceivedCoupon(coupon.id)
-          return (
-            <View key={coupon.id} className='selected-item'>
-              <View className='selected-left'>
-                <View className='selected-value'>
-                  {coupon.value ? (
-                    <>
-                      <Text className='value-number'>{coupon.value}</Text>
-                    </>
+          
+          {/* 优惠券列表 */}
+          {pushCoupons.selected.map((coupon, index) => {
+            // 根据 userStatus 判断优惠券状态
+            const isClaimed = coupon.userStatus === 'claimed' || coupon.userStatus === 'used'
+            const isUnclaimed = coupon.userStatus === 'unclaimed'
+            
+            // 处理按钮点击事件
+            const handleButtonClick = () => {
+              if (isClaimed) {
+                // 已领取的优惠券，直接提示
+                Taro.showToast({
+                  title: '该优惠券已领取，不可重复领取',
+                  icon: 'none'
+                })
+              } else {
+                // 未领取的优惠券，执行领取逻辑
+                handleCouponClick(coupon)
+              }
+            }
+            
+            return (
+              <View key={coupon.id} className='selected-item'>
+                <View className='selected-left'>
+                  <View className='selected-value'>
+                    {coupon.value ? (
+                      <>
+                        <Text className='value-number'>{coupon.value}</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Text className='value-number'>{coupon.discount}</Text>
+                      </>
+                    )}
+                    {coupon.limit && <Text className='value-limit'>{coupon.limit}</Text>}
+                  </View>
+                  <Text className='selected-name'>{coupon.name}</Text>
+                  <Text className='selected-expire'>{coupon.expire_date}前</Text>
+                </View>
+                <View className='selected-right'>
+                  <View className='selected-remain'>
+                    <Text className='remain-text'>剩余</Text>
+                    <Text className='remain-percent'>{coupon.remain}</Text>
+                  </View>
+                  {isClaimed ? (
+                    <View className='selected-btn disabled' onClick={handleButtonClick}>已领取</View>
                   ) : (
-                    <>
-                      <Text className='value-number'>{coupon.discount}</Text>
-                    </>
+                    <View className='selected-btn' onClick={handleButtonClick}>马上领</View>
                   )}
-                  {coupon.limit && <Text className='value-limit'>{coupon.limit}</Text>}
                 </View>
-                <Text className='selected-name'>{coupon.name}</Text>
-                <Text className='selected-expire'>{coupon.expire_date}前</Text>
               </View>
-              <View className='selected-right'>
-                <View className='selected-remain'>
-                  <Text className='remain-text'>剩余</Text>
-                  <Text className='remain-percent'>{coupon.remain}</Text>
-                </View>
-                {received ? (
-                  <View className='selected-btn disabled'>已领取</View>
-                ) : (
-                  <View className='selected-btn' onClick={() => handleCouponClick(coupon)}>马上抢</View>
-                )}
-              </View>
-            </View>
-          )
-        })}
-      </View>
-      
-      {/* 领好券部分 */}
-      <View className='selected-section'>
-        <View className='section-title'>
-          <Text>领好券</Text>
+            )
+          })}
         </View>
-        
-
-        
-        {/* 优惠券列表 */}
-        {pushCoupons.selected.map((coupon, index) => {
-          // 检查用户是否已经领取过当前优惠券
-          const received = hasReceivedCoupon(coupon.id)
-          return (
-            <View key={coupon.id} className='selected-item'>
-              <View className='selected-left'>
-                <View className='selected-value'>
-                  {coupon.value ? (
-                    <>
-                      <Text className='value-number'>{coupon.value}</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text className='value-number'>{coupon.discount}</Text>
-                    </>
-                  )}
-                  {coupon.limit && <Text className='value-limit'>{coupon.limit}</Text>}
-                </View>
-                <Text className='selected-name'>{coupon.name}</Text>
-                <Text className='selected-expire'>{coupon.expire_date}前</Text>
-              </View>
-              <View className='selected-right'>
-                <View className='selected-remain'>
-                  <Text className='remain-text'>剩余</Text>
-                  <Text className='remain-percent'>{coupon.remain}</Text>
-                </View>
-                {received ? (
-                  <View className='selected-btn disabled'>已领取</View>
-                ) : (
-                  <View className='selected-btn' onClick={() => handleCouponClick(coupon)}>马上领</View>
-                )}
-              </View>
-            </View>
-          )
-        })}
-      </View>
+      </ScrollView>
     </View>
   )
 }

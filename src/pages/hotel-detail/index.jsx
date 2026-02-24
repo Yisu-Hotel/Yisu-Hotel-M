@@ -223,7 +223,10 @@ export default function HotelDetail() {
 
   const fetchHotelDetail = async (id) => {
     try {
-      const response = await hotelApi.getHotelDetail(id);
+      const response = await hotelApi.getHotelDetail(id, {
+        check_in_date: checkInDate,
+        check_out_date: checkOutDate
+      });
       if (response.code === 0 && response.data) {
         const hotelData = response.data;
         const normalizedHotelInfo = {
@@ -396,6 +399,11 @@ export default function HotelDetail() {
     setCheckInDate(checkIn);
     setCheckOutDate(checkOut);
     setShowDateSelector(false);
+    
+    // 当日期变化时，重新获取酒店详情，确保价格能够根据新的日期更新
+    if (hotelId) {
+      fetchHotelDetail(hotelId);
+    }
   };
 
   const toggleRoomExpand = (roomId) => {

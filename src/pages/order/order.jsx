@@ -155,21 +155,29 @@ export default function OrderPage () {
   }
 
   // 处理订单操作
-  const handleOrderAction = useCallback(async (orderId, action, e) => {
+  const handleOrderAction = useCallback(async (orderId, action, e, orderStatus) => {
     if (e && e.stopPropagation) {
       e.stopPropagation()
     }
-    console.log('订单操作:', orderId, action)
+    console.log('订单操作:', orderId, action, orderStatus)
     if (action === 'pay') {
       // 跳转到支付页面
       Taro.navigateTo({
         url: `/pages/payment/index?bookingId=${orderId}`
       })
     } else if (action === 'view') {
-      // 跳转到支付页面（作为订单详情页）
-      Taro.navigateTo({
-        url: `/pages/payment/index?bookingId=${orderId}`
-      })
+      // 根据订单状态决定跳转路径
+      if (orderStatus === 'cancelled') {
+        // 已取消订单跳转到订单详情页
+        Taro.navigateTo({
+          url: `/pages/order-detail/index?bookingId=${orderId}`
+        })
+      } else {
+        // 其他状态跳转到支付页面（作为订单详情页）
+        Taro.navigateTo({
+          url: `/pages/payment/index?bookingId=${orderId}`
+        })
+      }
     } else if (action === 'cancel') {
       // 取消订单
       Taro.showModal({
@@ -185,6 +193,8 @@ export default function OrderPage () {
               })
               // 重新获取订单列表
               fetchOrders()
+              // 订单取消后，通知优惠券页面刷新优惠券列表
+              Taro.eventCenter.trigger('refreshCoupons')
             } catch (error) {
               Taro.showToast({
                 title: error.message || '取消订单失败',
@@ -251,75 +261,75 @@ export default function OrderPage () {
           </View>
         ) : orders.length > 0 ? (
           <>
-            {orders.map(order => (
-              <View key={order.id} className='order-item' onClick={(e) => handleOrderAction(order.id, 'view', e)}>
-                <View className='order-item-header'>
-                  <Text className='hotel-name'>{order.hotel_name || order.hotel?.name || '未知酒店'}</Text>
-                  <Text className={`order-status ${order.status === 'pending' ? 'status-pending' : ''}`}>
-                    {order.status === 'pending' && '待支付'}
-                    {order.status === 'paid' && '已付款'}
-                    {order.status === 'completed' && '已完成'}
-                    {order.status === 'cancelled' && '已取消'}
-                  </Text>
-                </View>
-                
-                <View className='order-item-body'>
-                  <Text className='order-date'>
-                    {order.check_in_date} - {order.check_out_date}
-                  </Text>
-                  <Text className='order-price'>¥{order.total_price}</Text>
-                </View>
-                
-                <View className='order-item-footer'>
-                  {order.status === 'pending' && (
-                    <>
-                      <View 
-                        className='order-btn cancel-btn' 
-                        onClick={(e) => handleOrderAction(order.id, 'cancel', e)}
-                      >
-                        取消订单
-                      </View>
-                      <View 
-                        className='order-btn confirm-btn' 
-                        onClick={(e) => handleOrderAction(order.id, 'pay', e)}
-                      >
-                        立即支付
-                      </View>
-                    </>
-                  )}
-                  {order.status === 'paid' && (
-                    <>
-                      <View 
-                        className='order-btn cancel-btn' 
-                        onClick={(e) => handleOrderAction(order.id, 'cancel', e)}
-                      >
-                        取消订单
-                      </View>
-                      <View 
-                        className='order-btn view-btn' 
-                        onClick={(e) => handleOrderAction(order.id, 'view', e)}
-                      >
+            {orders.map(order => {
+              const displayPrice = order.payAmount || order.total_price || 0;
+              return (
+                <View key={order.id} className='order-item' onClick={(e) => handleOrderAction(order.id, 'view', e, order.status)}>
+                  <View className='order-item-header'>
+                    <Text className='hotel-name'>{order.hotel_name || order.hotel?.name || '未知酒店'}</Text>
+                    <Text className={`order-status ${order.status === 'pending' ? 'status-pending' : ''}`}>
+                      {order.status === 'pending' && '待支付'}
+                      {order.status === 'paid' && '已付款'}
+                      {order.status === 'completed' && '已完成'}
+                      {order.status === 'cancelled' && '已取消'}
+                    </Text>
+                  </View>
+                  <View className='order-item-body'>
+                    <Text className='order-date'>
+                      {order.check_in_date} - {order.check_out_date}
+                    </Text>
+                    <Text className='order-price'>¥{displayPrice}</Text>
+                  </View>
+                  <View className='order-item-footer'>
+                    {order.status === 'pending' && (
+                      <>
+                        <View 
+                          className='order-btn cancel-btn' 
+                          onClick={(e) => handleOrderAction(order.id, 'cancel', e, order.status)}
+                        >
+                          取消订单
+                        </View>
+                        <View 
+                          className='order-btn confirm-btn' 
+                          onClick={(e) => handleOrderAction(order.id, 'pay', e, order.status)}
+                        >
+                          立即支付
+                        </View>
+                      </>
+                    )}
+                    {order.status === 'paid' && (
+                      <>
+                        <View 
+                          className='order-btn cancel-btn' 
+                          onClick={(e) => handleOrderAction(order.id, 'cancel', e, order.status)}
+                        >
+                          取消订单
+                        </View>
+                        <View 
+                          className='order-btn view-btn' 
+                          onClick={(e) => handleOrderAction(order.id, 'view', e, order.status)}
+                        >
+                          查看详情
+                        </View>
+                      </>
+                    )}
+                    {order.status === 'completed' && (
+                      <View className='order-btn view-btn' onClick={(e) => handleOrderAction(order.id, 'view', e, order.status)}>
                         查看详情
                       </View>
-                    </>
-                  )}
-                  {order.status === 'completed' && (
-                    <View className='order-btn view-btn' onClick={(e) => handleOrderAction(order.id, 'view', e)}>
-                      查看详情
-                    </View>
-                  )}
-                  {order.status === 'cancelled' && (
-                    <View className='order-btn view-btn' onClick={(e) => handleOrderAction(order.id, 'view', e)}>
-                      查看详情
-                    </View>
-                  )}
+                    )}
+                    {order.status === 'cancelled' && (
+                      <View className='order-btn view-btn' onClick={(e) => handleOrderAction(order.id, 'view', e, order.status)}>
+                        查看详情
+                      </View>
+                    )}
+                  </View>
                 </View>
-              </View>
-            ))}
-            {/* 底部加载状态 */}
+              );
+            })}
             <View className='list-footer' style={{ padding: '20px 0', textAlign: 'center', color: '#999', fontSize: '14px' }}>
-               {loading && <Text>加载中...</Text>}
-               {!loading && !hasMore && <Text>没有更多了</Text>}
+              {loading && <Text>加载中...</Text>}
+              {!loading && !hasMore && <Text>没有更多了</Text>}
             </View>
           </>
         ) : (

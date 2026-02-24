@@ -141,7 +141,11 @@ export default function MyPage () {
           />
           <View className='user-info'>
             <Text className='user-name'>{userInfo.nickname || userInfo.profile?.nickname || userInfo.phone || '用户'}</Text>
-            <Text className='user-id'>已登录</Text>
+            {userInfo.phone || userInfo.profile?.phone ? (
+              <Text className='user-phone'>{userInfo.phone || userInfo.profile?.phone}</Text>
+            ) : (
+              <Text className='user-id'>已登录</Text>
+            )}
           </View>
           <View className='user-arrow'>›</View>
         </View>

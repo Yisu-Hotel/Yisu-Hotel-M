@@ -536,84 +536,86 @@ const BookingConfirm = () => {
         <Text className='back-text'>返回</Text>
       </View>
       
-      {fetchingData ? (
-        <View className='loading-container'>
-          <Text className='loading-text'>加载中...</Text>
-        </View>
-      ) : (
-        <View className='summary-section'>
+      <ScrollView className='content-scroll' scrollY>
+        {fetchingData ? (
+          <View className='loading-container'>
+            <Text className='loading-text'>加载中...</Text>
+          </View>
+        ) : (
+          <View className='summary-section'>
+            <View className='section-title'>
+              <Text>订单信息</Text>
+            </View>
+            <View className='summary-row'>
+              <Text className='label'>酒店名称</Text>
+              <Text className='value'>{bookingInfo.hotelName || '酒店名称'}</Text>
+            </View>
+            <View className='summary-row'>
+              <Text className='label'>房型名称</Text>
+              <Text className='value'>{bookingInfo.roomType || '房型'}</Text>
+            </View>
+            <View className='summary-row'>
+              <Text className='label'>入住/离店</Text>
+              <Text className='value'>{bookingInfo.checkInDate || '入住日期'} - {bookingInfo.checkOutDate || '离店日期'}</Text>
+            </View>
+            <View className='summary-row'>
+              <Text className='label'>总间夜数</Text>
+              <Text className='value'>{bookingInfo.nights}</Text>
+            </View>
+            <View className='summary-row'>
+              <Text className='label'>总价</Text>
+              <Text className='value'>¥{bookingInfo.price.original || bookingInfo.price.final}</Text>
+            </View>
+            <View className='summary-row final'>
+              <Text className='label'>应付金额</Text>
+              <Text className='final-value'>¥{bookingInfo.price.original || bookingInfo.price.final}</Text>
+            </View>
+          </View>
+        )}
+
+        <View className='booking-info-section'>
           <View className='section-title'>
-            <Text>订单信息</Text>
+            <Text>入住信息</Text>
           </View>
-          <View className='summary-row'>
-            <Text className='label'>酒店名称</Text>
-            <Text className='value'>{bookingInfo.hotelName || '酒店名称'}</Text>
-          </View>
-          <View className='summary-row'>
-            <Text className='label'>房型名称</Text>
-            <Text className='value'>{bookingInfo.roomType || '房型'}</Text>
-          </View>
-          <View className='summary-row'>
-            <Text className='label'>入住/离店</Text>
-            <Text className='value'>{bookingInfo.checkInDate || '入住日期'} - {bookingInfo.checkOutDate || '离店日期'}</Text>
-          </View>
-          <View className='summary-row'>
-            <Text className='label'>总间夜数</Text>
-            <Text className='value'>{bookingInfo.nights}</Text>
-          </View>
-          <View className='summary-row'>
-            <Text className='label'>总价</Text>
-            <Text className='value'>¥{bookingInfo.price.original || bookingInfo.price.final}</Text>
-          </View>
-          <View className='summary-row final'>
-            <Text className='label'>应付金额</Text>
-            <Text className='final-value'>¥{bookingInfo.price.original || bookingInfo.price.final}</Text>
-          </View>
-        </View>
-      )}
-
-      <View className='booking-info-section'>
-        <View className='section-title'>
-          <Text>入住信息</Text>
-        </View>
-        <View className='form-item'>
-          <Text className='label'>住客姓名*</Text>
-          <Input
-            value={guestInfo.name}
-            placeholder='请输入住客姓名'
-            onInput={(e) => setGuestInfo({ ...guestInfo, name: e.detail.value })}
-          />
-        </View>
-
-        <View className='form-item'>
-          <Text className='label'>联系手机*</Text>
-          <View className='phone-input'>
-            <Text>+86</Text>
+          <View className='form-item'>
+            <Text className='label'>住客姓名*</Text>
             <Input
-              value={guestInfo.phone}
-              placeholder='请输入手机号码'
-              onInput={(e) => setGuestInfo({ ...guestInfo, phone: e.detail.value })}
+              value={guestInfo.name}
+              placeholder='请输入住客姓名'
+              onInput={(e) => setGuestInfo({ ...guestInfo, name: e.detail.value })}
             />
           </View>
-        </View>
-      </View>
 
-      <View className='special-requests-section'>
-        <View className='section-title'>
-          <Text>特殊要求</Text>
-        </View>
-        <View className='request-tags'>
-          {specialRequests.map(item => (
-            <View
-              key={item.id}
-              className={`request-tag ${item.selected ? 'selected' : ''}`}
-              onClick={() => handleSpecialRequestToggle(item.id)}
-            >
-              <Text>{item.name}</Text>
+          <View className='form-item'>
+            <Text className='label'>联系手机*</Text>
+            <View className='phone-input'>
+              <Text>+86</Text>
+              <Input
+                value={guestInfo.phone}
+                placeholder='请输入手机号码'
+                onInput={(e) => setGuestInfo({ ...guestInfo, phone: e.detail.value })}
+              />
             </View>
-          ))}
+          </View>
         </View>
-      </View>
+
+        <View className='special-requests-section'>
+          <View className='section-title'>
+            <Text>特殊要求</Text>
+          </View>
+          <View className='request-tags'>
+            {specialRequests.map(item => (
+              <View
+                key={item.id}
+                className={`request-tag ${item.selected ? 'selected' : ''}`}
+                onClick={() => handleSpecialRequestToggle(item.id)}
+              >
+                <Text>{item.name}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
 
       <View className='bottom-bar'>
         <View className='price-info'>

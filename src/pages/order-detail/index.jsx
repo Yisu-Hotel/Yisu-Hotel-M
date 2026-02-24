@@ -14,8 +14,9 @@ const OrderDetailPage = () => {
     const fetchOrderDetail = async () => {
       try {
         setLoading(true)
-        // 从路由参数获取订单ID
-        const { orderId: id } = Taro.getCurrentInstance().router?.params || {}
+        // 从路由参数获取订单ID，支持orderId和bookingId两种参数名
+        const { orderId: id1, bookingId: id2 } = Taro.getCurrentInstance().router?.params || {}
+        const id = id1 || id2
         if (!id) {
           Taro.showToast({
             title: '订单ID不能为空',
@@ -91,22 +92,24 @@ const OrderDetailPage = () => {
       success: async (res) => {
         if (res.confirm) {
           try {
-            await orderApi.cancelOrder(orderId)
-            Taro.showToast({
-              title: '订单已取消',
-              icon: 'success'
-            })
-            // 重新获取订单详情
-            const response = await orderApi.getOrderDetail(orderId)
-            if (response.code === 0 && response.data) {
-              setOrder(response.data)
+              await orderApi.cancelOrder(orderId)
+              Taro.showToast({
+                title: '订单已取消',
+                icon: 'success'
+              })
+              // 重新获取订单详情
+              const response = await orderApi.getOrderDetail(orderId)
+              if (response.code === 0 && response.data) {
+                setOrder(response.data)
+              }
+              // 订单取消后，通知优惠券页面刷新优惠券列表
+              Taro.eventCenter.trigger('refreshCoupons')
+            } catch (error) {
+              Taro.showToast({
+                title: error.message || '取消订单失败',
+                icon: 'none'
+              })
             }
-          } catch (error) {
-            Taro.showToast({
-              title: error.message || '取消订单失败',
-              icon: 'none'
-            })
-          }
         }
       }
     })
@@ -212,6 +215,10 @@ const OrderDetailPage = () => {
             <Text className='info-value discount'>-¥{order.discount_amount}</Text>
           </View>
         )}
+        <View className='info-item'>
+          <Text className='info-label'>实付金额</Text>
+          <Text className='info-value total-price'>¥{order.payAmount || order.total_price}</Text>
+        </View>
         <View className='info-item total'>
           <Text className='info-label'>总价</Text>
           <Text className='info-value total-price'>¥{order.total_price}</Text>

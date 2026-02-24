@@ -343,6 +343,43 @@
   }
 }
 
+// 已使用/已过期优惠券样式
+.coupon-disabled {
+  background-color: #f5f5f5;
+  box-shadow: none;
+}
+
+.coupon-value-disabled {
+  color: #999 !important;
+}
+
+.coupon-text-disabled {
+  color: #999 !important;
+}
+
+// 优惠券状态标签
+.coupon-status-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+
+  .status-text {
+    color: white;
+  }
+
+  &.used-tag {
+    background-color: #999;
+  }
+
+  &.expired-tag {
+    background-color: #d9d9d9;
+  }
+}
+
 // 横向滚动容器
 .limited-scroll,
 .category-scroll {
@@ -353,5 +390,53 @@
 
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+// 优惠券使用历史样式
+.coupon-history-item {
+  background-color: white;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #1890ff;
+
+  .history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+
+    .history-coupon-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .history-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ff4d4f;
+    }
+  }
+
+  .history-item-body {
+    .history-time {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .history-scenario {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .history-order {
+      font-size: 14px;
+      color: #666;
+    }
   }
 }
