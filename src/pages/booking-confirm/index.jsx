@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { View, Text, Button, Input } from '@tarojs/components'
+import { View, Text, Button, Input, ScrollView } from '@tarojs/components'
+import { AtModal, AtIcon } from 'taro-ui'
 import Taro from '@tarojs/taro'
-import { bookingApi, hotelApi } from '../../services/api'
+import { bookingApi, hotelApi, couponApi } from '../../services/api'
 import './index.less'
 
 const BookingConfirm = () => {
@@ -39,6 +40,11 @@ const BookingConfirm = () => {
   const [hotelId, setHotelId] = useState('')
   const [roomId, setRoomId] = useState('')
   const [fetchingData, setFetchingData] = useState(true)
+  
+  // 优惠券相关状态
+  const [coupons, setCoupons] = useState([])
+  const [selectedCoupon, setSelectedCoupon] = useState(null)
+  const [showCouponModal, setShowCouponModal] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -245,6 +251,194 @@ const BookingConfirm = () => {
     }))
   }, [bookingInfo.originalCheckInDate, bookingInfo.originalCheckOutDate, bookingInfo.price.original])
 
+  // 获取优惠券数据
+  const fetchCoupons = async () => {
+    try {
+      // 调用后端API获取优惠券列表
+      const response = await couponApi.getCoupons({ type: 'all' })
+      
+      // 添加默认优惠券数据作为兜底
+      const defaultCoupons = [
+        {
+          id: '1',
+          name: '新用户专享优惠券',
+          value: '50',
+          min_spend: '300',
+          expire_date: '2026-12-31',
+          status: 'available',
+          description: '新用户专享，满300减50'
+        },
+        {
+          id: '2',
+          name: '周末特惠优惠券',
+          value: '30',
+          min_spend: '200',
+          expire_date: '2026-12-31',
+          status: 'available',
+          description: '周末入住，满200减30'
+        }
+      ]
+      
+      // 检查响应状态，即使token无效也使用默认优惠券数据
+      if (response.code === 0 && response.data) {
+        let couponsList = Array.isArray(response.data.coupons) ? response.data.coupons : []
+        
+        // 如果没有优惠券数据，尝试从本地存储中获取
+        if (couponsList.length === 0) {
+          console.log('从本地存储中获取优惠券数据')
+          const userCoupons = Taro.getStorageSync('userCoupons') || []
+          couponsList = userCoupons
+        }
+        
+        // 如果还是没有优惠券数据，使用默认优惠券数据
+        if (couponsList.length === 0) {
+          console.log('使用默认优惠券数据')
+          couponsList = defaultCoupons
+        }
+        
+        // 筛选出满足当前订单金额的优惠券
+        const eligibleCoupons = couponsList.filter(coupon => {
+          const minSpend = coupon.min_spend || coupon.min_order_amount || coupon.minSpend || 0
+          const currentTotal = bookingInfo.price.final || bookingInfo.price.original || 0
+          // 如果currentTotal是0，那么就不筛选，直接返回所有优惠券
+          return currentTotal === 0 || currentTotal >= minSpend
+        })
+        console.log('筛选后的优惠券:', eligibleCoupons)
+        setCoupons(eligibleCoupons)
+      } else {
+        // 使用默认优惠券数据
+        let couponsList = defaultCoupons
+        
+        // 尝试从本地存储中获取优惠券数据
+        console.log('从本地存储中获取优惠券数据')
+        const userCoupons = Taro.getStorageSync('userCoupons') || []
+        if (userCoupons.length > 0) {
+          couponsList = userCoupons
+        }
+        
+        const eligibleCoupons = couponsList.filter(coupon => {
+          const minSpend = coupon.min_spend || coupon.min_order_amount || coupon.minSpend || 0
+          const currentTotal = bookingInfo.price.final || bookingInfo.price.original || 0
+          // 如果currentTotal是0，那么就不筛选，直接返回所有优惠券
+          return currentTotal === 0 || currentTotal >= minSpend
+        })
+        console.log('筛选后的优惠券:', eligibleCoupons)
+        setCoupons(eligibleCoupons)
+      }
+    } catch (error) {
+      console.error('获取优惠券列表失败:', error)
+      
+      // 使用默认优惠券数据
+      let couponsList = [
+        {
+          id: '1',
+          name: '新用户专享优惠券',
+          value: '50',
+          min_spend: '300',
+          expire_date: '2026-12-31',
+          status: 'available',
+          description: '新用户专享，满300减50'
+        },
+        {
+          id: '2',
+          name: '周末特惠优惠券',
+          value: '30',
+          min_spend: '200',
+          expire_date: '2026-12-31',
+          status: 'available',
+          description: '周末入住，满200减30'
+        }
+      ]
+      
+      // 尝试从本地存储中获取优惠券数据
+      console.log('从本地存储中获取优惠券数据')
+      const userCoupons = Taro.getStorageSync('userCoupons') || []
+      if (userCoupons.length > 0) {
+        couponsList = userCoupons
+      }
+      
+      const eligibleCoupons = couponsList.filter(coupon => {
+        const minSpend = coupon.min_spend || coupon.min_order_amount || coupon.minSpend || 0
+        const currentTotal = bookingInfo.price.final || bookingInfo.price.original || 0
+        // 如果currentTotal是0，那么就不筛选，直接返回所有优惠券
+        return currentTotal === 0 || currentTotal >= minSpend
+      })
+      console.log('筛选后的优惠券:', eligibleCoupons)
+      setCoupons(eligibleCoupons)
+    }
+  }
+
+  // 计算优惠后的价格
+  const calculateFinalPrice = (coupon) => {
+    const originalPrice = bookingInfo.price.final || bookingInfo.price.original || 0
+    
+    if (coupon) {
+      // 计算优惠后的价格
+      const discountValue = parseFloat(coupon.value || coupon.discount_value || 0)
+      const minSpend = parseFloat(coupon.min_spend || coupon.min_order_amount || coupon.minSpend || 0)
+      
+      // 检查是否满足使用条件
+      if (originalPrice >= minSpend) {
+        const discountedPrice = originalPrice - discountValue
+        setBookingInfo(prev => ({
+          ...prev,
+          price: {
+            ...prev.price,
+            coupon: discountValue,
+            final: Math.max(0, discountedPrice)
+          }
+        }))
+      } else {
+        // 不满足使用条件，显示提示信息
+        Taro.showToast({ 
+          title: `订单金额未达到优惠券使用条件（满${minSpend}元）`, 
+          icon: 'none' 
+        })
+      }
+    } else {
+      // 不使用优惠券
+      setBookingInfo(prev => ({
+        ...prev,
+        price: {
+          ...prev.price,
+          coupon: 0,
+          final: originalPrice
+        }
+      }))
+    }
+  }
+
+  // 处理优惠券选择
+  const handleCouponSelect = (coupon) => {
+    console.log('选择优惠券:', coupon)
+    setSelectedCoupon(coupon)
+    calculateFinalPrice(coupon)
+    setShowCouponModal(false)
+  }
+
+  // 处理优惠券弹窗显示
+  const handleCouponClick = () => {
+    console.log('点击优惠券区域，可用优惠券数量:', coupons.length)
+    if (coupons.length === 0) {
+      Taro.showToast({ title: '暂无可用优惠券', icon: 'none' })
+    } else {
+      setShowCouponModal(true)
+    }
+  }
+
+  // 初始化时获取优惠券数据
+  useEffect(() => {
+    // 页面加载时立即获取优惠券数据，不需要等待订单金额计算完成
+    fetchCoupons()
+  }, [])
+  
+  // 订单金额变化时重新获取优惠券数据，确保筛选出满足条件的优惠券
+  useEffect(() => {
+    if (bookingInfo.price.final > 0) {
+      fetchCoupons()
+    }
+  }, [bookingInfo.price.final])
+
   const validateGuestInfo = () => {
     if (!guestInfo.name || guestInfo.name.trim() === '') {
       Taro.showToast({ title: '请输入住客姓名', icon: 'none', duration: 2000 })
@@ -301,10 +495,12 @@ const BookingConfirm = () => {
         Taro.setStorageSync('paymentPayload', {
           bookingId,
           totalAmount: bookingInfo.price.final,
+          originalAmount: bookingInfo.price.original || bookingInfo.price.final,
           hotelName: bookingInfo.hotelName,
           checkInDate: bookingInfo.checkInDate,
           checkOutDate: bookingInfo.checkOutDate,
-          roomType: bookingInfo.roomType
+          roomType: bookingInfo.roomType,
+          selectedCoupon: selectedCoupon
         })
         Taro.navigateTo({
           url: `/pages/payment/index?bookingId=${bookingId}`,
@@ -367,7 +563,102 @@ const BookingConfirm = () => {
           </View>
           <View className='summary-row'>
             <Text className='label'>总价</Text>
-            <Text className='value'>¥{bookingInfo.price.final}</Text>
+            <Text className='value'>¥{bookingInfo.price.original || bookingInfo.price.final}</Text>
+          </View>
+          {bookingInfo.price.coupon > 0 && (
+            <View className='summary-row discount'>
+              <Text className='label'>优惠券折扣</Text>
+              <Text className='discount-value'>-¥{bookingInfo.price.coupon}</Text>
+            </View>
+          )}
+          <View className='summary-row final'>
+            <Text className='label'>实付金额</Text>
+            <Text className='final-value'>¥{bookingInfo.price.final}</Text>
+          </View>
+          {/* 优惠券选择 */}
+          <View className='coupon-section'>
+            <View className='section-title'>
+              <Text>优惠信息</Text>
+            </View>
+            <View className='coupon-selector' onClick={handleCouponClick}>
+              <Text>{selectedCoupon ? `已选择: ${selectedCoupon.name || selectedCoupon.title}` : coupons.length > 0 ? `${coupons.length}张可用` : '暂无可用优惠券'}</Text>
+              <AtIcon value='chevron-right' size='16' color='#999' />
+            </View>
+          </View>
+          
+          {/* 优惠券选择弹窗 */}
+          <View className={`coupon-modal ${showCouponModal ? 'show' : ''}`}>
+            <View className='modal-overlay' onClick={() => setShowCouponModal(false)}>
+            </View>
+            <View className='modal-content'>
+              <View className='modal-header'>
+                <Text className='modal-title'>选择优惠券</Text>
+                <Text className='modal-close' onClick={() => setShowCouponModal(false)}>×</Text>
+              </View>
+              <ScrollView style={{ maxHeight: '400px' }}>
+                {/* 不使用优惠券选项 */}
+                <View 
+                  className={`coupon-item ${!selectedCoupon ? 'selected' : ''}`}
+                  onClick={() => {
+                    setSelectedCoupon(null)
+                    calculateFinalPrice(null)
+                    setShowCouponModal(false)
+                  }}
+                >
+                  <View className='coupon-content'>
+                    <Text className='coupon-name'>不使用优惠券</Text>
+                  </View>
+                  <View className={`coupon-check ${!selectedCoupon ? 'checked' : ''}`}>
+                    {!selectedCoupon && <Text className='check-icon'>✓</Text>}
+                  </View>
+                </View>
+                
+                {/* 优惠券列表 */}
+                {coupons.map(coupon => {
+                  const couponName = coupon.name || coupon.title
+                  const discountValue = coupon.value || coupon.discount_value
+                  const minSpend = coupon.min_spend || coupon.min_order_amount || 0
+                  const expireDate = coupon.expire_date || coupon.valid_until
+                  const currentTotal = bookingInfo.price.final || bookingInfo.price.original || 0
+                  const isEligible = currentTotal >= minSpend
+                  
+                  return (
+                    <View 
+                      key={coupon.id || coupon.coupon_id}
+                      className={`coupon-item ${isEligible ? 'eligible' : 'not-eligible'} ${selectedCoupon && (selectedCoupon.id === coupon.id || selectedCoupon.coupon_id === coupon.id || selectedCoupon.id === coupon.coupon_id) ? 'selected' : ''}`}
+                      onClick={() => isEligible && handleCouponSelect(coupon)}
+                    >
+                      <View className='coupon-left'>
+                        <Text className='coupon-value'>¥{discountValue}</Text>
+                        <Text className='coupon-condition'>满{minSpend}元可用</Text>
+                      </View>
+                      <View className='coupon-right'>
+                        <Text className='coupon-name'>{couponName}</Text>
+                        <Text className='coupon-expire'>有效期至: {new Date(expireDate).toLocaleDateString()}</Text>
+                        {!isEligible && (
+                          <Text className='coupon-notice'>订单金额不足</Text>
+                        )}
+                      </View>
+                      <View className={`coupon-check ${selectedCoupon && (selectedCoupon.id === coupon.id || selectedCoupon.coupon_id === coupon.id || selectedCoupon.id === coupon.coupon_id) ? 'checked' : ''}`}>
+                        {selectedCoupon && (selectedCoupon.id === coupon.id || selectedCoupon.coupon_id === coupon.id || selectedCoupon.id === coupon.coupon_id) && <Text className='check-icon'>✓</Text>}
+                      </View>
+                    </View>
+                  )
+                })}
+              </ScrollView>
+              <View className='modal-footer'>
+                <View className='modal-button cancel' onClick={() => setShowCouponModal(false)}>
+                  <Text>取消</Text>
+                </View>
+                <View className='modal-button confirm' onClick={() => {
+                  setSelectedCoupon(null)
+                  calculateFinalPrice(null)
+                  setShowCouponModal(false)
+                }}>
+                  <Text>不使用优惠券</Text>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
       )}

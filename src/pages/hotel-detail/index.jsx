@@ -260,6 +260,9 @@ export default function HotelDetail() {
         }));
         setHotelInfo(normalizedHotelInfo);
         setRooms(formattedRooms);
+        
+        // 记录浏览历史
+        recordBrowsingHistory(normalizedHotelInfo);
       } else {
         Taro.showToast({
           title: response.msg || '获取酒店详情失败',
@@ -276,6 +279,39 @@ export default function HotelDetail() {
       });
       setHotelInfo(null);
       setRooms([]);
+    }
+  };
+  
+  // 记录浏览历史
+  const recordBrowsingHistory = (hotel) => {
+    try {
+      // 从本地缓存获取现有浏览历史
+      const existingHistory = Taro.getStorageSync('browsingHistory') || [];
+      
+      // 创建新的浏览历史记录
+      const newHistoryItem = {
+        id: Date.now().toString(), // 唯一ID，用于标识每条记录
+        hotel_id: hotel.id,
+        hotel: {
+          id: hotel.id,
+          name: hotel.hotel_name_cn,
+          image: hotel.main_image_url && hotel.main_image_url.length > 0 ? hotel.main_image_url[0] : '',
+          address: hotel.location_info?.formatted_address || ''
+        },
+        viewed_at: new Date().toISOString()
+      };
+      
+      // 去重：移除同一酒店的旧记录
+      const filteredHistory = existingHistory.filter(item => item.hotel_id !== hotel.id);
+      
+      // 将新记录添加到开头
+      const updatedHistory = [newHistoryItem, ...filteredHistory].slice(0, 50); // 最多保存50条记录
+      
+      // 保存回本地缓存
+      Taro.setStorageSync('browsingHistory', updatedHistory);
+      console.log('浏览历史已记录:', updatedHistory);
+    } catch (error) {
+      console.error('记录浏览历史失败:', error);
     }
   };
 
@@ -318,6 +354,9 @@ export default function HotelDetail() {
           title: collected ? '取消收藏成功' : '收藏成功',
           icon: 'success'
         });
+        
+        // 触发收藏状态变化事件，通知其他页面更新收藏状态
+        Taro.eventCenter.trigger('favoritesChanged', { hotelId, collected: !collected });
       } else {
         Taro.showToast({
           title: response.msg || (collected ? '取消收藏失败' : '收藏失败'),

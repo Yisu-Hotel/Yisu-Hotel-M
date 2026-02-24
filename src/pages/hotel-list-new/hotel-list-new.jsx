@@ -28,6 +28,12 @@ export default function HotelListNew() {
   const [hotelList, setHotelList] = useState([])
   const [loading, setLoading] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  
+  // 分页状态管理
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   // 新增状态：日历和城市选择器
   const [showCalendar, setShowCalendar] = useState(false)
@@ -452,13 +458,25 @@ export default function HotelListNew() {
   // 监听核心条件变化，触发搜索
   useEffect(() => {
     if (city && checkInDate && checkOutDate) {
-      fetchHotelList()
+      // 重置分页状态
+      setPage(1)
+      setHasMore(true)
+      setLoadError(false)
+      fetchHotelList(true)
     }
   }, [city, checkInDate, checkOutDate, keyword, activeFilters]) 
 
   // 获取酒店列表
-  const fetchHotelList = async () => {
-    setLoading(true)
+  const fetchHotelList = async (isInitial = false) => {
+    const currentPage = isInitial ? 1 : page
+    
+    if (!isInitial) {
+      setLoadingMore(true)
+      setLoadError(false)
+    } else {
+      setLoading(true)
+    }
+    
     try {
       const params = {
         city: city, // Map location/city to 'city' as per test file
@@ -471,22 +489,68 @@ export default function HotelListNew() {
         rating: activeFilters.rating,
         facilities: activeFilters.facilities,
         services: activeFilters.services,
-        page: 1,
-        pageSize: 50
+        page: currentPage,
+        pageSize: 10 // 每页10条数据，适合分页加载
       }
 
       console.log('Calling API with params:', params)
       const res = await hotelApi.getHotelList(params)
-      if (res.code === 0 && res.data && res.data.list) {
-        setHotelList(res.data.list)
+      if (res.code === 0 && res.data) {
+        const newHotels = res.data.list || []
+        
+        if (isInitial) {
+          setHotelList(newHotels)
+        } else {
+          setHotelList(prev => [...prev, ...newHotels])
+        }
+        
+        // 判断是否还有更多数据
+        setHasMore(newHotels.length >= params.pageSize)
+        
+        // 更新页码
+        if (!isInitial && newHotels.length > 0) {
+          setPage(prev => prev + 1)
+        }
       } else {
-        setHotelList([])
+        if (isInitial) {
+          setHotelList([])
+        }
+        setHasMore(false)
       }
     } catch (error) {
       console.error('Fetch error:', error)
-      Taro.showToast({ title: 'Failed to load hotels', icon: 'none' })
+      if (!isInitial) {
+        setLoadError(true)
+      } else {
+        Taro.showToast({ title: 'Failed to load hotels', icon: 'none' })
+      }
     } finally {
-      setLoading(false)
+      if (!isInitial) {
+        setLoadingMore(false)
+      } else {
+        setLoading(false)
+      }
+    }
+  }
+
+  // 加载更多
+  const loadMore = () => {
+    if (!loadingMore && !loading && hasMore && !loadError) {
+      fetchHotelList(false)
+    }
+  }
+
+  // 重试加载
+  const retryLoad = () => {
+    fetchHotelList(false)
+  }
+
+  // 滚动事件处理
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.detail
+    // 当滚动到距离底部20px以内时，触发加载更多
+    if (scrollHeight - scrollTop - clientHeight < 20) {
+      loadMore()
     }
   }
 
@@ -562,6 +626,11 @@ export default function HotelListNew() {
     <View className='hotel-list-page'>
       {/* Header Section */}
       <View className='header'>
+        {/* 返回按钮 */}
+        <View className='header-left' onClick={() => Taro.navigateTo({ url: '/pages/index/index' })}>
+          <Text className='back-button'>← 返回首页</Text>
+        </View>
+        
         <View className='search-bar-container'>
             <View className='search-inputs'>
                 <View className='input-group border-r' onClick={() => setShowCitySelector(true)}>
@@ -602,77 +671,101 @@ export default function HotelListNew() {
       </View>
 
       {/* Hotel List */}
-      <ScrollView scrollY className='hotel-list hotel-list-scroll'>
+      <ScrollView 
+        scrollY 
+        className='hotel-list hotel-list-scroll'
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         {loading ? (
           <View className='loading-state'>加载中...</View>
         ) : hotelList.length === 0 ? (
           <View className='empty-state'>暂无酒店</View>
         ) : (
-          hotelList.map((hotel, index) => (
-            <View 
-              key={hotel.hotel_id || hotel.id} 
-              className={`hotel-item animate-fadeInUp delay-${(index % 5) * 100}`} 
-              onClick={() => Taro.navigateTo({ url: `/pages/hotel-detail/index?id=${hotel.hotel_id || hotel.id}` })}
-            >
-              <Image 
-                className='hotel-image' 
-                src={Array.isArray(hotel.main_image_url) ? (hotel.main_image_url[0] || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3') : (hotel.main_image_url || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3')} 
-                mode='aspectFill' 
-                onError={(e) => {
-                  e.target.src = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3'
-                }}
-              />
-              <View className='hotel-info'>
-                <View className='hotel-header'>
-                  <View style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '4px' }}>
-                      <Text className='hotel-name' style={{ flex: '0 1 auto', marginRight: '8px', marginBottom: 0 }}>{hotel.hotel_name_cn}</Text>
-                      {hotel.tags && hotel.tags.slice(0, 2).map((tag, tagIndex) => (
-                        <View key={tagIndex} style={{ 
-                          backgroundColor: '#E6F7FF', 
-                          borderRadius: '4px', 
-                          padding: '2px 6px', 
-                          marginRight: '6px',
-                          border: '1px solid #91D5FF',
-                          flexShrink: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <Text style={{ fontSize: '10px', color: '#1890FF', lineHeight: 1 }}>{tag}</Text>
-                        </View>
-                      ))}
+          <>
+            {hotelList.map((hotel, index) => (
+              <View 
+                key={hotel.hotel_id || hotel.id} 
+                className={`hotel-item animate-fadeInUp delay-${(index % 5) * 100}`} 
+                onClick={() => Taro.navigateTo({ url: `/pages/hotel-detail/index?id=${hotel.hotel_id || hotel.id}` })}
+              >
+                <Image 
+                  className='hotel-image' 
+                  src={Array.isArray(hotel.main_image_url) ? (hotel.main_image_url[0] || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3') : (hotel.main_image_url || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3')} 
+                  mode='aspectFill' 
+                  onError={(e) => {
+                    e.target.src = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%20building%20architecture&image_size=landscape_4_3'
+                  }}
+                />
+                <View className='hotel-info'>
+                  <View className='hotel-header'>
+                    <View style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '4px' }}>
+                        <Text className='hotel-name' style={{ flex: '0 1 auto', marginRight: '8px', marginBottom: 0 }}>{hotel.hotel_name_cn}</Text>
+                        {hotel.tags && hotel.tags.slice(0, 2).map((tag, tagIndex) => (
+                          <View key={tagIndex} style={{ 
+                            backgroundColor: '#E6F7FF', 
+                            borderRadius: '4px', 
+                            padding: '2px 6px', 
+                            marginRight: '6px',
+                            border: '1px solid #91D5FF',
+                            flexShrink: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <Text style={{ fontSize: '10px', color: '#1890FF', lineHeight: 1 }}>{tag}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      {hotel.hotel_name_en && <Text style={{ fontSize: '11px', color: '#666', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{hotel.hotel_name_en}</Text>}
                     </View>
-                    {hotel.hotel_name_en && <Text style={{ fontSize: '11px', color: '#666', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{hotel.hotel_name_en}</Text>}
+                    <View className='hotel-rating' style={{ marginLeft: '8px', flexShrink: 0 }}>
+                      <Text className='rating-value'>{hotel.rating || 0}</Text>
+                    </View>
                   </View>
-                  <View className='hotel-rating' style={{ marginLeft: '8px', flexShrink: 0 }}>
-                    <Text className='rating-value'>{hotel.rating || 0}</Text>
+                  
+                  <View style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', marginTop: '4px', fontSize: '11px', color: '#666' }}>
+                    <Text>{hotel.star_rating}星级</Text>
+                    <Text style={{ margin: '0 4px' }}>·</Text>
+                    <Text>{hotel.review_count}点评</Text>
+                    <Text style={{ margin: '0 4px' }}>·</Text>
+                    <Text>{hotel.booking_count}预订</Text>
+                    <Text style={{ margin: '0 4px' }}>·</Text>
+                    <Text>{hotel.favorite_count}收藏</Text>
                   </View>
-                </View>
-                
-                <View style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', marginTop: '4px', fontSize: '11px', color: '#666' }}>
-                  <Text>{hotel.star_rating}星级</Text>
-                  <Text style={{ margin: '0 4px' }}>·</Text>
-                  <Text>{hotel.review_count}点评</Text>
-                  <Text style={{ margin: '0 4px' }}>·</Text>
-                  <Text>{hotel.booking_count}预订</Text>
-                  <Text style={{ margin: '0 4px' }}>·</Text>
-                  <Text>{hotel.favorite_count}收藏</Text>
-                </View>
 
-                <Text className='hotel-address' style={{ marginTop: '4px' }}>{hotel.location_info?.formatted_address || hotel.formatted_address}</Text>
-                {hotel.nearby_info && <Text style={{ fontSize: '11px', color: '#999', marginTop: '2px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{hotel.nearby_info}</Text>}
-                
-                <View className='hotel-footer' style={{ marginTop: '8px' }}>
-                  <View className='hotel-price'>
-                    <Text className='price-symbol'>¥</Text>
-                    <Text className='price-value'>{hotel.min_price}</Text>
-                    <Text className='price-unit'>/晚</Text>
+                  <Text className='hotel-address' style={{ marginTop: '4px' }}>{hotel.location_info?.formatted_address || hotel.formatted_address}</Text>
+                  {hotel.nearby_info && <Text style={{ fontSize: '11px', color: '#999', marginTop: '2px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{hotel.nearby_info}</Text>}
+                  
+                  <View className='hotel-footer' style={{ marginTop: '8px' }}>
+                    <View className='hotel-price'>
+                      <Text className='price-symbol'>¥</Text>
+                      <Text className='price-value'>{hotel.min_price}</Text>
+                      <Text className='price-unit'>/晚</Text>
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
-          ))
+            ))}
+            
+            {/* 加载更多提示 */}
+            {loadingMore && (
+              <View className='load-more-state'>加载中...</View>
+            )}
+            
+            {/* 加载失败提示 */}
+            {loadError && (
+              <View className='load-error-state' onClick={retryLoad}>
+                加载失败，点击重试
+              </View>
+            )}
+            
+            {/* 已加载全部提示 */}
+            {!loadingMore && !loadError && !hasMore && hotelList.length > 0 && (
+              <View className='load-all-state'>已加载全部</View>
+            )}
+          </>
         )}
       </ScrollView>
 
