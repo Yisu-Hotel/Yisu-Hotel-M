@@ -90,42 +90,39 @@ const hotelFAQ = [
     question: "酒店的地址在哪里？",
     answer: "我们在全国各地都有酒店，具体地址取决于您选择的酒店。您可以在我们的官网或APP上搜索具体酒店，查看详细地址和交通信息。如果您需要帮助，可以告诉我您想了解的酒店名称，我来为您查询具体地址。",
     keywords: ["地址", "位置", "在哪里", "酒店地址"]
+  },
+  {
+    id: 16,
+    question: "会员积分规则是什么？",
+    answer: "我们的会员积分规则如下：1. 积分获取：每消费1元可获得1个积分，入住酒店、餐饮消费、购买礼品等均可累计积分；2. 积分使用：积分可用于抵扣房费、兑换礼品、升级会员等级等；3. 积分有效期：积分自获得之日起2年内有效，逾期未使用的积分将自动失效；4. 会员等级：根据积分累计情况，会员等级分为普通会员、银卡会员、金卡会员和钻石会员，不同等级享受不同的专属权益；5. 积分查询：您可以在官网、APP或通过客服热线查询您的积分余额和积分明细。",
+    keywords: ["会员积分", "积分规则", "积分", "会员", "积分获取", "积分使用", "积分有效期"]
   }
 ];
 
-// 搜索知识库
-export const searchKnowledgeBase = (query) => {
-  const lowercaseQuery = query.toLowerCase();
-  
-  // 计算每个问题与查询的匹配度
-  const matches = hotelFAQ.map(item => {
-    let score = 0;
-    
-    // 检查问题是否包含查询关键词
-    if (item.question.toLowerCase().includes(lowercaseQuery)) {
-      score += 5;
+const normalize = (value) => (value || '').toLowerCase();
+
+const matchScore = (query, keywords) => {
+  const text = normalize(query);
+  return (keywords || []).reduce((score, keyword) => {
+    if (!keyword) {
+      return score;
     }
-    
-    // 检查关键词是否匹配
-    item.keywords.forEach(keyword => {
-      if (lowercaseQuery.includes(keyword.toLowerCase())) {
-        score += 2;
-      }
-    });
-    
-    // 检查回答是否包含查询关键词
-    if (item.answer.toLowerCase().includes(lowercaseQuery)) {
-      score += 1;
-    }
-    
-    return { ...item, score };
-  });
-  
-  // 按匹配度排序，返回前3个匹配结果
-  return matches
+    return text.includes(normalize(keyword)) ? score + 1 : score;
+  }, 0);
+};
+
+export const searchKnowledgeBase = (query, options = {}) => {
+  const limit = Number.isInteger(options.limit) ? options.limit : 3;
+  const matches = hotelFAQ
+    .map(item => ({
+      ...item,
+      score: matchScore(query, item.keywords)
+    }))
     .filter(item => item.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
+    .slice(0, limit);
+
+  return matches;
 };
 
 export default hotelFAQ;

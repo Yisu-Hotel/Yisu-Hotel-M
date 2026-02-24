@@ -99,39 +99,30 @@ const hotelFAQ = [
   }
 ];
 
-// 搜索知识库
-export const searchKnowledgeBase = (query) => {
-  const lowercaseQuery = query.toLowerCase();
-  
-  // 计算每个问题与查询的匹配度
-  const matches = hotelFAQ.map(item => {
-    let score = 0;
-    
-    // 检查问题是否包含查询关键词
-    if (item.question.toLowerCase().includes(lowercaseQuery)) {
-      score += 5;
+const normalize = (value) => (value || '').toLowerCase();
+
+const matchScore = (query, keywords) => {
+  const text = normalize(query);
+  return (keywords || []).reduce((score, keyword) => {
+    if (!keyword) {
+      return score;
     }
-    
-    // 检查关键词是否匹配
-    item.keywords.forEach(keyword => {
-      if (lowercaseQuery.includes(keyword.toLowerCase())) {
-        score += 2;
-      }
-    });
-    
-    // 检查回答是否包含查询关键词
-    if (item.answer.toLowerCase().includes(lowercaseQuery)) {
-      score += 1;
-    }
-    
-    return { ...item, score };
-  });
-  
-  // 按匹配度排序，返回前3个匹配结果
-  return matches
+    return text.includes(normalize(keyword)) ? score + 1 : score;
+  }, 0);
+};
+
+export const searchKnowledgeBase = (query, options = {}) => {
+  const limit = Number.isInteger(options.limit) ? options.limit : 3;
+  const matches = hotelFAQ
+    .map(item => ({
+      ...item,
+      score: matchScore(query, item.keywords)
+    }))
     .filter(item => item.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
+    .slice(0, limit);
+
+  return matches;
 };
 
 export default hotelFAQ;
