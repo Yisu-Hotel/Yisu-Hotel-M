@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Minimalist Order List</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3B82F6",
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#0F172A",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "12px",
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .soft-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        }
+        .active-tab-glow {
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }.no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 antialiased">
+<div class="h-12 w-full"></div>
+<div class="max-w-md mx-auto min-h-screen flex flex-col pb-24">
+<header class="px-6 pt-4 pb-6">
+<div class="flex items-center space-x-2">
+<div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+<span class="material-icons-outlined text-primary text-xl">description</span>
+</div>
+<h1 class="text-2xl font-semibold tracking-tight">My Orders</h1>
+</div>
+</header>
+<nav class="px-4 mb-6">
+<div class="flex space-x-6 overflow-x-auto no-scrollbar pb-2">
+<div class="flex flex-col items-center space-y-1 shrink-0">
+<span class="text-primary font-medium px-2">All</span>
+<div class="h-1 w-6 bg-primary rounded-full active-tab-glow"></div>
+</div>
+<span class="text-slate-400 dark:text-slate-500 font-medium shrink-0">Unpaid</span>
+<span class="text-slate-400 dark:text-slate-500 font-medium shrink-0">To Confirm</span>
+<span class="text-slate-400 dark:text-slate-500 font-medium shrink-0">To Stay</span>
+<span class="text-slate-400 dark:text-slate-500 font-medium shrink-0">Completed</span>
+<span class="text-slate-400 dark:text-slate-500 font-medium shrink-0">Cancelled</span>
+</div>
+</nav>
+<main class="flex-1 px-4 space-y-4">
+<div class="bg-white dark:bg-slate-800 rounded-[24px] p-5 soft-shadow border border-slate-100 dark:border-slate-700/50">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center space-x-2">
+<span class="material-icons-outlined text-slate-400 text-lg">apartment</span>
+<h3 class="font-semibold text-slate-900 dark:text-white">Grand Regency Hotel</h3>
+</div>
+<span class="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-xs font-medium rounded-full">Paid</span>
+</div>
+<div class="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-sm mb-6">
+<span class="material-icons-outlined text-sm">calendar_today</span>
+<span>2024-02-25 - 2024-02-28</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        Cancel Order
+                    </button>
+<button class="py-2.5 rounded-xl border border-primary/30 text-primary font-medium text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                        View Details
+                    </button>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800 rounded-[24px] p-5 soft-shadow border border-slate-100 dark:border-slate-700/50">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center space-x-2">
+<span class="material-icons-outlined text-slate-400 text-lg">apartment</span>
+<h3 class="font-semibold text-slate-900 dark:text-white">Sunset Bay Resort</h3>
+</div>
+<span class="px-3 py-1 bg-orange-50 dark:bg-orange-900/20 text-orange-500 dark:text-orange-400 text-xs font-medium rounded-full">To Pay</span>
+</div>
+<div class="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-sm mb-6">
+<span class="material-icons-outlined text-sm">calendar_today</span>
+<span>2024-02-25 - 2024-02-26</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium text-sm">
+                        Cancel Order
+                    </button>
+<button class="py-2.5 rounded-xl border border-primary/30 text-primary font-medium text-sm">
+                        View Details
+                    </button>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800 rounded-[24px] p-5 soft-shadow border border-slate-100 dark:border-slate-700/50">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center space-x-2">
+<span class="material-icons-outlined text-slate-400 text-lg">apartment</span>
+<h3 class="font-semibold text-slate-900 dark:text-white">Skyline Boutique Hotel</h3>
+</div>
+<span class="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-xs font-medium rounded-full">Paid</span>
+</div>
+<div class="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-sm mb-6">
+<span class="material-icons-outlined text-sm">calendar_today</span>
+<span>2024-02-25 - 2024-02-26</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium text-sm">
+                        Cancel Order
+                    </button>
+<button class="py-2.5 rounded-xl border border-primary/30 text-primary font-medium text-sm">
+                        View Details
+                    </button>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800 rounded-[24px] p-5 soft-shadow border border-slate-100 dark:border-slate-700/50">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center space-x-2">
+<span class="material-icons-outlined text-slate-400 text-lg">apartment</span>
+<h3 class="font-semibold text-slate-900 dark:text-white">The Urban Suite</h3>
+</div>
+<span class="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-xs font-medium rounded-full">Paid</span>
+</div>
+<div class="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-sm mb-6">
+<span class="material-icons-outlined text-sm">calendar_today</span>
+<span>2024-02-25 - 2024-02-27</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium text-sm">
+                        Cancel Order
+                    </button>
+<button class="py-2.5 rounded-xl border border-primary/30 text-primary font-medium text-sm">
+                        View Details
+                    </button>
+</div>
+</div>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 px-10 pt-3 pb-8 flex justify-between items-center">
+<div class="flex flex-col items-center space-y-1">
+<span class="material-icons-outlined text-slate-400 dark:text-slate-500">home</span>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Home</span>
+</div>
+<div class="flex flex-col items-center space-y-1">
+<span class="material-icons-outlined text-primary">receipt_long</span>
+<span class="text-[10px] font-medium text-primary uppercase tracking-wider">Orders</span>
+</div>
+<div class="flex flex-col items-center space-y-1">
+<span class="material-icons-outlined text-slate-400 dark:text-slate-500">person_outline</span>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Profile</span>
+</div>
+</nav>
+<div class="fixed bottom-1 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+</div>
+
+</body></html>

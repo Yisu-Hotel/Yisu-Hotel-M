@@ -5,11 +5,91 @@ import Taro from '@tarojs/taro';
 const API_BASE_URL = 'http://localhost:3001'; // 后端服务地址
 console.log('API_BASE_URL:', API_BASE_URL);
 
+const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+// 高德地图配置
+export const AMAP_CONFIG = {
+  key: metaEnv.VITE_AMAP_KEY || metaEnv.TARO_APP_AMAP_KEY || process.env.VITE_AMAP_KEY || process.env.TARO_APP_AMAP_KEY || '您的高德地图API密钥',
+  securityKey: metaEnv.VITE_AMAP_SECURITY_CODE || metaEnv.TARO_APP_AMAP_SECURITY_KEY || process.env.VITE_AMAP_SECURITY_CODE || process.env.TARO_APP_AMAP_SECURITY_KEY || '您的高德地图安全密钥'
+};
+console.log('AMAP_CONFIG:', AMAP_CONFIG);
+
+// API缓存配置
+const CACHE_CONFIG = {
+  enabled: true,
+  defaultExpiry: 5 * 60 * 1000, // 默认缓存5分钟
+  cacheKeyPrefix: 'api_cache_'
+};
+
+// 缓存存储
+const cacheStorage = {
+  set: (key, value, expiry = CACHE_CONFIG.defaultExpiry) => {
+    if (!CACHE_CONFIG.enabled) return;
+    try {
+      const item = {
+        value,
+        expiry: Date.now() + expiry
+      };
+      Taro.setStorageSync(`${CACHE_CONFIG.cacheKeyPrefix}${key}`, item);
+    } catch (error) {
+      console.error('缓存设置失败:', error);
+    }
+  },
+  get: (key) => {
+    if (!CACHE_CONFIG.enabled) return null;
+    try {
+      const item = Taro.getStorageSync(`${CACHE_CONFIG.cacheKeyPrefix}${key}`);
+      if (!item) return null;
+      if (Date.now() > item.expiry) {
+        // 缓存过期，删除
+        Taro.removeStorageSync(`${CACHE_CONFIG.cacheKeyPrefix}${key}`);
+        return null;
+      }
+      return item.value;
+    } catch (error) {
+      console.error('缓存获取失败:', error);
+      return null;
+    }
+  },
+  remove: (key) => {
+    if (!CACHE_CONFIG.enabled) return;
+    try {
+      Taro.removeStorageSync(`${CACHE_CONFIG.cacheKeyPrefix}${key}`);
+    } catch (error) {
+      console.error('缓存删除失败:', error);
+    }
+  },
+  clear: () => {
+    if (!CACHE_CONFIG.enabled) return;
+    try {
+      const keys = Taro.getStorageInfoSync().keys;
+      keys.forEach(key => {
+        if (key.startsWith(CACHE_CONFIG.cacheKeyPrefix)) {
+          Taro.removeStorageSync(key);
+        }
+      });
+    } catch (error) {
+      console.error('缓存清空失败:', error);
+    }
+  }
+};
+
 // 通用请求函数
 async function request(url, options = {}) {
   try {
     // 构建完整的请求URL
     const fullUrl = `${API_BASE_URL}${url}`;
+    
+    // 生成缓存键
+    const cacheKey = `${options.method || 'GET'}_${url}_${options.body || ''}`;
+    
+    // 检查是否启用缓存且为GET请求
+    if ((options.method || 'GET') === 'GET') {
+      const cachedData = cacheStorage.get(cacheKey);
+      if (cachedData) {
+        console.log('使用缓存数据:', cacheKey);
+        return cachedData;
+      }
+    }
     
     // 设置默认请求头
     const defaultHeaders = {
@@ -65,6 +145,10 @@ async function request(url, options = {}) {
       if (response.statusCode === 200) {
         // 检查后端返回的错误码
         if (responseData.code === 0) {
+          // 缓存成功的GET请求结果
+          if ((options.method || 'GET') === 'GET') {
+            cacheStorage.set(cacheKey, responseData);
+          }
           return responseData;
         } else if (responseData.code === 4008) {
           // Token 无效或已过期，跳转到登录页
@@ -76,6 +160,8 @@ async function request(url, options = {}) {
           Taro.removeStorageSync('token');
           Taro.removeStorageSync('isLoggedIn');
           Taro.removeStorageSync('userInfo');
+          // 清除缓存
+          cacheStorage.clear();
           // 跳转到登录页
           setTimeout(() => {
             Taro.navigateTo({ url: '/pages/login/login' });
@@ -125,6 +211,46 @@ async function request(url, options = {}) {
   }
 }
 
+// 模拟登录，获取测试token
+async function mockLogin() {
+  try {
+    // 检查是否已有token
+    const existingToken = Taro.getStorageSync('token');
+    if (existingToken) {
+      console.log('已有token，无需模拟登录');
+      return true;
+    }
+    
+    // 模拟登录请求
+    console.log('开始模拟登录...');
+    
+    // 模拟登录成功响应
+    const mockResponse = {
+      code: 0,
+      msg: '登录成功',
+      data: {
+        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoi12345678-1234-1234-89ab-123456789012IiwicGhvbmUiOiIxMjM0NTY3ODkwIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NjE4NDQwMDAsImV4cCI6MTc2MjQ0ODgwMH0.Sz7x9f8b7a6s5d4f3g2h1jklmnopqrstuvwxyz',
+        userInfo: {
+          id: '12345678-1234-1234-89ab-123456789012',
+          phone: '1234567890',
+          nickname: '测试用户'
+        }
+      }
+    };
+    
+    // 保存token到本地存储
+    Taro.setStorageSync('token', mockResponse.data.token);
+    Taro.setStorageSync('isLoggedIn', true);
+    Taro.setStorageSync('userInfo', mockResponse.data.userInfo);
+    
+    console.log('模拟登录成功，token已保存');
+    return true;
+  } catch (error) {
+    console.error('模拟登录失败:', error);
+    return false;
+  }
+}
+
 // 城市相关API
 export const cityApi = {
   // 获取所有城市列表
@@ -140,6 +266,22 @@ export const authApi = {
     return request('/mobile/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
+    });
+  },
+  
+  // 注册
+  register: async (data) => {
+    return request('/mobile/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  
+  // 发送验证码
+  sendCode: async (phone, type) => {
+    return request('/mobile/auth/send-code', {
+      method: 'POST',
+      body: JSON.stringify({ phone, type }),
     });
   }
 };
@@ -172,6 +314,26 @@ export const hotelApi = {
     if (Array.isArray(processedParams.amenities)) {
       processedParams.amenities = processedParams.amenities.join(',');
     }
+    // 处理新增的筛选维度
+    if (Array.isArray(processedParams.hotelTypes)) {
+      processedParams.hotelTypes = processedParams.hotelTypes.join(',');
+    }
+    if (Array.isArray(processedParams.brands)) {
+      processedParams.brands = processedParams.brands.join(',');
+    }
+    if (Array.isArray(processedParams.roomFacilities)) {
+      processedParams.roomFacilities = processedParams.roomFacilities.join(',');
+    }
+    if (Array.isArray(processedParams.hotelFeatures)) {
+      processedParams.hotelFeatures = processedParams.hotelFeatures.join(',');
+    }
+    // 处理新增的设施和服务筛选
+    if (Array.isArray(processedParams.facilities)) {
+      processedParams.facilities = processedParams.facilities.join(',');
+    }
+    if (Array.isArray(processedParams.services)) {
+      processedParams.services = processedParams.services.join(',');
+    }
     // 处理价格范围
     if (Array.isArray(processedParams.priceRange)) {
       processedParams.minPrice = processedParams.priceRange[0];
@@ -185,13 +347,15 @@ export const hotelApi = {
         filteredParams[key] = value;
       }
     }
+    // 为不同的筛选条件生成不同的缓存键
     const queryString = new URLSearchParams(filteredParams).toString();
     return request(`/mobile/hotel/list?${queryString}`);
   },
 
   // 获取酒店详情
-  getHotelDetail: async (hotelId) => {
-    return request(`/mobile/hotel/${hotelId}`);
+  getHotelDetail: async (hotelId, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return request(`/mobile/hotel/${hotelId}${queryString ? `?${queryString}` : ''}`);
   },
 
   // 收藏酒店
@@ -219,13 +383,10 @@ export const hotelApi = {
 // 收藏相关API
 export const favoriteApi = {
   // 获取收藏列表
-  getFavorites: async (params) => {
-    if (params) {
-      const queryString = new URLSearchParams(params).toString();
-      return request(`/mobile/favorite/list?${queryString}`);
-    } else {
-      return request('/mobile/favorite/list');
-    }
+  getFavorites: async (params = {}) => {
+    const timestamp = new Date().getTime();
+    const queryString = new URLSearchParams({ ...params, _t: timestamp }).toString();
+    return request(`/mobile/favorite/list?${queryString}`);
   },
 
   // 添加收藏
@@ -257,17 +418,19 @@ export const bookingApi = {
 
   // 获取预订列表
   getBookingList: async (params) => {
+    const timestamp = new Date().getTime();
     if (params) {
-      const queryString = new URLSearchParams(params).toString();
-      return request(`/mobile/booking?${queryString}`);
+      const queryString = new URLSearchParams({ ...params, _t: timestamp }).toString();
+      return request(`/mobile/booking/list?${queryString}`);
     } else {
-      return request('/mobile/booking');
+      return request(`/mobile/booking/list?_t=${timestamp}`);
     }
   },
 
   // 获取预订详情
   getBookingDetail: async (bookingId) => {
-    return request(`/mobile/booking/${bookingId}`);
+    const timestamp = new Date().getTime();
+    return request(`/mobile/booking/detail/${bookingId}?_t=${timestamp}`);
   },
 
   // 取消预订
@@ -291,19 +454,19 @@ export const bookingApi = {
 export const orderApi = {
   // 获取订单列表
   getOrders: async (params) => {
+    const timestamp = new Date().getTime();
     if (params) {
-      const queryString = new URLSearchParams(params).toString();
-      return request(`/mobile/booking?${queryString}`);
+      const queryString = new URLSearchParams({ ...params, _t: timestamp }).toString();
+      return request(`/mobile/booking/list?${queryString}`);
     } else {
-      return request('/mobile/booking');
+      return request(`/mobile/booking/list?_t=${timestamp}`);
     }
   },
-  
   // 获取订单详情
   getOrderDetail: async (orderId) => {
-    return request(`/mobile/booking/${orderId}`);
+    const timestamp = new Date().getTime();
+    return request(`/mobile/booking/detail/${orderId}?_t=${timestamp}`);
   },
-  
   // 取消订单
   cancelOrder: async (orderId) => {
     return request('/mobile/booking/cancel', {
@@ -311,12 +474,88 @@ export const orderApi = {
       body: JSON.stringify({ order_id: orderId }),
     });
   },
-  
   // 支付订单
   payOrder: async (orderId) => {
     return request('/mobile/booking/pay', {
       method: 'POST',
       body: JSON.stringify({ order_id: orderId }),
     });
+  }
+};
+
+// 优惠券相关API
+export const couponApi = {
+  // 获取优惠券列表
+  getCoupons: async (params) => {
+    const timestamp = new Date().getTime();
+    if (params) {
+      const queryString = new URLSearchParams({ ...params, _t: timestamp }).toString();
+      return request(`/mobile/coupon/list?${queryString}`);
+    } else {
+      return request(`/mobile/coupon/list?_t=${timestamp}`);
+    }
+  },
+  
+  // 领取优惠券
+  receiveCoupon: async (couponId) => {
+    return request('/mobile/coupon/receive', {
+      method: 'POST',
+      body: JSON.stringify({ coupon_id: couponId }),
+    });
+  },
+  
+  // 使用优惠券
+  useCoupon: async (couponId, bookingId) => {
+    return request('/mobile/coupon/use', {
+      method: 'POST',
+      body: JSON.stringify({ coupon_id: couponId, booking_id: bookingId }),
+    });
+  },
+  
+  // 获取优惠券使用历史
+  getCouponHistory: async () => {
+    return request('/mobile/coupon/history');
+  }
+};
+
+// 导出模拟登录函数
+export { mockLogin };
+
+// 浏览历史相关API
+export const historyApi = {
+  // 获取浏览历史
+  getHistory: async () => {
+    return request('/mobile/history/list');
+  }
+};
+
+// AI助手相关API
+export const aiApi = {
+  // AI聊天
+  chat: async (messages) => {
+    // 提取历史消息（除了最后一条）
+    const history = messages.slice(0, messages.length - 1);
+    return request('/mobile/chat/completion', {
+      method: 'POST',
+      body: JSON.stringify({ messages, history }),
+    });
+  },
+  
+  // 获取AI助手信息
+  getInfo: async () => {
+    return request('/mobile/chat/info');
+  },
+  
+  // 健康检查
+  healthCheck: async () => {
+    return request('/mobile/chat/health');
+  }
+};
+
+// 帮助中心相关API
+export const helpApi = {
+  // 获取帮助中心常见问题
+  getHelpCenter: async () => {
+    return request('/mobile/help/center');
   }
 };
