@@ -24,6 +24,7 @@ export default defineConfig(async (merge, { command, mode }) => {
     },
     copy: {
       patterns: [
+        { from: 'src/assets/tabbar', to: 'dist/assets/tabbar' }
       ],
       options: {
       }

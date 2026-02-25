@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
-import { View, Text, Image, Button, Input, Checkbox, Swiper, SwiperItem, Navigator } from '@tarojs/components'
-import { AtIcon, AtToast } from 'taro-ui'
+import { View, Text, Button, Input, ScrollView } from '@tarojs/components'
+import { AtModal, AtIcon } from 'taro-ui'
 import Taro from '@tarojs/taro'
-import { bookingApi, hotelApi } from '../../services/api'
+import { bookingApi, hotelApi, couponApi } from '../../services/api'
 import './index.less'
 
 const BookingConfirm = () => {
-  // 1. 页面状态管理
   const [bookingInfo, setBookingInfo] = useState({
     hotelName: '',
     checkInDate: '',
@@ -37,34 +36,83 @@ const BookingConfirm = () => {
     { id: 2, name: '电梯远近', selected: false }
   ])
 
-  const [invoiceInfo, setInvoiceInfo] = useState({
-    type: '酒店开具发票'
-  })
-
   const [loading, setLoading] = useState(false)
-  const [bookingToken, setBookingToken] = useState('')
   const [hotelId, setHotelId] = useState('')
   const [roomId, setRoomId] = useState('')
   const [fetchingData, setFetchingData] = useState(true)
+  
+  // 优惠券相关状态
+  const [coupons, setCoupons] = useState([])
+  const [selectedCoupon, setSelectedCoupon] = useState(null)
+  const [showCouponModal, setShowCouponModal] = useState(false)
 
-  // 2. 页面加载时获取路由参数和酒店详情
   useEffect(() => {
     const fetchData = async () => {
       try {
         setFetchingData(true)
         const routerParams = Taro.getCurrentInstance().router?.params || {}
-        const { hotelId, roomId, checkInDate, checkOutDate } = routerParams
+        const cachedParams = Taro.getStorageSync('bookingConfirmPayload') || {}
+        if (cachedParams && Object.keys(cachedParams).length > 0) {
+          Taro.removeStorageSync('bookingConfirmPayload')
+        }
+        const mergedParams = { ...routerParams, ...cachedParams }
+        const {
+          hotelId,
+          roomId,
+          checkInDate,
+          checkOutDate,
+          check_in_date,
+          check_out_date,
+          checkIn,
+          checkOut,
+          check_in,
+          check_out,
+          hotelName,
+          hotel_name,
+          hotel_name_cn,
+          roomName,
+          roomType,
+          price,
+          totalPrice,
+          total_amount,
+          totalAmount
+        } = mergedParams
         
         setHotelId(hotelId || '')
         setRoomId(roomId || '')
-        setBookingToken(routerParams.bookingToken || '')
-        
+        const passedHotelName = hotelName || hotel_name_cn || hotel_name || ''
+        const passedRoomName = roomName || roomType || ''
+        if (passedHotelName || passedRoomName) {
+          setBookingInfo(prev => ({
+            ...prev,
+            hotelName: passedHotelName || prev.hotelName,
+            roomType: passedRoomName || prev.roomType
+          }))
+        }
         // 保存原始日期格式，用于提交给后端
         let originalCheckInDate = ''
         let originalCheckOutDate = ''
         
-        // 如果有酒店ID，获取酒店详情
-        if (hotelId) {
+        // 优先使用从酒店详情页传递的价格
+        const passedPrice = parseFloat(price) || 0
+        const passedTotal = parseFloat(totalPrice || total_amount || totalAmount) || 0
+        console.log('从酒店详情页传递的价格:', passedPrice)
+        
+        // 如果有价格参数，直接设置价格
+        if (passedPrice > 0 || passedTotal > 0) {
+          setBookingInfo(prev => ({
+            ...prev,
+            price: {
+              original: passedPrice,
+              discount: 0,
+              coupon: 0,
+              final: passedTotal > 0 ? passedTotal : passedPrice,
+              total: passedTotal,
+              points: Math.floor((passedTotal > 0 ? passedTotal : passedPrice) * 0.5)
+            }
+          }))
+        } else if (hotelId) {
+          // 如果没有价格参数但有酒店ID，获取酒店详情
           const hotelDetail = await hotelApi.getHotelDetail(hotelId)
           if (hotelDetail.code === 0 && hotelDetail.data) {
             const hotelData = hotelDetail.data
@@ -81,12 +129,12 @@ const BookingConfirm = () => {
             }
             
             // 获取房型价格
-            const roomPrice = selectedRoomType?.prices?.[0]?.price || 0
+            const roomPrice = selectedRoomType?.prices?.[0]?.price || selectedRoomType?.price || 0
             
             setBookingInfo(prev => ({
               ...prev,
               hotelName: hotelData.hotel_name_cn || '',
-              roomType: selectedRoomType?.room_type_name || '',
+              roomType: selectedRoomType?.room_type_name || selectedRoomType?.name || '',
               bedInfo: selectedRoomType?.bed_type || '',
               price: {
                 original: roomPrice,
@@ -100,19 +148,18 @@ const BookingConfirm = () => {
         }
         
         // 设置日期
-        if (checkInDate && checkOutDate) {
+        const paramCheckIn = checkInDate || check_in_date || checkIn || check_in
+        const paramCheckOut = checkOutDate || check_out_date || checkOut || check_out
+        if (paramCheckIn && paramCheckOut) {
           // 保存原始日期格式
-          originalCheckInDate = checkInDate
-          originalCheckOutDate = checkOutDate
+          originalCheckInDate = paramCheckIn
+          originalCheckOutDate = paramCheckOut
           
           // 验证日期是否有效
           const today = new Date()
-          const start = new Date(checkInDate)
-          const end = new Date(checkOutDate)
-          
-          // 调整为当天的23:59:59，确保今天的日期被认为是有效的
-          const todayEnd = new Date(today)
-          todayEnd.setHours(23, 59, 59, 999)
+          today.setHours(0, 0, 0, 0)
+          const start = new Date(paramCheckIn)
+          const end = new Date(paramCheckOut)
           
           // 如果入住日期早于今天，使用今天作为默认入住日期
           if (start < today) {
@@ -121,7 +168,6 @@ const BookingConfirm = () => {
             originalCheckOutDate = new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           }
           
-          // 计算入住天数
           const nights = Math.ceil((new Date(originalCheckOutDate) - new Date(originalCheckInDate)) / (1000 * 60 * 60 * 24))
           
           // 格式化日期显示
@@ -152,12 +198,10 @@ const BookingConfirm = () => {
             originalCheckOutDate: originalCheckOutDate
           }))
         } else {
-          // 默认日期
           const today = new Date()
           const tomorrow = new Date(today)
           tomorrow.setDate(today.getDate() + 1)
           
-          // 格式化为标准日期格式
           originalCheckInDate = today.toISOString().split('T')[0]
           originalCheckOutDate = tomorrow.toISOString().split('T')[0]
           
@@ -187,14 +231,220 @@ const BookingConfirm = () => {
     fetchData()
   }, [])
 
-  // 3. 简化的验证逻辑（降低验证门槛，优先保证跳转）
+  useEffect(() => {
+    if (!bookingInfo.originalCheckInDate || !bookingInfo.originalCheckOutDate) return
+    const checkIn = new Date(bookingInfo.originalCheckInDate)
+    const checkOut = new Date(bookingInfo.originalCheckOutDate)
+    const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24))
+    const validNights = Number.isFinite(nights) && nights > 0 ? nights : 1
+    const nightlyPrice = Number(bookingInfo.price.original) || 0
+    const paramTotal = Number(bookingInfo.price.total) || 0
+    const total = paramTotal > 0 ? paramTotal : nightlyPrice * validNights
+    setBookingInfo(prev => ({
+      ...prev,
+      nights: `${validNights}晚`,
+      price: {
+        ...prev.price,
+        final: total,
+        total,
+        points: Math.floor(total * 0.5)
+      }
+    }))
+  }, [bookingInfo.originalCheckInDate, bookingInfo.originalCheckOutDate, bookingInfo.price.original])
+
+  // 获取优惠券数据
+  const fetchCoupons = async () => {
+    try {
+      // 调用后端API获取优惠券列表
+      const response = await couponApi.getCoupons({ type: 'all' })
+      
+      // 添加默认优惠券数据作为兜底
+      const defaultCoupons = [
+        {
+          id: '1',
+          name: '新用户专享优惠券',
+          value: '50',
+          min_spend: '300',
+          expire_date: '2026-12-31',
+          status: 'available',
+          description: '新用户专享，满300减50'
+        },
+        {
+          id: '2',
+          name: '周末特惠优惠券',
+          value: '30',
+          min_spend: '200',
+          expire_date: '2026-12-31',
+          status: 'available',
+          description: '周末入住，满200减30'
+        }
+      ]
+      
+      // 检查响应状态，即使token无效也使用默认优惠券数据
+      if (response.code === 0 && response.data) {
+        let couponsList = Array.isArray(response.data.coupons) ? response.data.coupons : []
+        
+        // 如果没有优惠券数据，尝试从本地存储中获取
+        if (couponsList.length === 0) {
+          console.log('从本地存储中获取优惠券数据')
+          const userCoupons = Taro.getStorageSync('userCoupons') || []
+          couponsList = userCoupons
+        }
+        
+        // 如果还是没有优惠券数据，使用默认优惠券数据
+        if (couponsList.length === 0) {
+          console.log('使用默认优惠券数据')
+          couponsList = defaultCoupons
+        }
+        
+        // 筛选出满足当前订单金额的优惠券
+        const eligibleCoupons = couponsList.filter(coupon => {
+          const minSpend = coupon.min_spend || coupon.min_order_amount || coupon.minSpend || 0
+          const currentTotal = bookingInfo.price.final || bookingInfo.price.original || 0
+          // 如果currentTotal是0，那么就不筛选，直接返回所有优惠券
+          return currentTotal === 0 || currentTotal >= minSpend
+        })
+        console.log('筛选后的优惠券:', eligibleCoupons)
+        setCoupons(eligibleCoupons)
+      } else {
+        // 使用默认优惠券数据
+        let couponsList = defaultCoupons
+        
+        // 尝试从本地存储中获取优惠券数据
+        console.log('从本地存储中获取优惠券数据')
+        const userCoupons = Taro.getStorageSync('userCoupons') || []
+        if (userCoupons.length > 0) {
+          couponsList = userCoupons
+        }
+        
+        const eligibleCoupons = couponsList.filter(coupon => {
+          const minSpend = coupon.min_spend || coupon.min_order_amount || coupon.minSpend || 0
+          const currentTotal = bookingInfo.price.final || bookingInfo.price.original || 0
+          // 如果currentTotal是0，那么就不筛选，直接返回所有优惠券
+          return currentTotal === 0 || currentTotal >= minSpend
+        })
+        console.log('筛选后的优惠券:', eligibleCoupons)
+        setCoupons(eligibleCoupons)
+      }
+    } catch (error) {
+      console.error('获取优惠券列表失败:', error)
+      
+      // 使用默认优惠券数据
+      let couponsList = [
+        {
+          id: '1',
+          name: '新用户专享优惠券',
+          value: '50',
+          min_spend: '300',
+          expire_date: '2026-12-31',
+          status: 'available',
+          description: '新用户专享，满300减50'
+        },
+        {
+          id: '2',
+          name: '周末特惠优惠券',
+          value: '30',
+          min_spend: '200',
+          expire_date: '2026-12-31',
+          status: 'available',
+          description: '周末入住，满200减30'
+        }
+      ]
+      
+      // 尝试从本地存储中获取优惠券数据
+      console.log('从本地存储中获取优惠券数据')
+      const userCoupons = Taro.getStorageSync('userCoupons') || []
+      if (userCoupons.length > 0) {
+        couponsList = userCoupons
+      }
+      
+      const eligibleCoupons = couponsList.filter(coupon => {
+        const minSpend = coupon.min_spend || coupon.min_order_amount || coupon.minSpend || 0
+        const currentTotal = bookingInfo.price.final || bookingInfo.price.original || 0
+        // 如果currentTotal是0，那么就不筛选，直接返回所有优惠券
+        return currentTotal === 0 || currentTotal >= minSpend
+      })
+      console.log('筛选后的优惠券:', eligibleCoupons)
+      setCoupons(eligibleCoupons)
+    }
+  }
+
+  // 计算优惠后的价格
+  const calculateFinalPrice = (coupon) => {
+    const originalPrice = bookingInfo.price.final || bookingInfo.price.original || 0
+    
+    if (coupon) {
+      // 计算优惠后的价格
+      const discountValue = parseFloat(coupon.value || coupon.discount_value || 0)
+      const minSpend = parseFloat(coupon.min_spend || coupon.min_order_amount || coupon.minSpend || 0)
+      
+      // 检查是否满足使用条件
+      if (originalPrice >= minSpend) {
+        const discountedPrice = originalPrice - discountValue
+        setBookingInfo(prev => ({
+          ...prev,
+          price: {
+            ...prev.price,
+            coupon: discountValue,
+            final: Math.max(0, discountedPrice)
+          }
+        }))
+      } else {
+        // 不满足使用条件，显示提示信息
+        Taro.showToast({ 
+          title: `订单金额未达到优惠券使用条件（满${minSpend}元）`, 
+          icon: 'none' 
+        })
+      }
+    } else {
+      // 不使用优惠券
+      setBookingInfo(prev => ({
+        ...prev,
+        price: {
+          ...prev.price,
+          coupon: 0,
+          final: originalPrice
+        }
+      }))
+    }
+  }
+
+  // 处理优惠券选择
+  const handleCouponSelect = (coupon) => {
+    console.log('选择优惠券:', coupon)
+    setSelectedCoupon(coupon)
+    calculateFinalPrice(coupon)
+    setShowCouponModal(false)
+  }
+
+  // 处理优惠券弹窗显示
+  const handleCouponClick = () => {
+    console.log('点击优惠券区域，可用优惠券数量:', coupons.length)
+    if (coupons.length === 0) {
+      Taro.showToast({ title: '暂无可用优惠券', icon: 'none' })
+    } else {
+      setShowCouponModal(true)
+    }
+  }
+
+  // 初始化时获取优惠券数据
+  useEffect(() => {
+    // 页面加载时立即获取优惠券数据，不需要等待订单金额计算完成
+    fetchCoupons()
+  }, [])
+  
+  // 订单金额变化时重新获取优惠券数据，确保筛选出满足条件的优惠券
+  useEffect(() => {
+    if (bookingInfo.price.final > 0) {
+      fetchCoupons()
+    }
+  }, [bookingInfo.price.final])
+
   const validateGuestInfo = () => {
-    // 临时简化：只要有内容就通过，方便测试跳转
     if (!guestInfo.name || guestInfo.name.trim() === '') {
       Taro.showToast({ title: '请输入住客姓名', icon: 'none', duration: 2000 })
       return false
     }
-    // 简化手机号验证：只要长度够就通过
     if (!guestInfo.phone || guestInfo.phone.replace(/\s+/g, '').length !== 11) {
       Taro.showToast({ title: '请输入正确的手机号码', icon: 'none', duration: 2000 })
       return false
@@ -202,18 +452,13 @@ const BookingConfirm = () => {
     return true
   }
 
-  // 4. 核心：修复后的立即支付点击逻辑
   const handleSubmitBooking = async () => {
-    console.log('立即支付按钮被点击了') // 用于调试
-    
-    // 验证信息
     const isValid = validateGuestInfo()
     if (!isValid) return
 
     try {
       setLoading(true)
       
-      // 验证并调整日期
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const checkInDate = new Date(bookingInfo.originalCheckInDate)
@@ -221,21 +466,18 @@ const BookingConfirm = () => {
       const checkOutDate = new Date(bookingInfo.originalCheckOutDate)
       checkOutDate.setHours(0, 0, 0, 0)
       
-      // 确保入住日期不早于今天
       if (checkInDate < today) {
         Taro.showToast({ title: '入住日期不能早于今天', icon: 'none', duration: 2000 })
         setLoading(false)
         return
       }
       
-      // 确保入住日期早于退房日期
       if (checkInDate >= checkOutDate) {
         Taro.showToast({ title: '入住日期必须早于退房日期', icon: 'none', duration: 2000 })
         setLoading(false)
         return
       }
       
-      // 准备预订数据
       const bookingData = {
         hotel_id: hotelId,
         room_type_id: roomId,
@@ -246,21 +488,23 @@ const BookingConfirm = () => {
         special_requests: specialRequests.filter(item => item.selected).map(item => item.name).join(',')
       }
       
-      console.log('提交预订数据：', bookingData)
-      
-      // 调用后端API创建预订
       const response = await bookingApi.createBooking(bookingData)
       
       if (response.code === 0 && response.data) {
         const bookingId = response.data.booking_id || response.data.id || 'BK_' + Date.now()
-        console.log('创建预订成功，订单ID：', bookingId)
         
-        // 关键：跳转到支付页（确保路由路径正确）
+        Taro.setStorageSync('paymentPayload', {
+          bookingId,
+          totalAmount: bookingInfo.price.final,
+          originalAmount: bookingInfo.price.original || bookingInfo.price.final,
+          hotelName: bookingInfo.hotelName,
+          checkInDate: bookingInfo.checkInDate,
+          checkOutDate: bookingInfo.checkOutDate,
+          roomType: bookingInfo.roomType,
+          selectedCoupon: selectedCoupon
+        })
         Taro.navigateTo({
-          url: `/pages/payment/index?booking_id=${bookingId}`,
-          success: () => {
-            console.log('跳转支付页成功')
-          },
+          url: `/pages/payment/index?bookingId=${bookingId}`,
           fail: (err) => {
             console.error('跳转失败：', err)
             Taro.showToast({ title: '跳转支付页失败', icon: 'none', duration: 2000 })
@@ -278,7 +522,6 @@ const BookingConfirm = () => {
     }
   }
 
-  // 5. 特殊要求选择逻辑
   const handleSpecialRequestToggle = (id) => {
     setSpecialRequests(prev =>
       prev.map(item =>
@@ -289,183 +532,105 @@ const BookingConfirm = () => {
 
   return (
     <View className='booking-confirm-page'>
-      {/* 返回按钮 */}
-      <View className='back-button' onClick={() => Taro.navigateBack()}>
+      <View className='back-btn' style={{ cursor: 'pointer' }} onClick={() => Taro.navigateBack()}>
         <Text className='back-icon'>←</Text>
         <Text className='back-text'>返回</Text>
       </View>
       
-      {/* 加载状态 */}
-      {fetchingData ? (
-        <View className='loading-container'>
-          <Text className='loading-text'>加载中...</Text>
-        </View>
-      ) : (
-        <>
-          {/* 顶部酒店信息 */}
-          <View className='header-section'>
-            <View className='hotel-info'>
-              <Text className='hotel-name'>{bookingInfo.hotelName || '酒店名称'}</Text>
+      <ScrollView className='content-scroll' scrollY>
+        {fetchingData ? (
+          <View className='loading-container'>
+            <Text className='loading-text'>加载中...</Text>
+          </View>
+        ) : (
+          <View className='summary-section'>
+            <View className='section-title'>
+              <Text>订单信息</Text>
             </View>
-            <View className='booking-dates'>
-              <Text>{bookingInfo.checkInDate || '入住日期'} - {bookingInfo.checkOutDate || '离店日期'}</Text>
-              <Text className='nights'>{bookingInfo.nights}</Text>
-              <Navigator url={`/pages/hotel-detail/index?id=${hotelId}`} className='room-detail-link'>房型详情</Navigator>
+            <View className='summary-row'>
+              <Text className='label'>酒店名称</Text>
+              <Text className='value'>{bookingInfo.hotelName || '酒店名称'}</Text>
             </View>
-            <View className='room-info'>
-              <Text>{bookingInfo.roomType || '房型'} | {bookingInfo.bedInfo || '床型'} | {bookingInfo.breakfast}</Text>
+            <View className='summary-row'>
+              <Text className='label'>房型名称</Text>
+              <Text className='value'>{bookingInfo.roomType || '房型'}</Text>
             </View>
-            <View className='cancel-policy'>
-              <View className='policy-item'>
-                <AtIcon value='check-circle' size='16' color='#07c160' />
-                <Text>{bookingInfo.freeCancel || '入住前24小时可免费取消'}</Text>
-              </View>
-              {bookingInfo.immediateConfirm && (
-                <View className='policy-item'>
-                  <AtIcon value='check-circle' size='16' color='#07c160' />
-                  <Text>立即确认</Text>
-                </View>
-              )}
+            <View className='summary-row'>
+              <Text className='label'>入住/离店</Text>
+              <Text className='value'>{bookingInfo.checkInDate || '入住日期'} - {bookingInfo.checkOutDate || '离店日期'}</Text>
+            </View>
+            <View className='summary-row'>
+              <Text className='label'>总间夜数</Text>
+              <Text className='value'>{bookingInfo.nights}</Text>
+            </View>
+            <View className='summary-row'>
+              <Text className='label'>总价</Text>
+              <Text className='value'>¥{bookingInfo.price.final || bookingInfo.price.original}</Text>
+            </View>
+            <View className='summary-row final'>
+              <Text className='label'>应付金额</Text>
+              <Text className='final-value'>¥{bookingInfo.price.final || bookingInfo.price.original}</Text>
             </View>
           </View>
-        </>
-      )}
+        )}
 
-      {/* 提示条 */}
-      <View className='tip-bar'>
-        <AtIcon value='volume' size='16' color='#ff976a' />
-        <Text>精选好房正在路上</Text>
-      </View>
-
-      {/* 订房信息 */}
-      <View className='booking-info-section'>
-        <View className='section-title'>
-          <Text>订房信息</Text>
-          <AtIcon value='question-circle' size='16' color='#999' />
-        </View>
-        <View className='remaining-rooms'>
-          <Text className='red'>仅剩{bookingInfo.remainingRooms}间</Text>
-          <View className='quantity-selector'>
-            <AtIcon value='minus-circle' size='20' color='#ccc' />
-            <Text>1间</Text>
-            <AtIcon value='plus-circle' size='20' color='#07c160' />
+        <View className='booking-info-section'>
+          <View className='section-title'>
+            <Text>入住信息</Text>
           </View>
-        </View>
-
-        <View className='form-item'>
-          <Text className='label'>住客姓名*</Text>
-          <Input
-            value={guestInfo.name}
-            placeholder='请输入住客姓名'
-            onInput={(e) => setGuestInfo({ ...guestInfo, name: e.detail.value })}
-          />
-          <AtIcon value='user' size='20' color='#999' />
-        </View>
-
-        <View className='form-item'>
-          <Text className='label'>联系手机*</Text>
-          <View className='phone-input'>
-            <Text>+86</Text>
+          <View className='form-item'>
+            <Text className='label'>住客姓名*</Text>
             <Input
-              value={guestInfo.phone}
-              placeholder='请输入手机号码'
-              onInput={(e) => setGuestInfo({ ...guestInfo, phone: e.detail.value })}
+              value={guestInfo.name}
+              placeholder='请输入住客姓名'
+              onInput={(e) => setGuestInfo({ ...guestInfo, name: e.detail.value })}
             />
-            <AtIcon value='book' size='20' color='#999' />
           </View>
-        </View>
 
-        <View className='phone-tip'>
-          <Text>请注意是否用此号码接收订单信息</Text>
-          <AtIcon value='close' size='16' color='#999' />
-        </View>
-      </View>
-
-      {/* 本单可享 */}
-      <View className='benefits-section'>
-        <View className='section-title'>
-          <Text>本单可享</Text>
-          <Text className='final-price'>已享最大优惠 ¥{bookingInfo.price.original}</Text>
-        </View>
-
-        <View className='benefit-item'>
-          <Text>促销优惠</Text>
-          <View className='benefit-value'>
-            <Text>3项优惠 共减¥{bookingInfo.price.discount}</Text>
-            <AtIcon value='chevron-down' size='16' color='#999' />
-          </View>
-        </View>
-
-        <View className='benefit-item'>
-          <Text>优惠券</Text>
-          <View className='benefit-value'>
-            <Text>满减券 减¥{bookingInfo.price.coupon}</Text>
-            <AtIcon value='chevron-right' size='16' color='#999' />
-          </View>
-        </View>
-
-        <View className='benefit-item'>
-          <Text>离店赚积分</Text>
-          <View className='benefit-value'>
-            <Text>{bookingInfo.price.points}积分</Text>
-            <AtIcon value='chevron-right' size='16' color='#999' />
-          </View>
-        </View>
-      </View>
-
-      {/* 特殊要求 */}
-      <View className='special-requests-section'>
-        <View className='section-title'>
-          <Text>特殊要求</Text>
-        </View>
-        <View className='request-tags'>
-          {specialRequests.map(item => (
-            <View
-              key={item.id}
-              className={`request-tag ${item.selected ? 'selected' : ''}`}
-              onClick={() => handleSpecialRequestToggle(item.id)}
-            >
-              <Text>{item.name}</Text>
+          <View className='form-item'>
+            <Text className='label'>联系手机*</Text>
+            <View className='phone-input'>
+              <Text>+86</Text>
+              <Input
+                value={guestInfo.phone}
+                placeholder='请输入手机号码'
+                onInput={(e) => setGuestInfo({ ...guestInfo, phone: e.detail.value })}
+              />
             </View>
-          ))}
-          <View className='more-requests'>
-            <Text>更多入住要求</Text>
-            <AtIcon value='chevron-right' size='16' color='#999' />
           </View>
         </View>
-      </View>
 
-      {/* 发票 */}
-      <View className='invoice-section'>
-        <View className='section-title'>
-          <Text>发票</Text>
+        <View className='special-requests-section'>
+          <View className='section-title'>
+            <Text>特殊要求</Text>
+          </View>
+          <View className='request-tags'>
+            {specialRequests.map(item => (
+              <View
+                key={item.id}
+                className={`request-tag ${item.selected ? 'selected' : ''}`}
+                onClick={() => handleSpecialRequestToggle(item.id)}
+              >
+                <Text>{item.name}</Text>
+              </View>
+            ))}
+          </View>
         </View>
-        <View className='invoice-info'>
-          <Text>{invoiceInfo.type}</Text>
-          <AtIcon value='question-circle' size='16' color='#999' />
-        </View>
-      </View>
+      </ScrollView>
 
-      {/* 底部支付栏（已缩小） */}
       <View className='bottom-bar'>
         <View className='price-info'>
-          <Text>在线付</Text>
+          <Text>应付总价</Text>
           <Text className='final-price'>¥{bookingInfo.price.final}</Text>
-          <View className='price-detail'>
-            <Text>查看明细</Text>
-            <AtIcon value='chevron-down' size='14' color='#999' />
-            <View className='new-user-tag'>新人价</View>
-          </View>
         </View>
-        {/* 关键：确保onClick绑定正确，无拼写错误 */}
         <Button
           className='pay-btn'
           onClick={handleSubmitBooking}
           loading={loading}
           disabled={loading}
-          hoverClass='pay-btn-hover' // 增加点击反馈
+          hoverClass='pay-btn-hover'
         >
-          立即支付
+          确认
         </Button>
       </View>
     </View>

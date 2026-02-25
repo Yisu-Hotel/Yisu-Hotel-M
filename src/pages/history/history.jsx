@@ -19,23 +19,18 @@ export default function HistoryPage () {
     try {
       setLoading(true)
       
-      // 调用后端API获取浏览历史
-      const response = await historyApi.getHistory()
+      // 从本地缓存获取浏览历史
+      const browsingHistory = Taro.getStorageSync('browsingHistory') || []
+      console.log('从本地缓存获取的浏览历史:', browsingHistory)
       
-      if (response.code === 0 && response.data) {
-        setHistory(response.data.history || [])
-      } else {
-        Taro.showToast({
-          title: response.message || '获取浏览历史失败',
-          icon: 'none'
-        })
-      }
+      setHistory(browsingHistory)
     } catch (error) {
       console.error('获取浏览历史失败:', error)
       Taro.showToast({
         title: error.message || '获取浏览历史失败，请检查网络连接',
         icon: 'none'
       })
+      setHistory([])
     } finally {
       setLoading(false)
     }
@@ -56,22 +51,21 @@ export default function HistoryPage () {
       success: async (res) => {
         if (res.confirm) {
           try {
-            // 调用后端API删除历史记录
-            const response = await historyApi.removeHistory(historyId)
+            // 从本地缓存获取当前历史记录
+            const currentHistory = Taro.getStorageSync('browsingHistory') || []
             
-            if (response.code === 0) {
-              // 更新本地历史记录
-              setHistory(prev => prev.filter(item => item.id !== historyId))
-              Taro.showToast({
-                title: '已删除',
-                icon: 'success'
-              })
-            } else {
-              Taro.showToast({
-                title: response.message || '删除失败',
-                icon: 'none'
-              })
-            }
+            // 过滤掉要删除的记录
+            const updatedHistory = currentHistory.filter(item => item.id !== historyId)
+            
+            // 保存回本地缓存
+            Taro.setStorageSync('browsingHistory', updatedHistory)
+            
+            // 更新本地状态
+            setHistory(updatedHistory)
+            Taro.showToast({
+              title: '已删除',
+              icon: 'success'
+            })
           } catch (error) {
             console.error('删除历史记录失败:', error)
             Taro.showToast({
@@ -100,21 +94,15 @@ export default function HistoryPage () {
       success: async (res) => {
         if (res.confirm) {
           try {
-            // 调用后端API清空历史记录
-            const response = await historyApi.clearHistory()
+            // 清空本地缓存中的历史记录
+            Taro.removeStorageSync('browsingHistory')
             
-            if (response.code === 0) {
-              setHistory([])
-              Taro.showToast({
-                title: '已清空',
-                icon: 'success'
-              })
-            } else {
-              Taro.showToast({
-                title: response.message || '清空失败',
-                icon: 'none'
-              })
-            }
+            // 更新本地状态
+            setHistory([])
+            Taro.showToast({
+              title: '已清空',
+              icon: 'success'
+            })
           } catch (error) {
             console.error('清空历史记录失败:', error)
             Taro.showToast({
@@ -155,8 +143,13 @@ export default function HistoryPage () {
         ) : history.length > 0 ? (
           history.map(item => {
             const hotel = item.hotel || item
+            const hotelId = item.hotel_id || hotel.id
             return (
-              <View key={item.id} className='history-item'>
+              <View 
+                key={item.id} 
+                className='history-item'
+                onClick={() => handleHotelClick(hotelId)}
+              >
                 <Image 
                   className='item-image' 
                   src={hotel.image && !hotel.image.includes('example.com') ? hotel.image : 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20exterior%20default%20placeholder&image_size=square'} 
@@ -166,7 +159,10 @@ export default function HistoryPage () {
                     <Text className='item-title'>{hotel.name || hotel.title}</Text>
                     <View 
                       className='delete-btn' 
-                      onClick={() => handleDeleteHistory(item.id)}
+                      onClick={(e) => {
+                        e.stopPropagation() // 阻止事件冒泡
+                        handleDeleteHistory(item.id)
+                      }}
                     >
                       <Text className='delete-icon'>×</Text>
                     </View>

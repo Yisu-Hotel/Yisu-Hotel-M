@@ -1,0 +1,264 @@
+.ai-assistant-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f6f7fb;
+}
+
+.ai-assistant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 20rpx;
+  background-color: #fff;
+  border-bottom: 1rpx solid #edf0f7;
+}
+
+.back-button {
+  padding: 8rpx;
+}
+
+.back-icon {
+  font-size: 32rpx;
+  color: #2e2e2e;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex: 1;
+  justify-content: center;
+}
+
+.header-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 18rpx;
+  background-color: #e3f2ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-avatar-text {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #1677ff;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.header-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1c1c1c;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.status-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background-color: #22c55e;
+}
+
+.status-text {
+  font-size: 20rpx;
+  color: #7b8193;
+  text-transform: uppercase;
+}
+
+.header-actions {
+  min-width: 96rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.clear-text {
+  font-size: 22rpx;
+  color: #9aa2b1;
+}
+
+.chat-container {
+  flex: 1;
+  padding: 20rpx;
+}
+
+.messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.empty-state {
+  padding: 40rpx 20rpx;
+  text-align: center;
+}
+
+.empty-text {
+  font-size: 24rpx;
+  color: #9aa2b1;
+}
+
+.message-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.user-message {
+  flex-direction: row-reverse;
+}
+
+.assistant-message {
+  flex-direction: row;
+}
+
+.tool-message {
+  flex-direction: row;
+}
+
+.avatar-container {
+  margin-top: 4rpx;
+}
+
+.avatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.assistant-avatar {
+  background-color: #1677ff;
+  color: #fff;
+}
+
+.user-avatar {
+  background-color: #22c55e;
+  color: #fff;
+}
+
+.avatar-icon {
+  font-size: 24rpx;
+}
+
+.message-content {
+  max-width: 72%;
+  padding: 16rpx 20rpx;
+  border-radius: 18rpx;
+  background-color: #fff;
+  box-shadow: 0 4rpx 12rpx rgba(15, 23, 42, 0.06);
+}
+
+.user-message .message-content {
+  background-color: #1677ff;
+  color: #fff;
+}
+
+.assistant-message .message-content {
+  background-color: #fff;
+  color: #1f2937;
+}
+
+.tool-message .message-content {
+  background-color: #f1f3f9;
+  color: #67728a;
+  font-size: 22rpx;
+  border: 1rpx solid #e5e9f2;
+}
+
+.message-text {
+  font-size: 26rpx;
+  line-height: 36rpx;
+  white-space: pre-wrap;
+}
+
+.message-timestamp {
+  margin-top: 8rpx;
+  font-size: 18rpx;
+  color: #94a3b8;
+  text-align: right;
+}
+
+.user-message .message-timestamp {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.loading-text {
+  font-size: 24rpx;
+  color: #64748b;
+}
+
+.error-banner {
+  background-color: #fff1f2;
+  border-top: 1rpx solid #ffe4e6;
+  padding: 12rpx 20rpx;
+}
+
+.error-text {
+  font-size: 22rpx;
+  color: #e11d48;
+}
+
+.input-container {
+  display: flex;
+  align-items: flex-end;
+  padding: 16rpx 20rpx;
+  gap: 16rpx;
+  background-color: #fff;
+  border-top: 1rpx solid #edf0f7;
+}
+
+.input-field {
+  flex: 1;
+  min-height: 72rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 24rpx;
+  padding: 16rpx 20rpx;
+  font-size: 26rpx;
+  background-color: #f8fafc;
+}
+
+.send-button {
+  height: 72rpx;
+  padding: 0 28rpx;
+  border-radius: 20rpx;
+  background-color: #1677ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-button.disabled {
+  background-color: #cbd5e1;
+}
+
+.send-icon {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+}
+@media (max-width: 375px) {
+  .message-content {
+    max-width: 75%;
+  }
+  
+  .message-text {
+    font-size: 24rpx;
+  }
+}
