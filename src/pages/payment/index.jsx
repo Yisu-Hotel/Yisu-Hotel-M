@@ -334,7 +334,7 @@ const PaymentPage = () => {
   if (!bookingDetail) {
     return (
       <View className='payment-page empty'>
-        <View className='back-button' onClick={() => Taro.navigateBack()}>
+        <View className='back-btn' style={{ cursor: 'pointer' }} onClick={() => Taro.navigateBack()}>
           <Text className='back-icon'>←</Text>
           <Text className='back-text'>返回</Text>
         </View>
@@ -345,8 +345,7 @@ const PaymentPage = () => {
 
   return (
     <View className='payment-page'>
-      {/* 返回按钮 */}
-      <View className='back-button' onClick={() => Taro.navigateBack()}>
+      <View className='back-btn' style={{ cursor: 'pointer' }} onClick={() => Taro.navigateBack()}>
         <Text className='back-icon'>←</Text>
         <Text className='back-text'>返回</Text>
       </View>

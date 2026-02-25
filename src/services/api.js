@@ -383,13 +383,10 @@ export const hotelApi = {
 // 收藏相关API
 export const favoriteApi = {
   // 获取收藏列表
-  getFavorites: async (params) => {
-    if (params) {
-      const queryString = new URLSearchParams(params).toString();
-      return request(`/mobile/favorite/list?${queryString}`);
-    } else {
-      return request('/mobile/favorite/list');
-    }
+  getFavorites: async (params = {}) => {
+    const timestamp = new Date().getTime();
+    const queryString = new URLSearchParams({ ...params, _t: timestamp }).toString();
+    return request(`/mobile/favorite/list?${queryString}`);
   },
 
   // 添加收藏

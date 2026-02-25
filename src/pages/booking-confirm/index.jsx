@@ -246,6 +246,7 @@ const BookingConfirm = () => {
       price: {
         ...prev.price,
         final: total,
+        total,
         points: Math.floor(total * 0.5)
       }
     }))
@@ -531,7 +532,7 @@ const BookingConfirm = () => {
 
   return (
     <View className='booking-confirm-page'>
-      <View className='back-button' onClick={() => Taro.navigateBack()}>
+      <View className='back-btn' style={{ cursor: 'pointer' }} onClick={() => Taro.navigateBack()}>
         <Text className='back-icon'>←</Text>
         <Text className='back-text'>返回</Text>
       </View>
@@ -564,11 +565,11 @@ const BookingConfirm = () => {
             </View>
             <View className='summary-row'>
               <Text className='label'>总价</Text>
-              <Text className='value'>¥{bookingInfo.price.original || bookingInfo.price.final}</Text>
+              <Text className='value'>¥{bookingInfo.price.final || bookingInfo.price.original}</Text>
             </View>
             <View className='summary-row final'>
               <Text className='label'>应付金额</Text>
-              <Text className='final-value'>¥{bookingInfo.price.original || bookingInfo.price.final}</Text>
+              <Text className='final-value'>¥{bookingInfo.price.final || bookingInfo.price.original}</Text>
             </View>
           </View>
         )}

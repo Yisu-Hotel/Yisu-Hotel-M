@@ -361,17 +361,26 @@ export default function HotelListNew() {
   const FACILITY_OPTIONS = [
     { id: 'wifi', name: '免费WiFi', icon: 'wifi' },
     { id: 'parking', name: '免费停车场', icon: 'local_parking' },
+    { id: 'air_conditioner', name: '空调', icon: 'ac_unit' },
+    { id: 'tv', name: '电视', icon: 'tv' },
+    { id: 'minibar', name: '迷你吧', icon: 'local_bar' },
+    { id: 'bathtub', name: '浴缸', icon: 'bathtub' },
+    { id: 'workdesk', name: '办公桌', icon: 'work' },
+    { id: 'sofa', name: '沙发', icon: 'weekend' },
     { id: 'gym', name: '健身房', icon: 'fitness_center' },
-    { id: 'pool', name: '游泳池', icon: 'pool' },
+    { id: 'swimming_pool', name: '游泳池', icon: 'pool' },
     { id: 'restaurant', name: '餐厅', icon: 'restaurant' },
-    { id: 'meeting', name: '会议室', icon: 'meeting_room' }
+    { id: 'breakfast', name: '早餐', icon: 'free_breakfast' }
   ]
   const SERVICE_OPTIONS = [
     { id: 'reception', name: '24小时前台' },
     { id: 'luggage', name: '行李寄存' },
-    { id: 'wakeup', name: '叫醒服务' },
-    { id: 'room_service', name: '送餐服务' },
-    { id: 'car_rental', name: '租车服务' }
+    { id: 'laundry', name: '洗衣服务' },
+    { id: 'taxi', name: '叫车服务' },
+    { id: 'concierge', name: '礼宾服务' },
+    { id: 'airport_transfer', name: '机场接送' },
+    { id: 'room_service', name: '24小时客房服务' },
+    { id: 'butler', name: '管家服务' }
   ]
   const RATING_OPTIONS = [
     { value: 4.8, label: '4.8分+' },
@@ -624,12 +633,12 @@ export default function HotelListNew() {
 
     return (
     <View className='hotel-list-page'>
+      <View className='back-btn' style={{ cursor: 'pointer' }} onClick={() => Taro.navigateTo({ url: '/pages/index/index' })}>
+        <Text className='back-icon'>←</Text>
+        <Text className='back-text'>返回</Text>
+      </View>
       {/* Header Section */}
       <View className='header'>
-        {/* 返回按钮 */}
-        <View className='header-left' onClick={() => Taro.navigateTo({ url: '/pages/index/index' })}>
-          <Text className='back-button'>← 返回首页</Text>
-        </View>
         
         <View className='search-bar-container'>
             <View className='search-inputs'>

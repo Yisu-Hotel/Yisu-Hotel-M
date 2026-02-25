@@ -2,7 +2,7 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   line-height: 1.4;
-  background: linear-gradient(135deg, #f8fafc, #e0f2fe);
+  background: #f8fafc;
   min-height: 100vh;
   padding-bottom: 20px;
 }
@@ -13,30 +13,39 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  background-color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(248, 250, 252, 0.85);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 1px 0 rgba(148, 163, 184, 0.2);
   position: sticky;
   top: 0;
   z-index: 100;
 
   .nav-left {
     .nav-title {
-      font-size: 18px;
+      font-size: 24px;
       font-weight: 700;
-      color: #1890ff;
+      color: #3b82f6;
     }
   }
 
   .nav-right {
     display: flex;
     gap: 16px;
+    align-items: center;
+
+    .user-button {
+      font-size: 20px;
+      font-weight: 600;
+      color: #3b82f6;
+      padding: 8px 16px;
+    }
 
     .login-button {
       padding: 8px 16px;
       background-color: transparent;
-      color: #1890ff;
+      color: #3b82f6;
       border-radius: 24px;
-      font-size: 14px;
+      font-size: 18px;
       font-weight: 500;
       transition: all 0.3s ease;
 
@@ -48,18 +57,18 @@
 
     .register-button {
       padding: 8px 16px;
-      background: linear-gradient(135deg, #1890ff, #38bdf8);
+      background: #3b82f6;
       color: white;
       border-radius: 24px;
-      font-size: 14px;
+      font-size: 18px;
       font-weight: 500;
-      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
       transition: all 0.3s ease;
 
       &:active {
-        background: linear-gradient(135deg, #38bdf8, #60a5fa);
+        background: #2563eb;
         transform: scale(0.95);
-        box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.3);
       }
     }
   }
@@ -69,24 +78,27 @@
 .banner-carousel {
   position: relative;
   width: 100%;
-  height: 180px;
+  height: 240px;
   overflow: hidden;
-  border-radius: 0 0 24px 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+  margin: 0;
 }
 
 .banner-scroll {
   width: 100%;
   height: 100%;
+  border-radius: 24px;
 }
 
 .banner-item {
   position: relative;
   width: 100%;
-  height: 180px;
+  height: 240px;
   float: left;
   overflow: hidden;
   transition: all 0.3s ease;
+  border-radius: 24px;
 }
 
 .banner-item:active {
@@ -96,25 +108,35 @@
 .banner-image {
   width: 100%;
   height: 100%;
+  display: block;
   transition: transform 0.3s ease;
+  border-radius: 24px;
 }
 
 .banner-item:active .banner-image {
   transform: scale(1.05);
 }
 
+.banner-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0) 45%, rgba(15, 23, 42, 0.55) 100%);
+}
+
 .banner-text {
   position: absolute;
-  bottom: 20px;
+  bottom: 18px;
   left: 20px;
   color: white;
   font-size: 18px;
-  font-weight: bold;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  text-shadow: 0 4px 12px rgba(15, 23, 42, 0.45);
   animation: slideInUp 0.5s ease;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  z-index: 1;
 }
 
 .banner-description {
@@ -126,7 +148,7 @@
 /* 轮播指示器 */
 .banner-indicators {
   position: absolute;
-  bottom: 12px;
+  bottom: 10px;
   left: 0;
   right: 0;
   display: flex;
@@ -139,7 +161,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.45);
   transition: all 0.3s ease;
 }
 
@@ -152,29 +174,18 @@
 
 /* 核心查询区域 */
 .search-container {
-  margin: 16px;
-  padding: 24px;
+  margin: -16px 16px 16px;
+  padding: 20px;
   background-color: white;
-  border-radius: 28px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
   position: relative;
   z-index: 1;
   animation: fadeInUp 0.5s ease;
-  margin-top: -30px;
-  background: linear-gradient(135deg, #ffffff, #f8fafc);
-  border: 2px solid #f1f5f9;
+  margin-top: 0;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
   overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #1890ff, #38bdf8, #60a5fa);
-    border-radius: 28px 28px 0 0;
-  }
 }
 
 /* 动画效果 */
@@ -302,35 +313,35 @@ html {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
-  padding: 18px 20px;
-  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  padding: 16px 18px;
+  background: #f8fafc;
   border-radius: 16px;
   cursor: pointer;
   user-select: none;
   z-index: 1000;
   position: relative;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+  border: 1px solid #f1f5f9;
 }
 
 .location-bar:active {
-  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: #eef2f7;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
 }
 
 .location-text {
   flex: 1;
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
   margin: 0 12px;
 }
 
 .location-icon {
   font-size: 16px;
-  color: #666;
+  color: #94a3b8;
   transition: transform 0.2s ease;
 }
 
@@ -342,31 +353,31 @@ html {
 .search-input-container {
   display: flex;
   align-items: center;
-  padding: 18px 20px;
+  padding: 16px 18px;
   margin-bottom: 20px;
-  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  background: #f8fafc;
   border-radius: 16px;
   transition: all 0.3s ease;
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
 }
 
 .search-input-container:focus-within {
-  background: linear-gradient(135deg, #ffffff, #e6f7ff);
-  border-color: #1890ff;
-  box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.15), 0 8px 24px rgba(24, 144, 255, 0.1);
+  background: #ffffff;
+  border-color: #bfdbfe;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
 .search-icon {
   margin-right: 12px;
-  color: #999;
+  color: #94a3b8;
   font-size: 16px;
 }
 
 .search-input {
   flex: 1;
   font-size: 15px;
-  color: #333;
+  color: #0f172a;
   background: transparent;
   padding: 4px 0;
   outline: none;
@@ -375,7 +386,7 @@ html {
 }
 
 .search-input::placeholder {
-  color: #999;
+  color: #94a3b8;
   font-size: 14px;
 }
 
@@ -384,20 +395,20 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
+  padding: 18px;
   margin-bottom: 20px;
-  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  background: #f8fafc;
   border-radius: 16px;
   transition: all 0.3s ease;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+  border: 1px solid #f1f5f9;
 }
 
 .date-container:active {
-  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: #eef2f7;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
 }
 
 .date-item {
@@ -469,14 +480,15 @@ html {
 }
 
 .filter-item Text:first-child {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 4px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 6px;
 }
 
 .filter-value {
-  font-size: 12px;
-  color: #999;
+  font-size: 14px;
+  color: #666;
 }
 
 .filter-divider {
@@ -499,7 +511,7 @@ html {
   margin-right: 14px;
   background: linear-gradient(135deg, #ffffff, #f1f5f9);
   border-radius: 28px;
-  font-size: 14px;
+  font-size: 18px;
   color: #475569;
   white-space: nowrap;
   transition: all 0.3s ease;
@@ -607,28 +619,26 @@ html {
 
 /* 精选推荐酒店列表 */
 .recommended-hotels {
-  margin: 16px;
-  margin-top: 0;
+  margin: 0 16px 16px;
 }
 
 .recommended-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding: 16px 0;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 14px;
+  padding: 6px 0 8px;
 }
 
 .recommended-title {
-  font-size: 19px;
-  font-weight: 600;
-  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .recommended-more {
-  font-size: 14px;
-  color: #1890ff;
+  font-size: 13px;
+  color: #3b82f6;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -642,20 +652,20 @@ html {
 .hotel-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 /* 酒店项 */
 .hotel-item {
   background-color: white;
-  border-radius: 28px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   transition: all 0.4s ease;
   cursor: pointer;
   position: relative;
-  margin-bottom: 28px;
-  border: 2px solid #f1f5f9;
+  margin-bottom: 16px;
+  border: 1px solid #f1f5f9;
   
   &::after {
     content: '';
@@ -663,25 +673,25 @@ html {
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #1890ff, #38bdf8, #60a5fa);
-    border-radius: 28px 28px 0 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #38bdf8, #60a5fa);
+    border-radius: 20px 20px 0 0;
     z-index: 3;
   }
 }
 
 .hotel-item:active {
-  transform: translateY(-10px);
-  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.14);
 }
 
 /* 酒店图片 */
 .hotel-image {
   width: 100%;
-  height: 260px;
+  height: 200px;
   object-fit: cover;
   transition: transform 0.5s ease;
-  border-radius: 28px 28px 0 0;
+  border-radius: 20px 20px 0 0;
 }
 
 .hotel-item:active .hotel-image {
@@ -695,24 +705,24 @@ html {
   top: 0;
   left: 0;
   right: 0;
-  height: 260px;
-  background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
-  border-radius: 28px 28px 0 0;
+  height: 200px;
+  background: linear-gradient(180deg, transparent 55%, rgba(15, 23, 42, 0.45) 100%);
+  border-radius: 20px 20px 0 0;
   z-index: 1;
   pointer-events: none;
   transition: background 0.3s ease;
 }
 
 .hotel-item:active::before {
-  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
+  background: linear-gradient(180deg, transparent 45%, rgba(15, 23, 42, 0.55) 100%);
 }
 
 /* 酒店信息 */
 .hotel-info {
-  padding: 28px;
+  padding: 18px;
   position: relative;
   z-index: 2;
-  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  background: #ffffff;
 }
 
 /* 酒店头部 */
@@ -1718,18 +1728,23 @@ html {
 
 /* 响应式设计 */
 @media (max-width: 375px) {
-  .banner {
-    height: 150px;
+  .banner-carousel {
+    height: 210px;
+    margin: 0;
   }
-  
+
+  .banner-item {
+    height: 210px;
+  }
+
   .banner-text {
     font-size: 16px;
-    bottom: 16px;
-    left: 16px;
+    bottom: 14px;
+    left: 14px;
   }
   
   .search-container {
-    margin: 12px;
+    margin: -14px 12px 12px;
     padding: 16px;
   }
   
@@ -1849,8 +1864,13 @@ html {
 }
 
 @media (min-width: 414px) {
-  .banner {
-    height: 200px;
+  .banner-carousel {
+    height: 260px;
+    margin: 0;
+  }
+
+  .banner-item {
+    height: 260px;
   }
   
   .banner-text {
@@ -1858,8 +1878,8 @@ html {
   }
   
   .search-container {
-    margin: 20px;
-    padding: 24px;
+    margin: -18px 18px 18px;
+    padding: 22px;
   }
   
   .location-bar {
@@ -1911,12 +1931,16 @@ html {
 
 /* 横屏模式适配 */
 @media (orientation: landscape) {
-  .banner {
-    height: 120px;
+  .banner-carousel {
+    height: 200px;
+  }
+
+  .banner-item {
+    height: 200px;
   }
   
   .search-container {
-    margin: 12px;
+    margin: -12px 12px 12px;
     padding: 16px;
   }
   
